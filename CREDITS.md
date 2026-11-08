@@ -11,7 +11,7 @@ licences extends to what they produced.
 | --- | --- |
 | [three.js](https://threejs.org) | MIT |
 | [Rapier](https://rapier.rs) (`@dimforge/rapier3d-deterministic-compat`) | Apache-2.0 |
-| Fonts: [Jost](https://fonts.google.com/specimen/Jost), [Courier Prime](https://fonts.google.com/specimen/Courier+Prime), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (Google Fonts) | SIL Open Font License 1.1 |
+| Fonts: [Jost](https://fonts.google.com/specimen/Jost), [Courier Prime](https://fonts.google.com/specimen/Courier+Prime), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono), served with the game from `public/fonts/` (woff2 from [Fontsource](https://fontsource.org) 5.x; licence texts beside them) | SIL Open Font License 1.1 |
 
 ## Third-party assets (CC0)
 

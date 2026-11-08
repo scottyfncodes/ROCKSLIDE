@@ -5,6 +5,7 @@ import { exposeSnapshot } from './game/snapshot';
 import { loadKit } from './render/kitView';
 import { loadPatrolModels } from './render/patrolModels';
 import { TitleScreen } from './ui/title';
+import './ui/fonts.css';
 import './ui/style.css';
 
 const loading = document.getElementById('loading')!;
