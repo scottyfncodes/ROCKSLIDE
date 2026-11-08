@@ -1480,6 +1480,10 @@ button {
 }
 /* a short landscape screen: the title at the top, the lodge framed in the middle, the button below */
 @media (orientation: landscape) and (max-height: 520px) {
+  /* leave the top strip to the loading line (body.titled #loading .loading-inner) so the emblem never sits on it */
+  .title-screen {
+    padding-top: calc(56px + var(--safe-t));
+  }
   .title-screen .inner {
     height: 100%;
     display: flex;

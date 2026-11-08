@@ -110,6 +110,10 @@ export interface Glider {
   held: boolean;
   /** seconds since the last touchdown */
   sinceLand: number;
+  /** a jump that ended this step: its seconds in the air (0 on every other step), for the clean-landing callout */
+  flew: number;
+  /** that touchdown's speed into the slope (m/s), whatever the machine; read only by the callout */
+  into: number;
 }
 
 const G = 9.81;
@@ -118,8 +122,17 @@ const LOOK = [0.1, 0.2, 0.3];
 const _trees: Tree[] = [];
 
 export const newGlider = (x: number, z: number, yaw: number, t: Terrain): Glider => ({
-  x, y: t.height(x, z), z, vx: 0, vy: 0, vz: 0, yaw, lean: 0, airborne: false, air: 0, landed: 0, bump: 0, surface: 'packed', power: 0, slip: 0, held: false, sinceLand: 99,
+  x, y: t.height(x, z), z, vx: 0, vy: 0, vz: 0, yaw, lean: 0, airborne: false, air: 0, landed: 0, bump: 0, surface: 'packed', power: 0, slip: 0, held: false, sinceLand: 99, flew: 0, into: 0,
 });
+
+/**
+ * A jump worth naming: at least this long in the air (s), and set down softer than this (m/s into the slope).
+ * Calibrated on scripts/sledlab.ts: on the real valley the softest long jumps meet the slope at 3-4.4 m/s
+ * and slams at 6-20, so about one jump in four of 0.8 s or more is clean: earned, but within reach.
+ */
+export const CLEAN = { minAir: 0.8, maxInto: 4.5 };
+/** the seconds of air of a clean landing this step, or 0: a real jump set down along the slope, not slammed into it */
+export const cleanLanding = (g: Glider) => (g.flew >= CLEAN.minAir && g.into < CLEAN.maxInto ? g.flew : 0);
 
 export const glideSpeed = (g: Glider) => Math.hypot(g.vx, g.vz);
 /** signed speed along the heading */
@@ -135,6 +148,8 @@ export const forwardSpeed = (g: Glider) => -(g.vx * Math.sin(g.yaw) + g.vz * Mat
 export function stepGlider(g: Glider, p: GlideProfile, steer: number, throttle: number, dt: number, t: Terrain, solid: Colliders, trees: TreeGrid | null, boost = 1, hold = false): void {
   g.bump = 0;
   g.landed = 0;
+  g.flew = 0;
+  g.into = 0;
   g.held = false;
   const fx = -Math.sin(g.yaw);
   const fz = -Math.cos(g.yaw);
@@ -294,6 +309,11 @@ export function stepGlider(g: Glider, p: GlideProfile, steer: number, throttle: 
       // keep the part of the fall that runs along the slope
       const n2 = t.normal(nx, nz);
       const vdotn = g.vx * n2.x + g.vy * n2.y + g.vz * n2.z;
+      // a real jump (not a hop the suspension caught): how long, and how hard it met the slope
+      if (flew >= 0.1) {
+        g.flew = flew;
+        g.into = Math.max(0, -vdotn);
+      }
       if (vdotn < 0) {
         g.vx -= n2.x * vdotn;
         g.vz -= n2.z * vdotn;

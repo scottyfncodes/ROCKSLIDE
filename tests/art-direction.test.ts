@@ -71,9 +71,13 @@ describe('the retired dark-slate language does not come back', () => {
       const s = read(f);
       for (const re of RETIRED_FONTS) expect(re.test(s), `${re} in ${f}`).toBe(false);
     }
-    const html = read('index.html');
-    const fams = [...html.matchAll(/family=([A-Za-z+]+)/g)].map((m) => m[1].replace(/\+/g, ' ')).sort();
+    // the faces are served with the game (src/ui/fonts.css), nothing from a font CDN
+    expect(read('index.html')).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+    const css = read('src/ui/fonts.css');
+    const fams = [...new Set([...css.matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]))].sort();
     expect(fams).toEqual(['Courier Prime', 'IBM Plex Mono', 'Jost']);
+    // and every file it points at ships
+    for (const m of css.matchAll(/url\('\/fonts\/([^']+)'\)/g)) expect(existsSync(`public/fonts/${m[1]}`), m[1]).toBe(true);
   });
 
   it('the theme colours are the card stock, not slate', () => {

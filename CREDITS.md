@@ -11,7 +11,7 @@ licences extends to what they produced.
 | --- | --- |
 | [three.js](https://threejs.org) | MIT |
 | [Rapier](https://rapier.rs) (`@dimforge/rapier3d-deterministic-compat`) | Apache-2.0 |
-| Fonts: [Jost](https://fonts.google.com/specimen/Jost), [Courier Prime](https://fonts.google.com/specimen/Courier+Prime), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (Google Fonts) | SIL Open Font License 1.1 |
+| Fonts: [Jost](https://fonts.google.com/specimen/Jost), [Courier Prime](https://fonts.google.com/specimen/Courier+Prime), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono), served with the game from `public/fonts/` (woff2 from [Fontsource](https://fontsource.org) 5.x; licence texts beside them) | SIL Open Font License 1.1 |
 
 ## Third-party assets (CC0)
 
@@ -37,6 +37,7 @@ licences extends to what they produced.
 
 The voices are synthetic: no real person's voice was recorded, cloned or imitated.
 
-AssetCraft's licence report over the catalogue (`assetcraft_license_report`, 121 GITCRAFT outputs
-registered for this project): no non-commercial or no-derivatives assets, no copyleft outputs, no
-unknown licences, no attributions owed.
+AssetCraft's licence report over the catalogue (`assetcraft_license_report`, re-registered 2026-11-08 from
+this file: the 115 shipped assets under `public/`): 113 `LicenseRef-SnowPatrol-Owned` (made for this project, as
+above), 2 `CC0-1.0` (the Poly Haven textures, attributed); no non-commercial or no-derivatives assets, no copyleft
+outputs, no unknown licences.
