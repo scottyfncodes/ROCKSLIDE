@@ -22,7 +22,7 @@ function fail(title: string, detail: string, retry = true) {
   document.body.classList.remove('titled');
   loading.classList.remove('gone');
   loading.style.display = '';
-  loading.innerHTML = `<div class="error-box"><div class="wordmark sm">ROCKSLIDE</div><h2>${title}</h2><p>${detail}</p>${
+  loading.innerHTML = `<div class="error-box"><div class="wordmark sm">SNOW PATROL</div><h2>${title}</h2><p>${detail}</p>${
     retry ? '<button class="btn red" type="button" onclick="location.reload()">Try again</button>' : ''
   }</div>`;
 }
@@ -43,7 +43,7 @@ const pause = () => new Promise<void>((r) => setTimeout(r, 0));
 
 async function boot() {
   if (!webglAvailable()) {
-    fail('WebGL is unavailable', 'ROCKSLIDE needs a browser with WebGL. Try a recent Safari, Chrome or Firefox.', false);
+    fail('WebGL is unavailable', 'SNOW PATROL needs a browser with WebGL. Try a recent Safari, Chrome or Firefox.', false);
     return;
   }
   progress(0.05, 'Opening the station');
@@ -88,7 +88,7 @@ async function boot() {
   if (queued !== null) title.onGo(queued);
 }
 
-window.addEventListener('error', (e) => console.error('ROCKSLIDE error', e.message));
+window.addEventListener('error', (e) => console.error('SNOW PATROL error', e.message));
 boot().catch((err) => {
   console.error(err);
   fail('The mountain would not load', 'Something went wrong while starting the game. Please reload the page.');

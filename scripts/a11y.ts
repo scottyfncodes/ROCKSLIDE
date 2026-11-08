@@ -271,7 +271,7 @@ for (const s of screens)
 const report = { kind: 'rockslide-a11y', url, when: new Date().toISOString(), axe: require('axe-core/package.json').version, screens, rules: [...rules.values()], checks, consoleErrors };
 writeFileSync(join(outDir, 'a11y.json'), JSON.stringify(report, null, 1));
 const md = [
-  `# ROCKSLIDE accessibility audit`,
+  `# SNOW PATROL accessibility audit`,
   '',
   `${report.when} · ${url} · axe-core ${report.axe} (WCAG 2.0/2.1/2.2 A + AA and best practice) · ${screens.length} screen captures · ${checks.filter((c) => c.ok).length}/${checks.length} checks pass`,
   '',

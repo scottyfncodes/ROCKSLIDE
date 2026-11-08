@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <title>ROCKSLIDE: Kessel Patrol</title>
+  <title>SNOW PATROL: Kessel Patrol</title>
   <g id="Layer_1" data-name="Layer 1">
     <rect id="field" x="0" y="0" width="1024" height="1024" fill="#141c24"/>
     <circle id="patch" cx="512" cy="512" r="400" fill="#1d2731" stroke="#f1ece1" stroke-width="26" stroke-miterlimit="10"/>

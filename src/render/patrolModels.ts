@@ -54,7 +54,7 @@ export async function loadPatrolModels(base: string, onProgress?: (f: number) =>
         const gltf = await loader.loadAsync(`${base}${id}.glb`);
         out[id] = gltf.scene;
       } catch (e) {
-        console.warn(`ROCKSLIDE: model ${id} did not load, keeping the code-built one`, e);
+        console.warn(`SNOW PATROL: model ${id} did not load, keeping the code-built one`, e);
       }
       onProgress?.(++n / PATROL_MODEL_IDS.length);
     }),
@@ -86,7 +86,7 @@ export function dressModel(
   for (const name of nodes) {
     const o = scene.getObjectByName(name);
     if (!o) {
-      console.warn(`ROCKSLIDE: model is missing its ${name} node, keeping the code-built one`);
+      console.warn(`SNOW PATROL: model is missing its ${name} node, keeping the code-built one`);
       return null;
     }
     found[name] = o;
@@ -97,7 +97,7 @@ export function dressModel(
   });
   for (const m of meshes) {
     if (!materials[roleOf(m)]) {
-      console.warn(`ROCKSLIDE: model has an unknown paint role "${roleOf(m)}", keeping the code-built one`);
+      console.warn(`SNOW PATROL: model has an unknown paint role "${roleOf(m)}", keeping the code-built one`);
       return null;
     }
   }

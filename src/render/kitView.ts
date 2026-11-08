@@ -96,7 +96,7 @@ export async function loadKit(base: string, onProgress?: (f: number) => void): P
         const gltf = await loader.loadAsync(`${base}${id}.glb`);
         kit[id] = { geometry: flattenScene(gltf.scene), scene: gltf.scene, clips: gltf.animations };
       } catch (e) {
-        console.warn(`ROCKSLIDE: kit asset ${id} did not load`, e);
+        console.warn(`SNOW PATROL: kit asset ${id} did not load`, e);
       }
       onProgress?.(++n / KIT_IDS.length);
     }),

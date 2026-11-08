@@ -51,7 +51,7 @@ export function modelConifer(scene: THREE.Object3D | undefined): { trunk: THREE.
   const crownMesh = scene.getObjectByName('spruce_crown') as THREE.Mesh | undefined;
   const trunkMesh = scene.getObjectByName('spruce_trunk') as THREE.Mesh | undefined;
   if (!crownMesh?.isMesh || !trunkMesh?.isMesh || !crownMesh.geometry.getAttribute('color')) {
-    console.warn('ROCKSLIDE: spruce model is incomplete, keeping the procedural conifer');
+    console.warn('SNOW PATROL: spruce model is incomplete, keeping the procedural conifer');
     return null;
   }
   const bake = (m: THREE.Mesh, colour: boolean) => {

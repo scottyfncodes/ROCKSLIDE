@@ -1,4 +1,4 @@
-# ROCKSLIDE: Mountain Patrol
+# SNOW PATROL
 
 *The mountain is the world. The patrol station is home.*
 
@@ -7,6 +7,8 @@ You are Vince, twenty, long blonde hair with a bit of a curl, the newest hand on
 Third-person, iPhone first, plays in the browser. Colorado high country: exposed granite, blowing snow and a working avalanche operation. Progress saves in the browser and **Continue** picks up exactly where you left off, mid-mission included.
 
 **Play it:** https://rockslide-game.vercel.app/
+
+> The game was called **ROCKSLIDE** until November 2026. The save keys (`rockslide.patrol.v1`, `rockslide.stats`), the Vercel project and the `rockslide-game.vercel.app` address keep the old name so saves and links keep working.
 
 ## A day on patrol
 
@@ -78,7 +80,7 @@ Kessel Bowl is the long game: about one morning in three it has reloaded (more i
 
 ### The avalanche
 
-Kessel Bowl carries a slab of blocks over a weak layer. A charge on a loaded slope sends a crack across it; the blocks inside the crack let go in the order it reaches them, slide and tumble under gravity against Voellmy-style friction, break into smaller blocks as they speed up, throw a powder cloud, and pile up where they stop, so later snow rides over earlier debris. A charge on a sound slope only cracks it locally. The flow can knock loose a neighbouring slope (a secondary release). The berm in the runout is what keeps it off the road; the debrief tells you how much of the loaded snow came down and whether any reached the road. The blocks are cut with ROCKSLIDE's Voronoi fracture.
+Kessel Bowl carries a slab of blocks over a weak layer. A charge on a loaded slope sends a crack across it; the blocks inside the crack let go in the order it reaches them, slide and tumble under gravity against Voellmy-style friction, break into smaller blocks as they speed up, throw a powder cloud, and pile up where they stop, so later snow rides over earlier debris. A charge on a sound slope only cracks it locally. The flow can knock loose a neighbouring slope (a secondary release). The berm in the runout is what keeps it off the road; the debrief tells you how much of the loaded snow came down and whether any reached the road. The blocks are cut with the Voronoi fracture carried over from the original ROCKSLIDE.
 
 ## Progression
 
@@ -136,7 +138,7 @@ Plain TypeScript, Vite and Three.js, no backend. The rules are pure and tested; 
 
 ### What came from where
 
-- **From ROCKSLIDE:** the Voronoi fracture (`sim/fracture.ts`, now cutting snow slab blocks), the rigid debris sim (`sim/debris.ts`, now the logs of a sawn tree), the conifer and toon/foliage/bark shaders with near-camera dithering, deterministic noise and path geometry, the synthesised audio approach, dynamic resolution and instancing.
+- **From the original ROCKSLIDE (this game's earlier boulder-run version):** the Voronoi fracture (`sim/fracture.ts`, now cutting snow slab blocks), the rigid debris sim (`sim/debris.ts`, now the logs of a sawn tree), the conifer and toon/foliage/bark shaders with near-camera dithering, deterministic noise and path geometry, the synthesised audio approach, dynamic resolution and instancing.
 - **From SKYTRACE:** the miniature-world look (chunky primitives, flat Lambert colour, clear silhouettes), the rescue helicopter, the recon scanner and its readout, recon pins, the floating touch stick idea, the radio subtitles, Mission Control's briefing style.
 - **From GITCRAFT:** the Kessel kit (MeshCraft/ForgeCraft GLBs), the Kessel Patrol emblem, icons and share card. See [`art/README.md`](art/README.md).
 - The old boulder-run game (routes, forks, mountains) is retired; it is in the git history.

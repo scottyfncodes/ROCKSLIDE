@@ -1,4 +1,4 @@
-"""ROCKSLIDE x GITCRAFT production pipeline: DesignCraft composes the 1200x630 share card (public/og-image.jpg).
+"""SNOW PATROL (formerly ROCKSLIDE) x GITCRAFT production pipeline: DesignCraft composes the 1200x630 share card (public/og-image.jpg).
 Storybook direction (art/README.md): aubergine card stock with an inset cream rule, the Jost wordmark in tracked
 capitals, Courier Prime copy, and the patrol lodge at dusk with Vince and Koda.
 
@@ -31,7 +31,7 @@ im = Image.open(EMBLEM).convert("RGBA"); c, r = 256, 208
 m = Image.new("L", (2048, 2048), 0); ImageDraw.Draw(m).ellipse([(c - r) * 4, (c - r) * 4, (c + r) * 4, (c + r) * 4], fill=255)
 im.putalpha(m.resize((512, 512), Image.LANCZOS)); im.crop((c - r, c - r, c + r, c + r)).save(f"{W}/emblem-round.png")
 
-call("new_document", {"width": 1200, "height": 630, "intent": "web", "margins": 0, "title": "ROCKSLIDE share card"})
+call("new_document", {"width": 1200, "height": 630, "intent": "web", "margins": 0, "title": "SNOW PATROL share card"})
 call("save_document", {"path": f"{W}/og-card.designcraft"})
 call("open_document", {"path": f"{W}/og-card.designcraft"})  # loads Document Fonts/
 for n, hx in [("Aubergine", "#3A2632"), ("Paper", "#F6ECDC"), ("Blush", "#E7AAA6"), ("Mustard", "#E0B042")]:
@@ -51,8 +51,8 @@ rule = x("frame.create", {"rect": [18, 18, 1182, 612], "content": "unassigned"})
 x("object.stroke", {"swatch": "RS Paper", "weight": 1.5, "align": "inside", "ids": [rule["id"]]})
 x("object.fill", {"swatch": "[None]", "ids": [rule["id"]]})
 call("place_image", {"path": f"{W}/emblem-round.png", "x": 64, "y": 66, "width": 104})
-text([60, 222, 760, 318], "ROCKSLIDE", {"fontFamily": "Jost", "fontStyle": "SemiBold", "size": 84, "tracking": 110, "fill": "RS Paper", "leading": {"kind": "points", "value": 88}})
-text([66, 322, 700, 352], "MOUNTAIN PATROL", {"fontFamily": "Jost", "fontStyle": "Medium", "size": 21, "tracking": 520, "fill": "RS Blush"})
+text([60, 226, 760, 318], "SNOW PATROL", {"fontFamily": "Jost", "fontStyle": "SemiBold", "size": 70, "tracking": 110, "fill": "RS Paper", "leading": {"kind": "points", "value": 88}})
+text([66, 322, 700, 352], "KESSEL VALLEY", {"fontFamily": "Jost", "fontStyle": "Medium", "size": 21, "tracking": 520, "fill": "RS Blush"})
 text([66, 392, 520, 520], "Rescues, avalanche control and recon flights in the Kessel valley. A snowmobile, a helicopter, a pair of old skis, and Koda.",
      {"fontFamily": "Courier Prime", "fontStyle": "Regular", "size": 19, "fill": "RS Paper", "leading": {"kind": "points", "value": 27}}, hyphenate=False)
 text([66, 548, 766, 570], "PLAY FREE IN THE BROWSER  ·  ROCKSLIDE-GAME.VERCEL.APP",
