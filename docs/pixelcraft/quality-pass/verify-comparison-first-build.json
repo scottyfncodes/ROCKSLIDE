@@ -1,0 +1,217 @@
+{
+ "comparable": true,
+ "why": "same method, same screens, viewports and journeys; deltas use only metrics measured in both runs",
+ "scores": {
+  "visual": {
+   "title": "Visual Quality",
+   "before": 90.2,
+   "after": 89.5,
+   "delta": -0.7
+  },
+  "usability": {
+   "title": "Usability",
+   "before": 81.7,
+   "after": 81.2,
+   "delta": -0.5
+  },
+  "consistency": {
+   "title": "Consistency",
+   "before": 78.1,
+   "after": 79.9,
+   "delta": 1.8
+  },
+  "overall": {
+   "title": "Overall",
+   "before": 83.3,
+   "after": 83.5,
+   "delta": 0.2
+  }
+ },
+ "resolved": [
+  {
+   "id": "states.no_hover",
+   "title": "No hover state",
+   "was": 1
+  }
+ ],
+ "persisting": [
+  {
+   "id": "nav.dead_end",
+   "title": "Dead-end screen",
+   "before": 12,
+   "after": 12
+  },
+  {
+   "id": "controls.obscured",
+   "title": "A control is covered by another element",
+   "before": 6,
+   "after": 6
+  },
+  {
+   "id": "mobile.reach",
+   "title": "Main action is at the top of the phone screen",
+   "before": 8,
+   "after": 8
+  },
+  {
+   "id": "spacing.off_scale",
+   "title": "Spacing does not follow a consistent scale",
+   "before": 7,
+   "after": 1
+  },
+  {
+   "id": "spacing.void",
+   "title": "Excessive empty gap between sections",
+   "before": 3,
+   "after": 3
+  },
+  {
+   "id": "resp.content_missing",
+   "title": "Content disappears at one screen size",
+   "before": 2,
+   "after": 2
+  },
+  {
+   "id": "layout.shift",
+   "title": "Layout jumps while the screen loads",
+   "before": 1,
+   "after": 1
+  }
+ ],
+ "new": [
+  {
+   "id": "layout.truncated",
+   "title": "Text is truncated",
+   "severity": "minor",
+   "count": 7
+  }
+ ],
+ "regressions": [
+  "text not truncated on hud @ narrow: 100% \u2192 75%",
+  "controls share radii and a small palette on map @ narrow: 100% \u2192 80%",
+  "controls share radii and a small palette on map @ landscape: 100% \u2192 80%",
+  "controls reachable with Tab on map @ desktop: 62% \u2192 25%",
+  "text not truncated on hud @ landscape: 100% \u2192 75%",
+  "controls share radii and a small palette on map @ desktop: 100% \u2192 80%",
+  "text not truncated on hud @ desktop: 100% \u2192 75%",
+  "text not truncated on hud @ iphone13: 100% \u2192 75%",
+  "controls share radii and a small palette on map @ iphone13: 100% \u2192 80%",
+  "controls share radii and a small palette on map @ iphone17: 100% \u2192 80%",
+  "controls share radii and a small palette on map @ tablet: 100% \u2192 80%",
+  "text not truncated on hud @ iphone17: 100% \u2192 75%",
+  "text not truncated on hud @ tablet: 100% \u2192 75%",
+  "text not truncated on map @ desktop: 100% \u2192 75%"
+ ],
+ "coverage_lost": [],
+ "screens": [
+  {
+   "screen": "hud",
+   "viewport": "iphone17",
+   "changed_pct": 2.62,
+   "diff": "diff/hud__iphone17.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "narrow",
+   "changed_pct": 2.07,
+   "diff": "diff/map__narrow.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "desktop",
+   "changed_pct": 1.73,
+   "diff": "diff/map__desktop.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "landscape",
+   "changed_pct": 1.12,
+   "diff": "diff/map__landscape.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "iphone13",
+   "changed_pct": 1.07,
+   "diff": "diff/map__iphone13.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "iphone17",
+   "changed_pct": 1.01,
+   "diff": "diff/map__iphone17.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "landscape",
+   "changed_pct": 0.87,
+   "diff": "diff/hud__landscape.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "iphone13",
+   "changed_pct": 0.78,
+   "diff": "diff/hud__iphone13.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "tablet",
+   "changed_pct": 0.39,
+   "diff": "diff/map__tablet.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "narrow",
+   "changed_pct": 0.32,
+   "diff": "diff/hud__narrow.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "iphone13",
+   "changed_pct": 0.04,
+   "diff": "diff/title__iphone13.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "tablet",
+   "changed_pct": 0.04,
+   "diff": "diff/title__tablet.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "iphone17",
+   "changed_pct": 0.03,
+   "diff": "diff/title__iphone17.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "narrow",
+   "changed_pct": 0.02,
+   "diff": "diff/title__narrow.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "tablet",
+   "changed_pct": 0.02,
+   "diff": "diff/hud__tablet.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "landscape",
+   "changed_pct": 0.02,
+   "diff": "diff/title__landscape.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "desktop",
+   "changed_pct": 0.01,
+   "diff": "diff/title__desktop.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "desktop",
+   "changed_pct": 0.01,
+   "diff": "diff/hud__desktop.jpg"
+  }
+ ],
+ "metrics_compared": 467
+}

@@ -1,0 +1,198 @@
+{
+ "comparable": true,
+ "why": "same method, same screens, viewports and journeys; deltas use only metrics measured in both runs",
+ "scores": {
+  "visual": {
+   "title": "Visual Quality",
+   "before": 90.2,
+   "after": 90.7,
+   "delta": 0.5
+  },
+  "usability": {
+   "title": "Usability",
+   "before": 81.7,
+   "after": 80.8,
+   "delta": -0.9
+  },
+  "consistency": {
+   "title": "Consistency",
+   "before": 78.1,
+   "after": 79.9,
+   "delta": 1.8
+  },
+  "overall": {
+   "title": "Overall",
+   "before": 83.3,
+   "after": 83.8,
+   "delta": 0.5
+  }
+ },
+ "resolved": [
+  {
+   "id": "states.no_hover",
+   "title": "No hover state",
+   "was": 1
+  }
+ ],
+ "persisting": [
+  {
+   "id": "nav.dead_end",
+   "title": "Dead-end screen",
+   "before": 12,
+   "after": 12
+  },
+  {
+   "id": "controls.obscured",
+   "title": "A control is covered by another element",
+   "before": 6,
+   "after": 6
+  },
+  {
+   "id": "mobile.reach",
+   "title": "Main action is at the top of the phone screen",
+   "before": 8,
+   "after": 8
+  },
+  {
+   "id": "spacing.off_scale",
+   "title": "Spacing does not follow a consistent scale",
+   "before": 7,
+   "after": 1
+  },
+  {
+   "id": "spacing.void",
+   "title": "Excessive empty gap between sections",
+   "before": 3,
+   "after": 3
+  },
+  {
+   "id": "resp.content_missing",
+   "title": "Content disappears at one screen size",
+   "before": 2,
+   "after": 2
+  },
+  {
+   "id": "layout.shift",
+   "title": "Layout jumps while the screen loads",
+   "before": 1,
+   "after": 1
+  }
+ ],
+ "new": [],
+ "regressions": [
+  "controls reachable with Tab on map @ desktop: 62% \u2192 12%",
+  "feedback within 400 ms on open and close the map @ desktop: 33% \u2192 0%"
+ ],
+ "coverage_lost": [],
+ "screens": [
+  {
+   "screen": "hud",
+   "viewport": "desktop",
+   "changed_pct": 9.45,
+   "diff": "diff/hud__desktop.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "tablet",
+   "changed_pct": 4.55,
+   "diff": "diff/hud__tablet.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "iphone17",
+   "changed_pct": 2.98,
+   "diff": "diff/hud__iphone17.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "narrow",
+   "changed_pct": 2.0,
+   "diff": "diff/map__narrow.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "landscape",
+   "changed_pct": 1.78,
+   "diff": "diff/hud__landscape.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "desktop",
+   "changed_pct": 1.72,
+   "diff": "diff/map__desktop.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "iphone13",
+   "changed_pct": 1.16,
+   "diff": "diff/map__iphone13.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "iphone13",
+   "changed_pct": 1.13,
+   "diff": "diff/hud__iphone13.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "landscape",
+   "changed_pct": 1.12,
+   "diff": "diff/map__landscape.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "iphone17",
+   "changed_pct": 1.0,
+   "diff": "diff/map__iphone17.jpg"
+  },
+  {
+   "screen": "map",
+   "viewport": "tablet",
+   "changed_pct": 0.39,
+   "diff": "diff/map__tablet.jpg"
+  },
+  {
+   "screen": "hud",
+   "viewport": "narrow",
+   "changed_pct": 0.27,
+   "diff": "diff/hud__narrow.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "iphone13",
+   "changed_pct": 0.04,
+   "diff": "diff/title__iphone13.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "tablet",
+   "changed_pct": 0.04,
+   "diff": "diff/title__tablet.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "landscape",
+   "changed_pct": 0.03,
+   "diff": "diff/title__landscape.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "iphone17",
+   "changed_pct": 0.02,
+   "diff": "diff/title__iphone17.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "narrow",
+   "changed_pct": 0.02,
+   "diff": "diff/title__narrow.jpg"
+  },
+  {
+   "screen": "title",
+   "viewport": "desktop",
+   "changed_pct": 0.01,
+   "diff": "diff/title__desktop.jpg"
+  }
+ ],
+ "metrics_compared": 467
+}
