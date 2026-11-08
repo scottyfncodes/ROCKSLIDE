@@ -1,15 +1,16 @@
 {
  "kind": "rockslide-playthrough",
  "url": "http://localhost:4173/",
- "when": "2026-11-05T14:56:59.132Z",
- "seconds": 517,
+ "when": "2026-11-08T14:29:20.032Z",
+ "seconds": 718,
  "ok": true,
  "counts": {
-  "realInputs": 59,
-  "holds": 19,
-  "clicks": 31,
-  "travelShortcuts": 126,
-  "timerShortcuts": 2
+  "realInputs": 72,
+  "holds": 26,
+  "clicks": 37,
+  "travelShortcuts": 146,
+  "timerShortcuts": 2,
+  "snowShortcuts": 0
  },
  "missions": {
   "rounds": {
@@ -25,7 +26,7 @@
    "funds": 220,
    "rep": 160,
    "ok": true,
-   "seconds": 53,
+   "seconds": 55,
    "rankBefore": "Recruit",
    "rankAfter": "Patroller",
    "extra": "DoneEyes on Kessel BowlReport filed. Slopes A and C are loaded. We bring them down tomorrow, or today if you are up for it.Slopes A and C are marked on the map and flagged on the mountain.+220funds+160reputationPromoted: Patroller. New gear and buildings are open.New on the mission table: Controlled Release, Lost on the TannbergBack to patrol"
@@ -34,7 +35,7 @@
    "funds": 340,
    "rep": 260,
    "ok": true,
-   "seconds": 123,
+   "seconds": 149,
    "rankBefore": "Patroller",
    "rankAfter": "Senior patroller",
    "extra": "DoneControlled ReleaseClean release, the berm held, the road is open. That is how it is done.95% of the loaded snow came down under control. The berm held: nothing reached the road. The flow also knocked loose a little snow off a neighbouring slope.+340funds+260reputationPromoted: Senior patroller. New gear and buildings are open.Back to patrol"
@@ -43,7 +44,7 @@
    "funds": 380,
    "rep": 300,
    "ok": true,
-   "seconds": 76,
+   "seconds": 83,
    "rankBefore": "Senior patroller",
    "rankAfter": "Senior patroller",
    "extra": "DoneLost on the TannbergNils is warm, splinted and eating soup. He says Koda is the best dog he has ever met.+380funds+300reputationBack to patrol"
@@ -61,10 +62,19 @@
    "funds": 140,
    "rep": 120,
    "ok": true,
-   "seconds": 60,
+   "seconds": 64,
    "rankBefore": "Lead patroller",
    "rankAfter": "Lead patroller",
    "extra": "DoneWhere's Pepper?Pepper is on the windowsill pretending none of this happened.+140funds+120reputationBack to patrol"
+  },
+  "drift": {
+   "funds": 90,
+   "rep": 70,
+   "ok": true,
+   "seconds": 5,
+   "rankBefore": "Lead patroller",
+   "rankAfter": "Lead patroller",
+   "extra": "DoneStuck in the DriftVan is back on the road. The driver waved. Mostly.+90funds+70reputationBack to patrol"
   },
   "tree": {
    "funds": 90,
@@ -75,25 +85,34 @@
    "rankAfter": "Lead patroller",
    "extra": "DoneTree Down on the PassPass road clear. Thanks for the quick work.+90funds+70reputationBack to patrol"
   },
-  "drift": {
-   "funds": 90,
+  "bowl-recon": {
+   "funds": 120,
    "rep": 70,
    "ok": true,
-   "seconds": 5,
+   "seconds": 41,
    "rankBefore": "Lead patroller",
    "rankAfter": "Lead patroller",
-   "extra": "DoneStuck in the DriftVan is back on the road. The driver waved. Mostly.+90funds+70reputationBack to patrol"
+   "extra": "DoneKessel Bowl Has ReloadedReport filed. The loaded slopes are flagged for the control team.Slopes A, C and D are loaded: flagged on the mountain and the map. The control job is on the mission table.+120funds+70reputationBack to patrol"
+  },
+  "bowl-control": {
+   "funds": 283,
+   "rep": 166,
+   "ok": true,
+   "seconds": 105,
+   "rankBefore": "Lead patroller",
+   "rankAfter": "Lead patroller",
+   "extra": "DoneBring Down the BowlBowl is down and the road is open again. Good work up there.95% of the loaded snow came down under control. The berm held: nothing reached the road. The flow also knocked loose a little snow off a neighbouring slope. Loaded today: Slopes A, C and D. You charged Slopes A, C and D. A clean read: +50 funds bonus.+283funds+166reputationBack to patrol"
   }
  },
  "final": {
   "rank": "Lead patroller",
-  "funds": 1170,
-  "reputation": 1225,
+  "funds": 1573,
+  "reputation": 1461,
   "day": 2,
   "progress": {
    "storyDone": 6,
    "storyTotal": 6,
-   "calloutsAnswered": 2,
+   "calloutsAnswered": 4,
    "badges": 1,
    "badgesTotal": 10,
    "buildings": [
@@ -103,24 +122,24 @@
  },
  "categories": {
   "player_experience": {
-   "checks": 9,
-   "passed": 9
+   "checks": 11,
+   "passed": 11
   },
   "core_gameplay": {
-   "checks": 44,
-   "passed": 44
+   "checks": 52,
+   "passed": 52
   },
   "controls": {
    "checks": 6,
    "passed": 6
   },
   "progression": {
-   "checks": 14,
-   "passed": 14
+   "checks": 17,
+   "passed": 17
   },
   "difficulty": {
-   "checks": 2,
-   "passed": 2
+   "checks": 3,
+   "passed": 3
   },
   "game_feel": {
    "checks": 3,
@@ -131,8 +150,8 @@
    "passed": 1
   },
   "replayability": {
-   "checks": 4,
-   "passed": 4
+   "checks": 8,
+   "passed": 8
   },
   "technical": {
    "checks": 1,
@@ -201,7 +220,7 @@
    "group": "Morning Rounds",
    "what": "the sled drives under real throttle (W)",
    "ok": true,
-   "detail": "{\"speedKmh\":22,\"movedM\":3.2}"
+   "detail": "{\"speedKmh\":22.3,\"movedM\":3.3}"
   },
   {
    "cat": "core_gameplay",
@@ -250,7 +269,7 @@
    "group": "Eyes on Kessel Bowl",
    "what": "call taken from the mission table",
    "ok": true,
-   "detail": "{\"id\":\"survey\",\"title\":\"Eyes on Kessel Bowl\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.2}"
+   "detail": "{\"id\":\"survey\",\"title\":\"Eyes on Kessel Bowl\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.1}"
   },
   {
    "cat": "core_gameplay",
@@ -264,7 +283,7 @@
    "group": "Eyes on Kessel Bowl",
    "what": "R lifts the helicopter off once the rotor is up to speed",
    "ok": true,
-   "detail": "{\"agl\":4.1,\"rotor\":0.975}"
+   "detail": "{\"agl\":4.1,\"rotor\":0.973}"
   },
   {
    "cat": "core_gameplay",
@@ -362,14 +381,14 @@
    "group": "Controlled Release",
    "what": "step 5: fire the charges from safe ground (hold Fire charges)",
    "ok": true,
-   "detail": "{\"fromRunTime\":5.9}"
+   "detail": "{\"fromRunTime\":5.3}"
   },
   {
    "cat": "game_feel",
    "group": "Controlled Release",
    "what": "hit-stop: the world clock nearly stops on the blast, then recovers",
    "ok": true,
-   "detail": "{\"worldSecondsPerFrame\":[0.003,0.0012,0.0099,0.0071,0.0243,0.0323,0.0387,0.0438]}"
+   "detail": "{\"worldSecondsPerFrame\":[0.003,0.0086,0.0032,0.0215,0.0299,0.0061,0.038,0.0432]}"
   },
   {
    "cat": "mobile",
@@ -425,7 +444,7 @@
    "group": "Station and gear",
    "what": "the engine upgrade really is faster: speed after 60 m from a standstill on a flat packed road",
    "ok": true,
-   "detail": "{\"stock\":[{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:29 13m:40 19m:47 25m:51 32m:55 39m:58 45m:61 52m:63 59m:65\"},{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:29 12m:40 19m:46 25m:51 31m:55 38m:58 45m:61 51m:63 58m:65\"}],\"mountain800\":[{\"kmh\":72.6,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:32 13m:43 19m:50 26m:56 33m:61 39m:64 46m:67 52m:70 59m:72\"},{\"kmh\":72.6,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:32 12m:43 19m:50 25m:55 31m:60 38m:64 44m:67 51m:69 58m:72\"}]}"
+   "detail": "{\"stock\":[{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:30 12m:40 19m:46 25m:51 31m:55 38m:58 45m:61 51m:63 58m:65\"},{\"kmh\":65.4,\"why\":\"sled, 61 m, engine-stock\",\"trace\":\"0m:0 6m:30 12m:40 19m:46 25m:51 32m:55 38m:58 45m:61 52m:63 58m:65\"}],\"mountain800\":[{\"kmh\":72.5,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:31 12m:42 19m:50 25m:56 31m:60 37m:64 44m:67 51m:69 58m:72\"},{\"kmh\":72.4,\"why\":\"sled, 60 m, engine-800\",\"trace\":\"0m:0 6m:32 13m:43 19m:51 26m:56 32m:61 38m:64 45m:67 51m:70 57m:72\"}]}"
   },
   {
    "cat": "player_experience",
@@ -453,7 +472,7 @@
    "group": "Lost on the Tannberg",
    "what": "Koda takes the scent and leads to the subject",
    "ok": true,
-   "detail": "{\"kodaSamples\":65,\"endsFrom\":7}"
+   "detail": "{\"kodaSamples\":71,\"endsFrom\":7}"
   },
   {
    "cat": "game_feel",
@@ -579,14 +598,14 @@
    "group": "Where's Pepper?",
    "what": "Koda takes the scent and leads to the subject",
    "ok": true,
-   "detail": "{\"kodaSamples\":47,\"endsFrom\":6}"
+   "detail": "{\"kodaSamples\":51,\"endsFrom\":6}"
   },
   {
    "cat": "game_feel",
    "group": "Where's Pepper?",
    "what": "Koda's route follows the scent trail once on it (within 12 m)",
    "ok": true,
-   "detail": "{\"worstOffTrailM\":2.6,\"worstIncludingTheRunToTheTrailM\":8.4}"
+   "detail": "{\"worstOffTrailM\":3.5,\"worstIncludingTheRunToTheTrailM\":8.1}"
   },
   {
    "cat": "core_gameplay",
@@ -621,34 +640,6 @@
    "group": "Callouts",
    "what": "a radio callout comes in on the game's timer (#1)",
    "ok": true,
-   "detail": "Incoming callTree Down on the PassA spruce has come down across the pass road below Kessel"
-  },
-  {
-   "cat": "core_gameplay",
-   "group": "Tree Down on the Pass",
-   "what": "step 1: get to the scene",
-   "ok": true,
-   "detail": ""
-  },
-  {
-   "cat": "core_gameplay",
-   "group": "Tree Down on the Pass",
-   "what": "mission completes and the debrief opens",
-   "ok": true,
-   "detail": "DoneTree Down on the PassPass road clear. Thanks for the quick work.+90funds+70reputationBack to patrol"
-  },
-  {
-   "cat": "progression",
-   "group": "Tree Down on the Pass",
-   "what": "pays the advertised reward (+90 funds, +70 reputation)",
-   "ok": true,
-   "detail": "{\"funds\":90,\"reputation\":70}"
-  },
-  {
-   "cat": "replayability",
-   "group": "Callouts",
-   "what": "a radio callout comes in on the game's timer (#2)",
-   "ok": true,
    "detail": "Incoming callStuck in the DriftA van has slid into a drift on the Tannberg road.RespondLat"
   },
   {
@@ -675,16 +666,44 @@
   {
    "cat": "replayability",
    "group": "Callouts",
+   "what": "a radio callout comes in on the game's timer (#2)",
+   "ok": true,
+   "detail": "Incoming callTree Down on the PassA spruce has come down across the pass road below Kessel"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Tree Down on the Pass",
+   "what": "step 1: get to the scene",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Tree Down on the Pass",
+   "what": "mission completes and the debrief opens",
+   "ok": true,
+   "detail": "DoneTree Down on the PassPass road clear. Thanks for the quick work.+90funds+70reputationBack to patrol"
+  },
+  {
+   "cat": "progression",
+   "group": "Tree Down on the Pass",
+   "what": "pays the advertised reward (+90 funds, +70 reputation)",
+   "ok": true,
+   "detail": "{\"funds\":90,\"reputation\":70}"
+  },
+  {
+   "cat": "replayability",
+   "group": "Callouts",
    "what": "callouts are drawn from the pool (both kinds answered, or one twice)",
    "ok": true,
-   "detail": "[\"tree\",\"drift\"]"
+   "detail": "[\"drift\",\"tree\"]"
   },
   {
    "cat": "core_gameplay",
    "group": "Badges and Koda",
    "what": "Koda smells a hidden badge from 20 m and runs to it",
    "ok": true,
-   "detail": "{\"kodaFromBadgeM\":5.3,\"mode\":\"point\"}"
+   "detail": "{\"kodaFromBadgeM\":5.6,\"mode\":\"point\"}"
   },
   {
    "cat": "progression",
@@ -701,25 +720,151 @@
    "detail": "{\"day\":2,\"forecast\":\"MorningOvercast-6°MiddayOvercast-8°AfternoonOvercast-8°EveningOvercast-11°\"}"
   },
   {
+   "cat": "replayability",
+   "group": "Kessel Bowl, again",
+   "what": "after the story, new snow reloads the bowl and the avalanche service posts a recon flight and a control job",
+   "ok": true,
+   "detail": "{\"loaded\":[\"A\",\"C\",\"D\"],\"wind\":\"strong west\",\"viaNight\":true}"
+  },
+  {
+   "cat": "player_experience",
+   "group": "Kessel Bowl Has Reloaded",
+   "what": "the mission table opens from the lodge table",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl Has Reloaded",
+   "what": "call taken from the mission table",
+   "ok": true,
+   "detail": "{\"id\":\"bowl-recon\",\"title\":\"Kessel Bowl Has Reloaded\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.2}"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl, again",
+   "what": "recon: fly to Kessel Bowl",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl, again",
+   "what": "recon: the scanner reads all four slopes",
+   "ok": true,
+   "detail": "[\"SLOPE A\",\"SLOPE B\",\"SLOPE C\",\"SLOPE D\"]"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl Has Reloaded",
+   "what": "mission completes and the debrief opens",
+   "ok": true,
+   "detail": "DoneKessel Bowl Has ReloadedReport filed. The loaded slopes are flagged for the control team.Slopes A, C and D are loade"
+  },
+  {
+   "cat": "progression",
+   "group": "Kessel Bowl Has Reloaded",
+   "what": "pays the advertised reward (+120 funds, +70 reputation)",
+   "ok": true,
+   "detail": "{\"funds\":120,\"reputation\":70}"
+  },
+  {
+   "cat": "replayability",
+   "group": "Kessel Bowl, again",
+   "what": "recon flags today's loaded slopes (the wind's pattern), ready for the control team",
+   "ok": true,
+   "detail": "{\"marked\":[\"A\",\"C\",\"D\"],\"loaded\":[\"A\",\"C\",\"D\"]}"
+  },
+  {
+   "cat": "player_experience",
+   "group": "Kessel Bowl, again",
+   "what": "the table shows what recon flagged and that the pay is \"up to\" the listed reward",
+   "ok": true,
+   "detail": "{\"tag\":\"up to +290\",\"read\":\"Recon flagged Slopes A, C and D as loaded.\"}"
+  },
+  {
+   "cat": "progression",
+   "group": "Kessel Bowl, again",
+   "what": "the mission table shows the next rank and how far off it is",
+   "ok": true,
+   "detail": "Next rankChief of patrol in 205 reputation"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl, again",
+   "what": "control: road closed and up on Kessel Ridge",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl, again",
+   "what": "control: your own charges, as many as you choose (the step waits for you to fire)",
+   "ok": true,
+   "detail": "{\"charged\":[\"A\",\"C\",\"D\"],\"hud\":\"Charge the slopes you judge loaded, then get clear and fire (3 set)\"}"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Kessel Bowl, again",
+   "what": "control: fire from safe ground with the charges you chose",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "cat": "difficulty",
+   "group": "Kessel Bowl, again",
+   "what": "control: today's loaded slopes come down and the berm holds",
+   "ok": true,
+   "detail": "{\"fired\":true,\"settled\":true,\"releasedShare\":0.953,\"reachedRoad\":false}"
+  },
+  {
+   "cat": "core_gameplay",
+   "group": "Bring Down the Bowl",
+   "what": "mission completes and the debrief opens",
+   "ok": true,
+   "detail": "DoneBring Down the BowlBowl is down and the road is open again. Good work up there.95% of the loaded snow came down unde"
+  },
+  {
+   "cat": "progression",
+   "group": "Bring Down the Bowl",
+   "what": "pays by the result, up to the listed 290 funds (a clean read: base, share and bonus)",
+   "ok": true,
+   "detail": "{\"funds\":283,\"reputation\":166,\"clean\":true}"
+  },
+  {
+   "cat": "replayability",
+   "group": "Kessel Bowl, again",
+   "what": "the debrief explains the result: what was loaded, what you charged, and the clean-read bonus",
+   "ok": true,
+   "detail": "DoneBring Down the BowlBowl is down and the road is open again. Good work up there.95% of the loaded snow came down under control. The berm held: nothing reached the road. The flow also knocked loose a little snow off a "
+  },
+  {
+   "cat": "replayability",
+   "group": "Kessel Bowl, again",
+   "what": "the bowl is controlled, the calls are off the board, and the patrol log counts it",
+   "ok": true,
+   "detail": "{\"events\":[],\"controlled\":true,\"bowlDays\":1}"
+  },
+  {
    "cat": "core_gameplay",
    "group": "Campaign",
    "what": "every story mission completed end to end",
    "ok": true,
-   "detail": "[\"rounds\",\"survey\",\"release\",\"skier\",\"supplies\",\"pepper\",\"tree\",\"drift\"]"
+   "detail": "[\"rounds\",\"survey\",\"release\",\"skier\",\"supplies\",\"pepper\",\"drift\",\"tree\",\"bowl-recon\",\"bowl-control\"]"
   },
   {
    "cat": "progression",
    "group": "Campaign",
    "what": "reputation raises the rank (Recruit at the start)",
    "ok": true,
-   "detail": "{\"rank\":\"Lead patroller\",\"reputation\":1225,\"ranks\":\"Recruit 0, Patroller 200, Senior patroller 520, Lead patroller 950, Chief of patrol 1500\"}"
+   "detail": "{\"rank\":\"Lead patroller\",\"reputation\":1461,\"ranks\":\"Recruit 0, Patroller 200, Senior patroller 520, Lead patroller 950, Chief of patrol 1500\"}"
   },
   {
    "cat": "player_experience",
    "group": "Campaign",
    "what": "every mission step's objective is on the HUD, word for word (plus its count on counted steps)",
    "ok": true,
-   "detail": "{\"stepsChecked\":24,\"mismatches\":[]}"
+   "detail": "{\"stepsChecked\":31,\"mismatches\":[]}"
   },
   {
    "cat": "technical",
@@ -737,86 +882,104 @@
   "[  12s] PASS Title: the first radio call says where to start (the mission table) (DispatchMorning, Kessel Patrol. Forty centimetres up high overnight. There is a call on yo)",
   "[  13s] PASS Morning Rounds: the mission table opens from the lodge table",
   "[  15s] PASS Morning Rounds: call taken from the mission table ({\"id\":\"rounds\",\"title\":\"Morning Rounds\",\"step\":0,\"steps\":5,\"stepKind\":\"interact\",\"objective\":\"Say good morning to Koda\",\"seconds\":0.1})",
-  "[  17s] PASS Morning Rounds: step 1: pet Koda",
+  "[  16s] PASS Morning Rounds: step 1: pet Koda",
   "[  18s] PASS Morning Rounds: step 2: get on the sled in the garage",
-  "[  23s] PASS Morning Rounds: the sled drives under real throttle (W) ({\"speedKmh\":22,\"movedM\":3.2})",
+  "[  23s] PASS Morning Rounds: the sled drives under real throttle (W) ({\"speedKmh\":22.3,\"movedM\":3.3})",
   "[  24s] PASS Morning Rounds: step 3: ride up the pass road to the weather station",
   "[  24s] PASS Morning Rounds: X gets off the sled",
   "[  32s] PASS Morning Rounds: step 4: hold Repair for 3 s to restart the weather station",
   "[  33s] PASS Morning Rounds: mission completes and the debrief opens (DoneMorning RoundsStation is transmitting again. Thanks. Fresh numbers: forty centimetres overnight up there.+150funds+1)",
   "[  33s] PASS Morning Rounds: pays the advertised reward (+150 funds, +120 reputation) ({\"funds\":150,\"reputation\":120})",
-  "[  37s] PASS Eyes on Kessel Bowl: the mission table opens from the lodge table",
-  "[  38s] PASS Eyes on Kessel Bowl: call taken from the mission table ({\"id\":\"survey\",\"title\":\"Eyes on Kessel Bowl\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.2})",
-  "[  39s] PASS Eyes on Kessel Bowl: step 1: start the helicopter on the pad",
-  "[  49s] PASS Eyes on Kessel Bowl: R lifts the helicopter off once the rotor is up to speed ({\"agl\":4.1,\"rotor\":0.975})",
-  "[  50s] PASS Eyes on Kessel Bowl: step 2: fly to Kessel Bowl",
-  "[  67s] PASS Eyes on Kessel Bowl: step 3: the scanner reads all four slopes (A and C loaded, B and D stable) ({\"SLOPE A\":\"loaded\",\"SLOPE B\":\"stable\",\"SLOPE C\":\"loaded\",\"SLOPE D\":\"stable\"})",
-  "[  89s] PASS Eyes on Kessel Bowl: C settles the helicopter onto the pad ({\"landed\":true})",
-  "[  89s] PASS Eyes on Kessel Bowl: mission completes and the debrief opens (DoneEyes on Kessel BowlReport filed. Slopes A and C are loaded. We bring them down tomorrow, or today if you are up for )",
-  "[  89s] PASS Eyes on Kessel Bowl: pays the advertised reward (+220 funds, +160 reputation) ({\"funds\":220,\"reputation\":160})",
-  "[  93s] PASS Eyes on Kessel Bowl: X shuts the helicopter down on the pad and you climb out ({\"mode\":\"foot\"})",
-  "[  94s] PASS Controlled Release: the mission table opens from the lodge table",
-  "[  96s] PASS Controlled Release: call taken from the mission table ({\"id\":\"release\",\"title\":\"Controlled Release\",\"step\":0,\"steps\":7,\"stepKind\":\"interact\",\"objective\":\"Take the charges from the locker in the garage\",\"seconds\":0.2})",
-  "[  98s] PASS Controlled Release: step 1: take the charges from the locker",
-  "[ 101s] PASS Controlled Release: step 2: close the pass road at the barrier",
-  "[ 102s] PASS Controlled Release: step 3: climb to Kessel Ridge",
-  "[ 108s] PASS Controlled Release: step 4: set a charge on each loaded slope (A and C)",
-  "[ 109s] PASS Controlled Release: firing is refused while standing on the slope (\"Too close to fire\", disabled) ({\"label\":\"Too close to fire\",\"hold\":0,\"enabled\":false})",
-  "[ 114s] PASS Controlled Release: step 5: fire the charges from safe ground (hold Fire charges) ({\"fromRunTime\":5.9})",
-  "[ 114s] PASS Controlled Release: hit-stop: the world clock nearly stops on the blast, then recovers ({\"worldSecondsPerFrame\":[0.003,0.0012,0.0099,0.0071,0.0243,0.0323,0.0387,0.0438]})",
-  "[ 114s] PASS Controlled Release: the blast asks the phone to vibrate (pattern 45/50/90 ms) ([[16,70,16],[16,70,16],[45,50,90]])",
-  "[ 214s] PASS Controlled Release: step 6: the avalanche runs and settles ({\"releasedShare\":0.945,\"reachedRoad\":false})",
-  "[ 214s] PASS Controlled Release: a release on the loaded slopes brings most of the loaded snow down ({\"releasedShare\":0.945})",
-  "[ 216s] PASS Controlled Release: mission completes and the debrief opens (DoneControlled ReleaseClean release, the berm held, the road is open. That is how it is done.95% of the loaded snow came)",
-  "[ 216s] PASS Controlled Release: pays the advertised reward (+340 funds, +260 reputation) ({\"funds\":340,\"reputation\":260})",
-  "[ 264s] PASS Station and gear: build the garage workshop from the mission table (220 funds) ({\"buildings\":[\"workshop\"],\"spent\":220,\"rank\":\"Senior patroller\"})",
-  "[ 269s] PASS Station and gear: buy the Mountain 800 engine at the workbench and it is fitted ({\"equipped\":\"engine-800\"})",
-  "[ 307s] PASS Station and gear: the engine upgrade really is faster: speed after 60 m from a standstill on a flat packed road ({\"stock\":[{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:29 13m:40 19m:47 25m:51 32m:55 39m:58 45m:61 52m:63 59m:65\"},{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:29 12m:40 19m:46 25m:51 31m:55 38m:58 45m:61 51m:63 58m:65\"}],\"mountain800\":[{\"kmh\":72.6,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:32 13m:43 19m:50 26m:56 33m:61 39m:64 46m:67 52m:70 59m:72\"},{\"kmh\":72.6,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:32 12m:43 19m:50 25m:55 31m:60 38m:64 44m:67 51m:69 58m:72\"}]})",
-  "[ 308s] PASS Lost on the Tannberg: the mission table opens from the lodge table",
-  "[ 309s] PASS Lost on the Tannberg: call taken from the mission table ({\"id\":\"skier\",\"title\":\"Lost on the Tannberg\",\"step\":0,\"steps\":6,\"stepKind\":\"goto\",\"objective\":\"Get to the Tannberg top station: up the run on the sled, or fly\",\"seconds\":0.2})",
-  "[ 310s] PASS Lost on the Tannberg: step 1: get to the Tannberg top station",
-  "[ 373s] PASS Lost on the Tannberg: Koda takes the scent and leads to the subject ({\"kodaSamples\":65,\"endsFrom\":7})",
-  "[ 373s] PASS Lost on the Tannberg: Koda's route follows the scent trail once on it (within 12 m) ({\"worstOffTrailM\":1.4,\"worstIncludingTheRunToTheTrailM\":1.4})",
-  "[ 377s] PASS Lost on the Tannberg: step 3: hold First aid for 3 s",
-  "[ 380s] PASS Lost on the Tannberg: step 4: bring the sled over and help Nils on",
-  "[ 381s] PASS Lost on the Tannberg: step 5: take Nils down to the clinic on the sled",
-  "[ 383s] PASS Lost on the Tannberg: mission completes and the debrief opens (DoneLost on the TannbergNils is warm, splinted and eating soup. He says Koda is the best dog he has ever met.+380funds+3)",
-  "[ 383s] PASS Lost on the Tannberg: pays the advertised reward (+380 funds, +300 reputation) ({\"funds\":380,\"reputation\":300})",
-  "[ 388s] PASS Firewood for the Kettle: the mission table opens from the lodge table",
-  "[ 389s] PASS Firewood for the Kettle: call taken from the mission table ({\"id\":\"supplies\",\"title\":\"Firewood for the Kettle\",\"step\":0,\"steps\":4,\"stepKind\":\"interact\",\"objective\":\"Load the supply crate onto the sled rack\",\"seconds\":0.1})",
-  "[ 392s] PASS Firewood for the Kettle: step 1: load the crate onto the sled rack",
-  "[ 393s] PASS Firewood for the Kettle: step 2: get on the sled",
-  "[ 394s] PASS Firewood for the Kettle: step 3: ride down to the Kettle",
-  "[ 396s] PASS Firewood for the Kettle: mission completes and the debrief opens (DoneFirewood for the KettleThat's the stove sorted for a week. Come in for a hot chocolate any time.+160funds+110reputat)",
-  "[ 396s] PASS Firewood for the Kettle: pays the advertised reward (+160 funds, +110 reputation) ({\"funds\":160,\"reputation\":110})",
-  "[ 401s] PASS Where's Pepper?: the mission table opens from the lodge table",
-  "[ 403s] PASS Where's Pepper?: call taken from the mission table ({\"id\":\"pepper\",\"title\":\"Where's Pepper?\",\"step\":0,\"steps\":5,\"stepKind\":\"goto\",\"objective\":\"Go to Mirror Lake\",\"seconds\":0.2})",
-  "[ 403s] PASS Where's Pepper?: step 1: go to Mirror Lake",
-  "[ 410s] PASS Save and Continue: after a reload, Continue restores the mission mid-way, funds, rank and place ({\"mission\":\"pepper step 1\",\"funds\":810,\"rank\":\"Lead patroller\"})",
-  "[ 455s] PASS Where's Pepper?: Koda takes the scent and leads to the subject ({\"kodaSamples\":47,\"endsFrom\":6})",
-  "[ 455s] PASS Where's Pepper?: Koda's route follows the scent trail once on it (within 12 m) ({\"worstOffTrailM\":2.6,\"worstIncludingTheRunToTheTrailM\":8.4})",
-  "[ 458s] PASS Where's Pepper?: step 3: coax Pepper down and pick her up",
-  "[ 459s] PASS Where's Pepper?: step 4: bring Pepper home to the Kettle",
-  "[ 461s] PASS Where's Pepper?: mission completes and the debrief opens (DoneWhere's Pepper?Pepper is on the windowsill pretending none of this happened.+140funds+120reputationBack to patrol)",
-  "[ 461s] PASS Where's Pepper?: pays the advertised reward (+140 funds, +120 reputation) ({\"funds\":140,\"reputation\":120})",
-  "[ 470s] PASS Callouts: a radio callout comes in on the game's timer (#1) (Incoming callTree Down on the PassA spruce has come down across the pass road below Kessel)",
-  "[ 472s] PASS Tree Down on the Pass: step 1: get to the scene",
-  "[ 476s] PASS Tree Down on the Pass: mission completes and the debrief opens (DoneTree Down on the PassPass road clear. Thanks for the quick work.+90funds+70reputationBack to patrol)",
-  "[ 476s] PASS Tree Down on the Pass: pays the advertised reward (+90 funds, +70 reputation) ({\"funds\":90,\"reputation\":70})",
-  "[ 483s] PASS Callouts: a radio callout comes in on the game's timer (#2) (Incoming callStuck in the DriftA van has slid into a drift on the Tannberg road.RespondLat)",
-  "[ 484s] PASS Stuck in the Drift: step 1: get to the scene",
-  "[ 488s] PASS Stuck in the Drift: mission completes and the debrief opens (DoneStuck in the DriftVan is back on the road. The driver waved. Mostly.+90funds+70reputationBack to patrol)",
-  "[ 488s] PASS Stuck in the Drift: pays the advertised reward (+90 funds, +70 reputation) ({\"funds\":90,\"reputation\":70})",
-  "[ 492s] PASS Callouts: callouts are drawn from the pool (both kinds answered, or one twice) ([\"tree\",\"drift\"])",
-  "[ 502s] PASS Badges and Koda: Koda smells a hidden badge from 20 m and runs to it ({\"kodaFromBadgeM\":5.3,\"mode\":\"point\"})",
-  "[ 507s] PASS Badges and Koda: walking onto it finds the badge and it is logged ({\"badges\":\"1 of 10\"})",
-  "[ 509s] PASS Sleep: the bunk ends the day: next morning, a fresh four-period forecast ({\"day\":2,\"forecast\":\"MorningOvercast-6°MiddayOvercast-8°AfternoonOvercast-8°EveningOvercast-11°\"})",
-  "[ 513s] PASS Campaign: every story mission completed end to end ([\"rounds\",\"survey\",\"release\",\"skier\",\"supplies\",\"pepper\",\"tree\",\"drift\"])",
-  "[ 513s] PASS Campaign: reputation raises the rank (Recruit at the start) ({\"rank\":\"Lead patroller\",\"reputation\":1225,\"ranks\":\"Recruit 0, Patroller 200, Senior patroller 520, Lead patroller 950, Chief of patrol 1500\"})",
-  "[ 513s] PASS Campaign: every mission step's objective is on the HUD, word for word (plus its count on counted steps) ({\"stepsChecked\":24,\"mismatches\":[]})",
-  "[ 513s] PASS Campaign: no page errors or console errors during the whole playthrough ([])"
+  "[  38s] PASS Eyes on Kessel Bowl: the mission table opens from the lodge table",
+  "[  39s] PASS Eyes on Kessel Bowl: call taken from the mission table ({\"id\":\"survey\",\"title\":\"Eyes on Kessel Bowl\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.1})",
+  "[  40s] PASS Eyes on Kessel Bowl: step 1: start the helicopter on the pad",
+  "[  50s] PASS Eyes on Kessel Bowl: R lifts the helicopter off once the rotor is up to speed ({\"agl\":4.1,\"rotor\":0.973})",
+  "[  52s] PASS Eyes on Kessel Bowl: step 2: fly to Kessel Bowl",
+  "[  70s] PASS Eyes on Kessel Bowl: step 3: the scanner reads all four slopes (A and C loaded, B and D stable) ({\"SLOPE A\":\"loaded\",\"SLOPE B\":\"stable\",\"SLOPE C\":\"loaded\",\"SLOPE D\":\"stable\"})",
+  "[  91s] PASS Eyes on Kessel Bowl: C settles the helicopter onto the pad ({\"landed\":true})",
+  "[  91s] PASS Eyes on Kessel Bowl: mission completes and the debrief opens (DoneEyes on Kessel BowlReport filed. Slopes A and C are loaded. We bring them down tomorrow, or today if you are up for )",
+  "[  91s] PASS Eyes on Kessel Bowl: pays the advertised reward (+220 funds, +160 reputation) ({\"funds\":220,\"reputation\":160})",
+  "[  96s] PASS Eyes on Kessel Bowl: X shuts the helicopter down on the pad and you climb out ({\"mode\":\"foot\"})",
+  "[  97s] PASS Controlled Release: the mission table opens from the lodge table",
+  "[  99s] PASS Controlled Release: call taken from the mission table ({\"id\":\"release\",\"title\":\"Controlled Release\",\"step\":0,\"steps\":7,\"stepKind\":\"interact\",\"objective\":\"Take the charges from the locker in the garage\",\"seconds\":0.2})",
+  "[ 101s] PASS Controlled Release: step 1: take the charges from the locker",
+  "[ 104s] PASS Controlled Release: step 2: close the pass road at the barrier",
+  "[ 105s] PASS Controlled Release: step 3: climb to Kessel Ridge",
+  "[ 112s] PASS Controlled Release: step 4: set a charge on each loaded slope (A and C)",
+  "[ 112s] PASS Controlled Release: firing is refused while standing on the slope (\"Too close to fire\", disabled) ({\"label\":\"Too close to fire\",\"hold\":0,\"enabled\":false})",
+  "[ 117s] PASS Controlled Release: step 5: fire the charges from safe ground (hold Fire charges) ({\"fromRunTime\":5.3})",
+  "[ 117s] PASS Controlled Release: hit-stop: the world clock nearly stops on the blast, then recovers ({\"worldSecondsPerFrame\":[0.003,0.0086,0.0032,0.0215,0.0299,0.0061,0.038,0.0432]})",
+  "[ 117s] PASS Controlled Release: the blast asks the phone to vibrate (pattern 45/50/90 ms) ([[16,70,16],[16,70,16],[45,50,90]])",
+  "[ 243s] PASS Controlled Release: step 6: the avalanche runs and settles ({\"releasedShare\":0.945,\"reachedRoad\":false})",
+  "[ 243s] PASS Controlled Release: a release on the loaded slopes brings most of the loaded snow down ({\"releasedShare\":0.945})",
+  "[ 245s] PASS Controlled Release: mission completes and the debrief opens (DoneControlled ReleaseClean release, the berm held, the road is open. That is how it is done.95% of the loaded snow came)",
+  "[ 245s] PASS Controlled Release: pays the advertised reward (+340 funds, +260 reputation) ({\"funds\":340,\"reputation\":260})",
+  "[ 300s] PASS Station and gear: build the garage workshop from the mission table (220 funds) ({\"buildings\":[\"workshop\"],\"spent\":220,\"rank\":\"Senior patroller\"})",
+  "[ 306s] PASS Station and gear: buy the Mountain 800 engine at the workbench and it is fitted ({\"equipped\":\"engine-800\"})",
+  "[ 346s] PASS Station and gear: the engine upgrade really is faster: speed after 60 m from a standstill on a flat packed road ({\"stock\":[{\"kmh\":65.3,\"why\":\"sled, 60 m, engine-stock\",\"trace\":\"0m:0 6m:30 12m:40 19m:46 25m:51 31m:55 38m:58 45m:61 51m:63 58m:65\"},{\"kmh\":65.4,\"why\":\"sled, 61 m, engine-stock\",\"trace\":\"0m:0 6m:30 12m:40 19m:46 25m:51 32m:55 38m:58 45m:61 52m:63 58m:65\"}],\"mountain800\":[{\"kmh\":72.5,\"why\":\"sled, 61 m, engine-800\",\"trace\":\"0m:0 6m:31 12m:42 19m:50 25m:56 31m:60 37m:64 44m:67 51m:69 58m:72\"},{\"kmh\":72.4,\"why\":\"sled, 60 m, engine-800\",\"trace\":\"0m:0 6m:32 13m:43 19m:51 26m:56 32m:61 38m:64 45m:67 51m:70 57m:72\"}]})",
+  "[ 347s] PASS Lost on the Tannberg: the mission table opens from the lodge table",
+  "[ 348s] PASS Lost on the Tannberg: call taken from the mission table ({\"id\":\"skier\",\"title\":\"Lost on the Tannberg\",\"step\":0,\"steps\":6,\"stepKind\":\"goto\",\"objective\":\"Get to the Tannberg top station: up the run on the sled, or fly\",\"seconds\":0.2})",
+  "[ 350s] PASS Lost on the Tannberg: step 1: get to the Tannberg top station",
+  "[ 419s] PASS Lost on the Tannberg: Koda takes the scent and leads to the subject ({\"kodaSamples\":71,\"endsFrom\":7})",
+  "[ 419s] PASS Lost on the Tannberg: Koda's route follows the scent trail once on it (within 12 m) ({\"worstOffTrailM\":1.4,\"worstIncludingTheRunToTheTrailM\":1.4})",
+  "[ 423s] PASS Lost on the Tannberg: step 3: hold First aid for 3 s",
+  "[ 426s] PASS Lost on the Tannberg: step 4: bring the sled over and help Nils on",
+  "[ 427s] PASS Lost on the Tannberg: step 5: take Nils down to the clinic on the sled",
+  "[ 429s] PASS Lost on the Tannberg: mission completes and the debrief opens (DoneLost on the TannbergNils is warm, splinted and eating soup. He says Koda is the best dog he has ever met.+380funds+3)",
+  "[ 429s] PASS Lost on the Tannberg: pays the advertised reward (+380 funds, +300 reputation) ({\"funds\":380,\"reputation\":300})",
+  "[ 433s] PASS Firewood for the Kettle: the mission table opens from the lodge table",
+  "[ 435s] PASS Firewood for the Kettle: call taken from the mission table ({\"id\":\"supplies\",\"title\":\"Firewood for the Kettle\",\"step\":0,\"steps\":4,\"stepKind\":\"interact\",\"objective\":\"Load the supply crate onto the sled rack\",\"seconds\":0.1})",
+  "[ 437s] PASS Firewood for the Kettle: step 1: load the crate onto the sled rack",
+  "[ 438s] PASS Firewood for the Kettle: step 2: get on the sled",
+  "[ 439s] PASS Firewood for the Kettle: step 3: ride down to the Kettle",
+  "[ 442s] PASS Firewood for the Kettle: mission completes and the debrief opens (DoneFirewood for the KettleThat's the stove sorted for a week. Come in for a hot chocolate any time.+160funds+110reputat)",
+  "[ 442s] PASS Firewood for the Kettle: pays the advertised reward (+160 funds, +110 reputation) ({\"funds\":160,\"reputation\":110})",
+  "[ 446s] PASS Where's Pepper?: the mission table opens from the lodge table",
+  "[ 448s] PASS Where's Pepper?: call taken from the mission table ({\"id\":\"pepper\",\"title\":\"Where's Pepper?\",\"step\":0,\"steps\":5,\"stepKind\":\"goto\",\"objective\":\"Go to Mirror Lake\",\"seconds\":0.2})",
+  "[ 449s] PASS Where's Pepper?: step 1: go to Mirror Lake",
+  "[ 455s] PASS Save and Continue: after a reload, Continue restores the mission mid-way, funds, rank and place ({\"mission\":\"pepper step 1\",\"funds\":810,\"rank\":\"Lead patroller\"})",
+  "[ 504s] PASS Where's Pepper?: Koda takes the scent and leads to the subject ({\"kodaSamples\":51,\"endsFrom\":6})",
+  "[ 504s] PASS Where's Pepper?: Koda's route follows the scent trail once on it (within 12 m) ({\"worstOffTrailM\":3.5,\"worstIncludingTheRunToTheTrailM\":8.1})",
+  "[ 507s] PASS Where's Pepper?: step 3: coax Pepper down and pick her up",
+  "[ 508s] PASS Where's Pepper?: step 4: bring Pepper home to the Kettle",
+  "[ 509s] PASS Where's Pepper?: mission completes and the debrief opens (DoneWhere's Pepper?Pepper is on the windowsill pretending none of this happened.+140funds+120reputationBack to patrol)",
+  "[ 509s] PASS Where's Pepper?: pays the advertised reward (+140 funds, +120 reputation) ({\"funds\":140,\"reputation\":120})",
+  "[ 518s] PASS Callouts: a radio callout comes in on the game's timer (#1) (Incoming callStuck in the DriftA van has slid into a drift on the Tannberg road.RespondLat)",
+  "[ 520s] PASS Stuck in the Drift: step 1: get to the scene",
+  "[ 524s] PASS Stuck in the Drift: mission completes and the debrief opens (DoneStuck in the DriftVan is back on the road. The driver waved. Mostly.+90funds+70reputationBack to patrol)",
+  "[ 524s] PASS Stuck in the Drift: pays the advertised reward (+90 funds, +70 reputation) ({\"funds\":90,\"reputation\":70})",
+  "[ 532s] PASS Callouts: a radio callout comes in on the game's timer (#2) (Incoming callTree Down on the PassA spruce has come down across the pass road below Kessel)",
+  "[ 534s] PASS Tree Down on the Pass: step 1: get to the scene",
+  "[ 538s] PASS Tree Down on the Pass: mission completes and the debrief opens (DoneTree Down on the PassPass road clear. Thanks for the quick work.+90funds+70reputationBack to patrol)",
+  "[ 538s] PASS Tree Down on the Pass: pays the advertised reward (+90 funds, +70 reputation) ({\"funds\":90,\"reputation\":70})",
+  "[ 542s] PASS Callouts: callouts are drawn from the pool (both kinds answered, or one twice) ([\"drift\",\"tree\"])",
+  "[ 551s] PASS Badges and Koda: Koda smells a hidden badge from 20 m and runs to it ({\"kodaFromBadgeM\":5.6,\"mode\":\"point\"})",
+  "[ 555s] PASS Badges and Koda: walking onto it finds the badge and it is logged ({\"badges\":\"1 of 10\"})",
+  "[ 557s] PASS Sleep: the bunk ends the day: next morning, a fresh four-period forecast ({\"day\":2,\"forecast\":\"MorningOvercast-6°MiddayOvercast-8°AfternoonOvercast-8°EveningOvercast-11°\"})",
+  "[ 562s] PASS Kessel Bowl, again: after the story, new snow reloads the bowl and the avalanche service posts a recon flight and a control job ({\"loaded\":[\"A\",\"C\",\"D\"],\"wind\":\"strong west\",\"viaNight\":true})",
+  "[ 563s] PASS Kessel Bowl Has Reloaded: the mission table opens from the lodge table",
+  "[ 564s] PASS Kessel Bowl Has Reloaded: call taken from the mission table ({\"id\":\"bowl-recon\",\"title\":\"Kessel Bowl Has Reloaded\",\"step\":0,\"steps\":4,\"stepKind\":\"mount\",\"objective\":\"Start the helicopter on the pad\",\"seconds\":0.2})",
+  "[ 575s] PASS Kessel Bowl, again: recon: fly to Kessel Bowl",
+  "[ 587s] PASS Kessel Bowl, again: recon: the scanner reads all four slopes ([\"SLOPE A\",\"SLOPE B\",\"SLOPE C\",\"SLOPE D\"])",
+  "[ 603s] PASS Kessel Bowl Has Reloaded: mission completes and the debrief opens (DoneKessel Bowl Has ReloadedReport filed. The loaded slopes are flagged for the control team.Slopes A, C and D are loade)",
+  "[ 603s] PASS Kessel Bowl Has Reloaded: pays the advertised reward (+120 funds, +70 reputation) ({\"funds\":120,\"reputation\":70})",
+  "[ 606s] PASS Kessel Bowl, again: recon flags today's loaded slopes (the wind's pattern), ready for the control team ({\"marked\":[\"A\",\"C\",\"D\"],\"loaded\":[\"A\",\"C\",\"D\"]})",
+  "[ 608s] PASS Kessel Bowl, again: the table shows what recon flagged and that the pay is \"up to\" the listed reward ({\"tag\":\"up to +290\",\"read\":\"Recon flagged Slopes A, C and D as loaded.\"})",
+  "[ 608s] PASS Kessel Bowl, again: the mission table shows the next rank and how far off it is (Next rankChief of patrol in 205 reputation)",
+  "[ 614s] PASS Kessel Bowl, again: control: road closed and up on Kessel Ridge",
+  "[ 624s] PASS Kessel Bowl, again: control: your own charges, as many as you choose (the step waits for you to fire) ({\"charged\":[\"A\",\"C\",\"D\"],\"hud\":\"Charge the slopes you judge loaded, then get clear and fire (3 set)\"})",
+  "[ 625s] PASS Kessel Bowl, again: control: fire from safe ground with the charges you chose",
+  "[ 709s] PASS Kessel Bowl, again: control: today's loaded slopes come down and the berm holds ({\"fired\":true,\"settled\":true,\"releasedShare\":0.953,\"reachedRoad\":false})",
+  "[ 712s] PASS Bring Down the Bowl: mission completes and the debrief opens (DoneBring Down the BowlBowl is down and the road is open again. Good work up there.95% of the loaded snow came down unde)",
+  "[ 712s] PASS Bring Down the Bowl: pays by the result, up to the listed 290 funds (a clean read: base, share and bonus) ({\"funds\":283,\"reputation\":166,\"clean\":true})",
+  "[ 715s] PASS Kessel Bowl, again: the debrief explains the result: what was loaded, what you charged, and the clean-read bonus (DoneBring Down the BowlBowl is down and the road is open again. Good work up there.95% of the loaded snow came down under control. The berm held: nothing reached the road. The flow also knocked loose a little snow off a )",
+  "[ 715s] PASS Kessel Bowl, again: the bowl is controlled, the calls are off the board, and the patrol log counts it ({\"events\":[],\"controlled\":true,\"bowlDays\":1})",
+  "[ 715s] PASS Campaign: every story mission completed end to end ([\"rounds\",\"survey\",\"release\",\"skier\",\"supplies\",\"pepper\",\"drift\",\"tree\",\"bowl-recon\",\"bowl-control\"])",
+  "[ 715s] PASS Campaign: reputation raises the rank (Recruit at the start) ({\"rank\":\"Lead patroller\",\"reputation\":1461,\"ranks\":\"Recruit 0, Patroller 200, Senior patroller 520, Lead patroller 950, Chief of patrol 1500\"})",
+  "[ 715s] PASS Campaign: every mission step's objective is on the HUD, word for word (plus its count on counted steps) ({\"stepsChecked\":31,\"mismatches\":[]})",
+  "[ 715s] PASS Campaign: no page errors or console errors during the whole playthrough ([])"
  ],
- "method": "Real key input and clicks for every action and menu; long journeys skipped with the QA teleport (counted in counts.travelShortcuts); the radio callout timer wound down through the save (counts.timerShortcuts). Chromium headless, SwiftShader (software WebGL), 390x844 touch viewport, Light graphics.",
+ "method": "Real key input and clicks for every action and menu; long journeys skipped with the QA teleport (counted in counts.travelShortcuts); the radio callout timer wound down through the save (counts.timerShortcuts); if the night did not reload Kessel Bowl, new snow is set through the save (counts.snowShortcuts). Chromium headless, SwiftShader (software WebGL), 390x844 touch viewport, Light graphics.",
  "notTested": [
   "real-device frame rate",
   "real touch hardware and haptics on a phone (vibration was observed as a request to navigator.vibrate, not felt)",

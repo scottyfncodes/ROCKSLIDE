@@ -17,7 +17,7 @@ Third-person, iPhone first, plays in the browser. Colorado high country: exposed
 5. **Do the job.** Repair, scan, set charges, follow Koda, give first aid, deliver.
 6. **Get paid.** Funds and reputation; reputation is your patrol rank.
 7. **Build up.** Spend funds on the station (new buildings appear in the yard) and on gear for you, the sled, the helicopter, the skis and Koda.
-8. **Sleep.** The bunk in the lodge ends the day: a new forecast, the slopes load up again.
+8. **Sleep.** The bunk in the lodge ends the day: a new forecast, and the night's snow lands on the slopes (heavy after a snowy evening, a dusting after a clear one).
 
 ## The valley
 
@@ -70,6 +70,11 @@ Five families, one mission system (every mission is data: a short list of steps)
 | Firewood for the Kettle | Community | Load the supply crate on the sled rack and deliver it to Greta in Hollin |
 | Where's Pepper? | Community | Koda tracks Greta's cat to the boathouse; carry her home |
 | Tree Down on the Pass, Stuck in the Drift | Mountain response (world events) | Callouts that come in on the radio every few minutes of play once you are on the job (more often in storms), one at a time; saw the trunk off the road, dig out a van |
+| Kessel Bowl Has Reloaded, Bring Down the Bowl | Aerial recon, avalanche control (after the story) | When 25 cm of new snow builds up on the bowl again (overnight or through a snowy day), the avalanche service posts both. The wind that came with the snow decides which slopes are loaded (one of nine patterns, from one slope to three), so it is not always A and C. The recon flight reads all four and flags the loaded ones; it is optional. The control job lets you choose which slopes to charge, then fire: pay goes by the share of the loaded snow that comes down (100 funds for the job, up to 140 more for the snow, 25 off for each charge on a stable slope, 50 more for a clean read). Skip the flight and you are reading the slopes blind |
+
+### After the story
+
+Kessel Bowl is the long game: about one morning in three it has reloaded (more if you play through a snowy afternoon), and each time the loading is different. The mission table shows what recon flagged, or tells you nobody has flown it; the debrief says what was loaded, what you charged and what it paid. The patrol log counts the times you have brought the bowl down and how many were clean reads. The callouts keep coming alongside.
 
 ### The avalanche
 
@@ -77,7 +82,7 @@ Kessel Bowl carries a slab of blocks over a weak layer. A charge on a loaded slo
 
 ## Progression
 
-- **Rank** from reputation: Recruit, Patroller, Senior patroller, Lead patroller, Chief of patrol.
+- **Rank** from reputation: Recruit, Patroller, Senior patroller, Lead patroller, Chief of patrol. The mission table and the patrol log show the next rank and how much reputation it needs, with a thin bar.
 - **The station** grows with funds and rank, and each building is a real building in the yard that opens new gear: kennel run (Koda's gear, Koda smells further), garage workshop (sled paint, engines, tracks), equipment room (skis, skins, helmet), helicopter hangar (paint, thermal scanner, searchlight), radio mast (shows the badges on the map), lodge wing (night shift bonus when you sleep), yard lights and the patrol flag.
 - **Gear** with real effects where it says so: engines (faster sled), deep lug track (floats on powder), race skis (quicker turns), mohair skins (climb on skis), thermal scanner, searchlight at night. The rest is how you, your sled, your helicopter and Koda look: jackets, hats, goggles, paint, collars, harnesses, bandanas.
 
@@ -96,9 +101,19 @@ The people are jointed figures driven by a procedural gait built from the leg's 
 
 The station (the lodge and its furniture included), vehicles, people, Koda, buildings, the working mountain, the weather station and the kit are MeshCraft/ForgeCraft models (`public/models/`; the latest pass is in [`docs/modernization/REPORT.md`](docs/modernization/REPORT.md)); voices, the Kessel theme, stingers, impacts and the wind bed are AudioCraft; the particle atlas is FXCraft. See [`art/README.md`](art/README.md), [`art/audio/README.md`](art/audio/README.md), [`art/fx/README.md`](art/fx/README.md) and [`CREDITS.md`](CREDITS.md) (sources and licences for everything shipped).
 
+## Accessibility
+
+- **Keyboard only:** Tab reaches Start, every panel takes focus when it opens and keeps Tab inside it, Esc closes it, and focus goes back to where it was. Every button shows a 2 px cyan focus ring.
+- **Screen readers:** panels are modal dialogs named by their title; the mission table and shop tabs are tab lists with the open tab marked; pause toggles say which option is on; the radio, toasts and the current objective are announced as they change, an incoming call at once; the 3D view is labelled. What is drawn in the 3D view (the valley, markers, Koda) is not described.
+- **Readable:** text is at least 12 px and passes WCAG AA contrast on every panel (axe-core); locked rows are a dashed card, never faded out. Touch targets are at least 44 px.
+- **Reduced motion:** with the system setting on, panels and buttons stop animating, and the camera drops its handheld breathing and wind buffet and keeps a quarter of its shake.
+- **Not changed, on purpose:** the page does not zoom (`user-scalable=no`): pinch belongs to the map, and on a phone a page zoom mid-play strands the controls. axe reports this (`meta-viewport`).
+
+`npx tsx scripts/a11y.ts <url> <outdir>` runs the audit (axe-core on eight screens at phone and desktop size, plus 35 scripted checks); results are in [`docs/accessibility/`](docs/accessibility/).
+
 ## Saving
 
-Everything persists in `localStorage` (`rockslide.patrol.v1`): missions done and in progress (down to which slopes are charged and whether Nils is on your sled), funds, rank, gear owned and worn, buildings, badges, the day, time and weather, where you, the sled and the helicopter are, and settings. It saves every 12 seconds, on every mission event, and when the page is hidden or closed. A damaged or older save is repaired with defaults rather than lost. A mission interrupted mid-avalanche finishes the release on load.
+Everything persists in `localStorage` (`rockslide.patrol.v1`): missions done and in progress (down to which slopes are charged and whether Nils is on your sled), which slopes of Kessel Bowl are loaded today and which recon flagged, funds, rank, gear owned and worn, buildings, badges, the day, time and weather, where you, the sled and the helicopter are, and settings. It saves every 12 seconds, on every mission event, and when the page is hidden or closed. A damaged or older save is repaired with defaults rather than lost. A mission interrupted mid-avalanche finishes the release on load.
 
 ## Performance on phones
 
