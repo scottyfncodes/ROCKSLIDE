@@ -37,6 +37,7 @@ licences extends to what they produced.
 
 The voices are synthetic: no real person's voice was recorded, cloned or imitated.
 
-AssetCraft's licence report over the catalogue (`assetcraft_license_report`, 121 GITCRAFT outputs
-registered for this project): no non-commercial or no-derivatives assets, no copyleft outputs, no
-unknown licences, no attributions owed.
+AssetCraft's licence report over the catalogue (`assetcraft_license_report`, re-registered 2026-11-08 from
+this file: the 115 shipped assets under `public/`): 113 `LicenseRef-SnowPatrol-Owned` (made for this project, as
+above), 2 `CC0-1.0` (the Poly Haven textures, attributed); no non-commercial or no-derivatives assets, no copyleft
+outputs, no unknown licences.
