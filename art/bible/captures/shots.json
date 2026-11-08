@@ -254,10 +254,10 @@
   "ui-title-wordmark": {
    "from": "ui-title",
    "crop": [
-    440,
-    540,
-    1000,
-    740
+    428,
+    536,
+    1012,
+    744
    ]
   },
   "ui-forecast": {

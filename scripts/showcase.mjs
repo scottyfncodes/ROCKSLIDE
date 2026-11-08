@@ -11,7 +11,7 @@ const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: 1, isM
 const page = await ctx.newPage();
 const logs = [];
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));
-page.on('console', (m) => m.type() === 'warning' && m.text().includes('ROCKSLIDE') && logs.push(`[warn] ${m.text()}`));
+page.on('console', (m) => m.type() === 'warning' && m.text().includes('SNOW PATROL') && logs.push(`[warn] ${m.text()}`));
 const t0 = Date.now();
 await page.goto(url);
 await page.waitForFunction(() => window.patrol, null, { timeout: 180000 });

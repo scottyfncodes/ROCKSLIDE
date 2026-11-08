@@ -768,7 +768,7 @@ const report = {
 };
 writeFileSync(join(outDir, 'playthrough.json'), JSON.stringify(report, null, 1));
 const md = [
-  `# ROCKSLIDE playthrough: ${report.ok ? 'PASS' : `FAIL (${failed.length} of ${checks.length} checks)`}`,
+  `# SNOW PATROL playthrough: ${report.ok ? 'PASS' : `FAIL (${failed.length} of ${checks.length} checks)`}`,
   '',
   `${report.when} · ${url} · ${report.seconds} s · ${checks.length} checks · ${counts.realInputs} real key inputs (${counts.holds} holds) · ${counts.clicks} clicks · ${counts.travelShortcuts} travel shortcuts · ${counts.timerShortcuts} callout-timer shortcuts · ${counts.snowShortcuts} snow shortcuts`,
   '',

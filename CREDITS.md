@@ -1,6 +1,6 @@
 # Credits
 
-ROCKSLIDE: Mountain Patrol is original work. Everything it ships is made in this repository or with
+SNOW PATROL (formerly ROCKSLIDE) is original work. Everything it ships is made in this repository or with
 [GITCRAFT](https://github.com/scottyfncodes/GITCRAFT), the shared production toolchain, except two
 CC0 scanned textures from Poly Haven (listed below); no other third-party samples, models or images. Every tool below is free and open source; none of their
 licences extends to what they produced.

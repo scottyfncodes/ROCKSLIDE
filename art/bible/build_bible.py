@@ -1,4 +1,4 @@
-"""ROCKSLIDE: the Kessel art bible, edition 2.1. Laid out in GITCRAFT DesignCraft from captures of the
+"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.2. Laid out in GITCRAFT DesignCraft from captures of the
 running game and colour tokens read from the game's own code. Reproducible end to end:
 
   npm ci && npx vite build && (npx vite preview --port 4173 &)
@@ -69,7 +69,7 @@ def captures():
     # derived crops, all from captures: the in-game wordmark and the emblem without its square field
     title = Image.open(os.path.join(CAPS, "ui-title.jpg"))
     # crops of captures (recorded in shots.json under "derived"): the wordmark and the forecast strip
-    derived = {"ui-title-wordmark": ("ui-title", (440, 540, 1000, 740)), "ui-forecast": ("ui-board", (728, 222, 1165, 334))}
+    derived = {"ui-title-wordmark": ("ui-title", (428, 536, 1012, 744)), "ui-forecast": ("ui-board", (728, 222, 1165, 334))}
     for name, (src, box) in derived.items():
         Image.open(os.path.join(CAPS, src + ".jpg")).crop(box).save(os.path.join(CAPS, name + ".jpg"), quality=90)
     meta["derived"] = {k: {"from": v[0], "crop": v[1]} for k, v in derived.items()}
@@ -96,7 +96,7 @@ d = None
 
 def chrome(sp, n, section, source, dark=False):
     ink = MUTED if dark else BTN
-    d.text(sp, [M, 26, 600, 38], "ROCKSLIDE  ·  KESSEL ART BIBLE  ·  EDITION 2.1", J, "SemiBold", 7.5, ink, tracking=300)
+    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.2", J, "SemiBold", 7.5, ink, tracking=300)
     d.text(sp, [W - M - 300, 26, W - M, 38], f"{section}   {n:02d} / {PAGES}", J, "SemiBold", 7.5, ink, tracking=300, align="right")
     d.rect(sp, [M, 42, W - M, 42.75], fill=MUTED if not dark else "#6A4552")
     if source:
@@ -167,9 +167,9 @@ def p_cover(sp):
     d.gradient(sp, [428, 0, 800, H], [{"location": 0, "color": INK, "opacity": 100}, {"location": 40, "color": INK, "opacity": 78}, {"location": 100, "color": INK, "opacity": 0}])
     d.rect(sp, [20, 20, W - 20, H - 20], stroke=CREAM, weight=1.5)
     d.tool("place_image", {"path": os.path.join(WORK, "emblem-round.png"), "x": 72, "y": 76, "width": 96, "spread": sp})
-    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.1", J, "Medium", 10, PINK, tracking=420)
-    d.text(sp, [66, 236, 900, 330], "ROCKSLIDE", J, "SemiBold", 86, CREAM, tracking=110, leading=90)
-    d.text(sp, [72, 334, 800, 360], "MOUNTAIN PATROL", J, "Medium", 20, PINK, tracking=520)
+    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.2", J, "Medium", 10, PINK, tracking=420)
+    d.text(sp, [66, 242, 900, 330], "SNOW PATROL", J, "SemiBold", 72, CREAM, tracking=110, leading=80)
+    d.text(sp, [72, 334, 800, 360], "KESSEL VALLEY", J, "Medium", 20, PINK, tracking=520)
     d.rect(sp, [72, 386, 118, 387.5], fill=CREAM)
     d.text(sp, [72, 402, 520, 520], "Storybook card stock over a working Colorado mountain. The canonical visual reference for the game as it ships today: interface, colour, type, characters, places, light and the rules for anything new.", C, "Regular", 14, CREAM, leading=20)
     d.text(sp, [72, 690, 700, 702], "NOVEMBER 2026  ·  SUPERSEDES EDITION 1 (THE DARK-SLATE KIT SHEET)", J, "SemiBold", 8, AMBER, tracking=260)
@@ -328,7 +328,7 @@ def p_type(sp, title_size):
     head(sp, "TYPOGRAPHY", "Three faces, each with one job", "Jost speaks for the patrol, Courier Prime for people on the radio, IBM Plex Mono for instruments. Nothing else is set in the game or its materials.")
     cw = (W - 2 * M - 48) / 3
     cols = [
-        ("JOST", "Geometric sans: titles, labels, buttons, the wordmark", J, "SemiBold", "MOUNTAIN PATROL", "Medium", 0.42,
+        ("JOST", "Geometric sans: titles, labels, buttons, the wordmark", J, "SemiBold", "KESSEL VALLEY", "Medium", 0.42,
          ["Wordmark: Bold 700, tracking 0.16em, cut across in two (see below)", "Panel titles: SemiBold 600 caps, 15 px, 0.22em", "Labels: SemiBold 600 caps, 12 px, 0.16em, --muted", "Buttons: SemiBold 600 caps, 13 px, 0.12em", "Chapter title: SemiBold 600 caps, 24 to 40 px, 0.16em"],
          "Jost 4.x (Google Fonts v20), SIL OFL 1.1. Weights 400 to 700."),
         ("COURIER PRIME", "Typewriter: the radio, chapter sub-lines, anything said", C, "Regular", "Kessel Patrol, it's Greta at the Kettle.", "Regular", 0,
@@ -351,11 +351,11 @@ def p_type(sp, title_size):
     h3(sp, M, 588, 500, "THE WORDMARK, AS THE GAME SETS IT")
     i = d.image(sp, [M, 606, M + 392, 606 + 392 / 2.8], cap("ui-title-wordmark"), align=4, stroke=INK, weight=0.5)
     tag(sp, M, 606 + 392 / 2.8 + 6, "capture")
-    d.text(sp, [M + 140, 606 + 392 / 2.8 + 7.5, M + 476, 606 + 392 / 2.8 + 18], "ui-title, cropped: emblem, cut wordmark, MOUNTAIN PATROL", P, "Medium", 6.8, INK)
+    d.text(sp, [M + 140, 606 + 392 / 2.8 + 7.5, M + 476, 606 + 392 / 2.8 + 18], "ui-title, cropped: emblem, cut wordmark, KESSEL VALLEY", P, "Medium", 6.8, INK)
     bullets(sp, [M + 420, 606, W - M, 742], [
-        "Jost Bold, tracking 0.16em, in --paper. Two copies of the word, clipped along a line that falls from 58% to 38% of its height, the lower half nudged 0.06em right and 0.05em down: a rockslide in the letters.",
-        "Above it, the Kessel Patrol emblem, clipped to its rim. Below it, MOUNTAIN PATROL in Jost Medium, widely tracked, in --pink.",
-        "In a layout that cannot cut the word (a PDF, a share card), set ROCKSLIDE in Jost SemiBold or Bold with 0.11 to 0.16em tracking and leave the cut to the game.",
+        "Jost Bold, tracking 0.16em, in --paper. Two copies of the word, clipped along a line that falls from 58% to 38% of its height, the lower half nudged 0.06em right and 0.05em down: a slide in the letters. SNOW PATROL stays on one line so the cut runs through both words.",
+        "Above it, the Kessel Patrol emblem, clipped to its rim. Below it, KESSEL VALLEY in Jost Medium, widely tracked, in --pink.",
+        "In a layout that cannot cut the word (a PDF, a share card), set SNOW PATROL in Jost SemiBold or Bold with 0.11 to 0.16em tracking and leave the cut to the game.",
         "Minimum sizes: 12 px for any text on a phone (PLAYCRAFT legibility rule), 44 px touch targets for anything you press.",
     ], size=9.2, gap=4)
     return i
@@ -427,7 +427,7 @@ def p_ui_title(sp):
     x2 = M + 390
     h3(sp, x2, 500, W - M - x2, "WHAT MAKES IT")
     bullets(sp, [x2, 518, W - M, 750], [
-        "Title: the camera square on to the lodge door, Vince and Koda either side of it, a slow push in and out. In the lower third: the emblem, the cut wordmark, MOUNTAIN PATROL in blush, two or three lines of Jost, one red button (Start your patrol, or Continue).",
+        "Title: the camera square on to the lodge door, Vince and Koda either side of it, a slow push in and out. In the lower third: the emblem, the cut wordmark, KESSEL VALLEY in blush, two or three lines of Jost, one red button (Start your patrol, or Continue).",
         "The table: one burgundy card on the dimmed lodge. Centred title in tracked caps; sentence-case tabs, paper when selected; a paper topo map; the forecast as four periods (sky, temperature, wind); avalanche danger as a mustard number and its name; the next rank above the forecast as one line and a thin mustard bar; the calls as cards, locked ones as dashed open cards with quiet text (never faded below 4.5:1 contrast); the selected call's brief on paper with a red Take this call and a ghost Free patrol.",
         "On a phone the card is one column that fits the width inside the safe area; nothing shrinks below 12 px; every target, the tabs included, is 44 px. Every card button lifts under a mouse, sinks when pressed and shows a 2 px cyan focus ring.",
     ], size=9.5, gap=5)
@@ -664,7 +664,7 @@ def p_emblem(sp):
         "Minimum size 32 px (favicon). Do not recolour, outline, rotate or put type inside it.",
     ], size=9.2, gap=4)
     bullets(sp, [600, 600, W - M, 760], [
-        "Share card: aubergine card stock, an inset 1.5 pt cream rule, the emblem, ROCKSLIDE in Jost SemiBold, MOUNTAIN PATROL in blush, Courier Prime copy, a mustard URL line, the lodge at dusk fading in from the right.",
+        "Share card: aubergine card stock, an inset 1.5 pt cream rule, the emblem, SNOW PATROL in Jost SemiBold, KESSEL VALLEY in blush, Courier Prime copy, a mustard URL line, the lodge at dusk fading in from the right.",
         "Any new marketing image follows the same build: a real capture, a card-stock panel, the three faces.",
     ], size=9.2, gap=4)
 
@@ -767,7 +767,7 @@ def main():
     shots, _ = captures()
     shutil.copy(os.path.join(REPO, "public/og-image.jpg"), os.path.join(CAPS, "share-card.jpg"))
     d = DC(REPO, os.path.join(WORK, "designcraft.log"))
-    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "ROCKSLIDE: the Kessel art bible, edition 2.1"})
+    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.2"})
     d.tool("save_document", {"path": DOC})
     r = d.tool("open_document", {"path": DOC})
     print("document fonts:", r.get("documentFonts"))
@@ -795,7 +795,7 @@ def main():
     elif over:
         raise SystemExit(f"overset text: {json.dumps([(s['id'], s.get('preview')) for s in over])[:1500]}")
     d.tool("save_document", {"path": DOC})
-    r = d.x("file.exportPdf", {"path": PDF, "title": "ROCKSLIDE: the Kessel art bible, edition 2.1", "author": "The Kessel Patrol (ROCKSLIDE)", "compressImages": True})
+    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.2", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
     print("pdf:", r)
     os.makedirs(os.path.join(WORK, "pages"), exist_ok=True)
     for i in range(PAGES):

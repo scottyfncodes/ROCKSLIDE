@@ -1,8 +1,12 @@
-# ROCKSLIDE: notes for Claude Code
+# SNOW PATROL: notes for Claude Code
+
+The game was called ROCKSLIDE until November 2026. Persistent identifiers keep the old name on
+purpose: the save keys (`rockslide.patrol.v1`, `rockslide.stats`), the Vercel project `rockslide` and
+its domain `rockslide-game.vercel.app`, `art/rockslide-palette.json` and the report `kind` fields.
 
 ## Visual direction: the art bible is canonical
 
-`art/kessel-art-bible.pdf` (edition 2.1, built from `art/bible/`) is the visual reference for every
+`art/kessel-art-bible.pdf` (edition 2.2, built from `art/bible/`) is the visual reference for every
 DesignCraft, PixelCraft, PLAYCRAFT and Claude Code task. Before any visual, UI, asset or marketing
 work, check the relevant pages; page 19 is the checklist for new assets.
 

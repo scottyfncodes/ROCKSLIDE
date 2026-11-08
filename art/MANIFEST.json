@@ -34,11 +34,11 @@
   },
   {
    "path": "../public/icons/icon.svg",
-   "bytes": 1598,
+   "bytes": 1600,
    "tools": "VectorCraft",
    "status": "shipped",
    "notes": "Kessel Patrol emblem (VectorCraft)",
-   "sha256": "9318f399f875a7c9331d2b3f9af36a10616461101bbd7b4644d5f745a5901c55"
+   "sha256": "28915f16cd9cfce1d98cf1a16483fc6cc08d3ec960b1ac680ccb4e355c835125"
   },
   {
    "path": "../public/models/rs_akja.glb",
@@ -346,11 +346,11 @@
   },
   {
    "path": "../public/og-image.jpg",
-   "bytes": 150243,
+   "bytes": 150672,
    "tools": "DesignCraft layout and JPEG export",
    "status": "shipped",
-   "notes": "share card, storybook direction: aubergine card stock with an inset cream rule, Jost wordmark, Courier Prime copy, the lodge at dusk with Vince and Koda (Playwright capture of the game); art/pipeline/4_share_card.py",
-   "sha256": "3a926fb373b05883d9c81e04a0606b98afa70888f29221091d1d49eef7a28a87"
+   "notes": "share card, storybook direction: aubergine card stock with an inset cream rule, the SNOW PATROL Jost wordmark, Courier Prime copy, the lodge at dusk with Vince and Koda (Playwright capture of the game); art/pipeline/4_share_card.py",
+   "sha256": "746e14a864971edf0b783ff7b1004b89d3af06e99d6cdcae6138932ca53938d1"
   },
   {
    "path": "../public/audio/voice/avy_clear.m4a",
@@ -1266,19 +1266,19 @@
   },
   {
    "path": "kessel-art-bible.pdf",
-   "bytes": 5927290,
+   "bytes": 5929864,
    "tools": "DesignCraft layout and PDF export (Playwright captures of the game, colour tokens from the code)",
    "status": "shipped",
    "notes": "The art bible, edition 2: the canonical visual reference, 20 pages. Built by art/bible/build_bible.py from art/bible/captures (capture.mjs) and art/bible/tokens.json (tokens.ts); fonts pinned in art/bible/fonts.json; review in art/bible/QA.md. Supersedes edition 1 (dark slate).",
-   "sha256": "109779aaff7f9d60bb5866b141926bd7491b2c7431addc75d3d2c4be40419885"
+   "sha256": "2bb7b0b13448fde044bbde87a2142296892f866fbbea415db792d60c5dfa79ab"
   },
   {
    "path": "bible/kessel-art-bible.designcraft",
-   "bytes": 5915291,
+   "bytes": 5917741,
    "tools": "DesignCraft",
    "status": "source",
    "notes": "The editable layout of the art bible (open beside a Document Fonts folder holding the fonts in art/bible/fonts.json)",
-   "sha256": "2dd16651a98308ad781d2637a59a04b415ee8e8fbccaef807c46c95557963ce0"
+   "sha256": "53a03e132e682e56040e91152908b602abf85103c98c9c6d14bef4550f6785d2"
   },
   {
    "path": "bible/qa-contact-sheet.jpg",

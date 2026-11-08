@@ -1,3 +1,16 @@
+# Art bible edition 2.2: the game is now SNOW PATROL (2026-11-08)
+
+A naming edition. The game was renamed from ROCKSLIDE to SNOW PATROL; the art direction is unchanged (no new
+tokens, palette, type or world colours).
+
+| Page | What changed in the game | In the bible |
+| --- | --- | --- |
+| 1 Cover | The name | SNOW PATROL in Jost SemiBold (72 pt, so the two words clear the lodge), KESSEL VALLEY beneath |
+| Running header | The name | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.2 |
+| 6 Typography | The wordmark reads SNOW PATROL; the sub-brand under it is KESSEL VALLEY; the wordmark stays on one line (`white-space: nowrap`) and is sized `clamp(28px, 8.6vw, 60px)` so it fits a 320 px phone and the desktop title card | `ui-title` re-captured; the wordmark crop widened to the longer name; the wordmark text |
+| 8 Title and the mission table | The title screen shows the new name | `phone-title` re-captured; the title text |
+| 18 Identity | The share card carries the new name | `share-card` from the new `public/og-image.jpg`; the share card text |
+
 # Art bible edition 2.1: synchronised with the quality and retention pass (2026-11-05)
 
 A point edition: the interface changed in small ways, so the pages that show it were brought back in step. Nothing
