@@ -5,7 +5,7 @@ import { BUZZ, buzz, hitStopScale, HIT_TOTAL } from './feel';
 import type { GameSnapshot } from './snapshot';
 import { TitleScreen } from '../ui/title';
 import { RoadNet, trimWay, wayTo, type Way } from '../world/routing';
-import { forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlider, type Glider } from '../actors/glide';
+import { cleanLanding, forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlider, type Glider } from '../actors/glide';
 import { HELI, heliAgl, newHeli, stepHeli, type Heli } from '../actors/heli';
 import { newHusky, pet, startTrack, stepHusky, type Husky, type Scent } from '../actors/husky';
 import { newWalker, stepWalker, type Walker } from '../actors/walker';
@@ -437,6 +437,12 @@ export class Game {
 
   // ------------------------------------------------------------------ vehicles
 
+  /** name the skill when it happens: a long jump set down softly gets a short callout */
+  private cleanLanding(g: Glider) {
+    const air = cleanLanding(g);
+    if (air > 0) this.hud.toast(`Clean landing · ${air.toFixed(1)} s of air`, 'good', 1.8);
+  }
+
   private mountSled(silent = false) {
     this.mode = 'sled';
     this.cam.setMode('sled');
@@ -791,6 +797,7 @@ export class Game {
         this.cam.kick(Math.min(1, s.landed / 10));
         if (s.landed > 6) buzz(this.p.settings.vibrate, BUZZ.landing);
       }
+      this.cleanLanding(s);
       if (s.bump > 3) {
         this.audio.bump(s.bump);
         this.cam.kick(Math.min(1, s.bump / 10));
@@ -822,6 +829,7 @@ export class Game {
         this.particles.powder(s.x, s.y + 0.2, s.z, 10, 4, 2.5, 0, 0, 1, FX_KIND.powder);
         this.audio.landing(s.landed);
       }
+      this.cleanLanding(s);
       if (s.bump > 3) {
         this.audio.bump(s.bump);
         this.cam.kick(0.5);
