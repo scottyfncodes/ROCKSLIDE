@@ -186,7 +186,7 @@ export class PatrollerMesh {
    * On skis, what the pose needs from the game: in the air; spinning or flipping (the rotation's sign, 0
    * when it has stopped); which grab; the butter's press on the snow (-1 tail .. 1 nose).
    */
-  readonly ski = { air: false, spin: 0, flip: 0, grabKind: 'mute' as 'mute' | 'safety' | 'tail', press: 0 };
+  readonly ski = { air: false, spin: 0, flip: 0, grabKind: 'mute' as 'mute' | 'safety' | 'tail' | 'japan' | 'blunt', press: 0 };
   /** the pole plant at each turn's start: which hand, how far through (s), the side of the last turn */
   private plantT = 9;
   private plantR = false;
@@ -1054,7 +1054,29 @@ export class PatrollerMesh {
           liftL = mix(liftL, 0.36, g);
           liftR = mix(liftR, 0.36, g);
           y -= 0.08 * g;
-          if (sk.grabKind === 'tail') {
+          if (sk.grabKind === 'japan') {
+            // the Japan: the right hand across to the front of the left ski, the knees pulled up and the
+            // skis tweaked back behind, tips down, the chest arched up out of it, the other arm up high
+            fwdL = mix(fwdL, -0.24, g);
+            fwdR = mix(fwdR, -0.24, g);
+            pitchL = pitchR = -0.38 * g;
+            spine = mix(spine, -0.3, g);
+            chest = mix(chest, 0.18, g);
+            chestYaw = mix(chestYaw, 0.2, g);
+            arm.R = { arm: mix(arm.R.arm, 0.85, g), roll: mix(arm.R.roll, -0.5, g), elbow: mix(arm.R.elbow, 0.35, g) };
+            arm.L = { arm: mix(arm.L.arm, 1.35, g), roll: mix(arm.L.roll, -1.2, g), elbow: mix(arm.L.elbow, 0.1, g) };
+            headY = mix(headY, -0.3, g);
+          } else if (sk.grabKind === 'blunt') {
+            // the Blunt: the left hand back to the tail of the left ski, the legs forward, the tips up,
+            // the right arm reaching out front
+            fwdL = mix(fwdL, 0.22, g);
+            fwdR = mix(fwdR, 0.22, g);
+            pitchL = pitchR = 0.35 * g;
+            spine = mix(spine, -0.15, g);
+            arm.L = { arm: mix(arm.L.arm, -0.75, g), roll: mix(arm.L.roll, -0.3, g), elbow: mix(arm.L.elbow, 0.12, g) };
+            arm.R = { arm: mix(arm.R.arm, 1.5, g), roll: mix(arm.R.roll, 0.55, g), elbow: mix(arm.R.elbow, 0.1, g) };
+            headY = mix(headY, -0.35, g);
+          } else if (sk.grabKind === 'tail') {
             // reach back for the tail of the right ski: the legs tuck forward, the tips tweak up
             fwdL = mix(fwdL, 0.22, g);
             fwdR = mix(fwdR, 0.22, g);

@@ -146,7 +146,7 @@ export class Hud {
     input.bind(down, 'down');
     // TRICK: only on skis, only does anything in the air
     this.trickBtn = el('button', 'act trick hidden', `${ICON.trick}<span>Trick</span>`) as HTMLButtonElement;
-    this.trickBtn.setAttribute('aria-label', 'Trick: in the air tap to grab, hold to spin, with forward or back to flip; on the snow hold with forward or back to butter');
+    this.trickBtn.setAttribute('aria-label', 'Trick: in the air tap to grab, hold to spin, with forward or back to flip, on a diagonal for a cork, a misty, a Japan or a Blunt; on the snow hold with forward or back to butter, to a side to butter spin');
     input.bind(this.trickBtn, 'trick');
     this.act = el('button', 'act') as HTMLButtonElement;
     this.actLabel = el('span');
