@@ -1212,7 +1212,8 @@ export class Game {
           const fz = -Math.cos(s.yaw);
           s.vx += fx * (ev.boost ?? 0);
           s.vz += fz * (ev.boost ?? 0);
-          this.hud.trickPop('Stomped it', `+${ev.points}${ev.combo! > 1 ? ` · combo x${ev.combo}` : ''} · boost`, 'clean', 1.6);
+          // the jump called by its name (Cork 720 Mute), the way it would be on the hill
+          this.hud.trickPop(ev.name || 'Stomped it', `${ev.name ? 'Stomped · ' : ''}+${ev.points}${ev.combo! > 1 ? ` · combo x${ev.combo}` : ''} · boost`, 'clean', 1.8);
           this.audio.stomp(ev.combo ?? 1);
           buzz(v, BUZZ.trick);
           this.p.trickBest = Math.max(this.p.trickBest, ev.points);
@@ -2453,9 +2454,16 @@ export class Game {
       } else if (tr.recoverT > 0) roll = Math.sin(tr.recoverT * 22) * 0.18 * (tr.recoverT / TRICK.stumbleSecs);
       this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -tr.flip);
       this.qa.multiply(this.qb);
+      if (tr.tilt > 0.001) {
+        // off axis: a Cork tips over sideways and back, a Misty forward over the tips, nearly flat at the
+        // middle of it, upright again as it unwinds
+        const d = tr.spinDir;
+        if (tr.axis === 'misty') this.qa.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -1.05 * tr.tilt)).multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(0, 0, 1), d * 0.35 * tr.tilt));
+        else this.qa.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(0, 0, 1), -d * 1.15 * tr.tilt)).multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), 0.4 * tr.tilt));
+      }
       if (roll) this.qa.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(0, 0, 1), roll));
       pl.group.quaternion.copy(this.qa);
-      if (tr.flip || roll) {
+      if (tr.flip || roll || tr.tilt > 0.001) {
         // keep the hips where they were: rotate about 1 m up, not about the boots
         this.tmpAxis.set(0, 1, 0).applyQuaternion(this.qa);
         pl.group.position.x -= this.tmpAxis.x;
@@ -2474,7 +2482,7 @@ export class Game {
       sk.air = s.airborne;
       sk.spin = Math.sign(tr.spinRate);
       sk.flip = Math.sign(tr.flipRate);
-      if (tr.grabT > 0) sk.grabKind = tr.grabName.startsWith('Tail') ? 'tail' : tr.grabName.startsWith('Safety') ? 'safety' : 'mute';
+      if (tr.grabT > 0) sk.grabKind = (['tail', 'safety', 'japan', 'blunt'] as const).find((k) => tr.grabName.toLowerCase().startsWith(k)) ?? 'mute';
       sk.press = s.airborne ? 0 : tr.press;
       if (Math.abs(sk.press) > 0.01) {
         // the butter: the body tips onto the tips (tails up) or the tails (tips up), pivoting about the

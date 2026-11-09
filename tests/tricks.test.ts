@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { grade, jumpScore, newTricks, offTurn, stepTricks, TRICK, type TrickEvent, type TrickInput, type TrickState } from '../src/actors/tricks';
+import { grade, jumpName, jumpScore, newTricks, offTurn, stepTricks, TRICK, type TrickEvent, type TrickInput, type TrickState } from '../src/actors/tricks';
 
 const dt = 1 / 60;
 const idle: TrickInput = { held: false, sx: 0, sy: 0 };
@@ -182,5 +182,79 @@ describe('natural jumps on the Tannberg run', async () => {
     for (let t = 0; t < 0.5; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: 1 }, true, dt));
     expect(ev.filter((e) => e.type === 'butter').length).toBe(1);
     expect(s.flipRate).toBe(0);
+  });
+
+  it('a hold with the stick back and to a side is a Cork: off axis, worth more, named on the landing', () => {
+    const s = newTricks();
+    // hold 0.45 s (the spin starts at 0.2), let go: it finishes the 360, then the body comes back upright
+    const ev = jump(s, (t) => ({ held: t > 0.05 && t < 0.5, sx: 0.6, sy: -0.6 }), 1.6);
+    const spin = ev.find((e) => e.type === 'trick' && e.trick!.kind === 'spin')!;
+    expect(spin.trick!.name).toBe('Cork 360');
+    expect(spin.trick!.points).toBe(Math.round(TRICK.points.spin * TRICK.offAxis));
+    expect(ev.some((e) => e.type === 'trick' && e.trick!.kind === 'flip')).toBe(false);
+    const l = land(ev);
+    expect(l.landing).toBe('clean');
+    expect(l.name).toBe('Cork 360');
+  });
+
+  it('forward and to a side is a Misty; landing still tipped off axis is not clean', () => {
+    const s = newTricks();
+    // off the snow first, then the press
+    const ev: TrickEvent[] = [...stepTricks(s, idle, true, dt)];
+    for (let t = 0; t < 0.45; t += dt) ev.push(...stepTricks(s, { held: true, sx: -0.6, sy: 0.6 }, true, dt));
+    expect(s.axis).toBe('misty');
+    expect(s.tilt).toBeGreaterThan(0.5);
+    ev.push(...stepTricks(s, idle, false, dt));
+    expect(land(ev).landing).not.toBe('clean');
+  });
+
+  it('a tap on a diagonal is a Japan (forward) or a Blunt (back), never a flip', () => {
+    for (const [sy, name] of [[0.6, 'Japan grab'], [-0.6, 'Blunt grab']] as const) {
+      const s = newTricks();
+      const ev = jump(s, (t) => ({ held: t > 0.1 && t < 0.18, sx: 0.6, sy }), 1.0);
+      expect(ev.find((e) => e.type === 'trick')!.trick!.name).toBe(name);
+      expect(s.flipsCounted).toBe(0);
+      expect(land(ev).name).toBe(name);
+    }
+    // straight forward is still a flip
+    const f = newTricks();
+    const ev = jump(f, (t) => ({ held: t > 0.05 && t < 0.3, sx: 0, sy: 1 }), 1.2);
+    expect(ev.some((e) => e.type === 'trick' && e.trick!.name === 'front flip')).toBe(true);
+  });
+
+  it('names a jump the way a skier would: rotations, then grabs', () => {
+    expect(jumpName([{ kind: 'grab', name: 'Mute grab', points: 0 }, { kind: 'spin', name: 'Cork 720', points: 0 }])).toBe('Cork 720 Mute');
+    expect(jumpName([{ kind: 'flip', name: 'back flip', points: 0 }, { kind: 'grab', name: 'Safety grab', points: 0 }])).toBe('back flip Safety');
+    expect(jumpName([{ kind: 'grab', name: 'Mute grab', points: 0 }, { kind: 'grab', name: 'Tail grab', points: 0 }])).toBe('Mute to Tail grab');
+    expect(jumpName([])).toBe('');
+  });
+
+  it('on the snow, TRICK with the stick to a side is a butter spin: a 360 on the tips, finished when let go', () => {
+    const s = newTricks();
+    const ev: TrickEvent[] = [];
+    for (let t = 0; t < 0.4; t += dt) ev.push(...stepTricks(s, { held: true, sx: 1, sy: 0 }, false, dt));
+    expect(s.groundSpin).toBe(true);
+    expect(s.press).toBeGreaterThan(0.3);
+    for (let t = 0; t < 1.2; t += dt) ev.push(...stepTricks(s, idle, false, dt));
+    const b = ev.filter((e) => e.type === 'butter');
+    expect(b.map((e) => e.trick!.name)).toEqual(['Butter 360']);
+    expect(s.groundSpin).toBe(false);
+    expect(s.spin).toBe(0);
+    expect(s.score).toBe(TRICK.butterSpinPoints);
+  });
+
+  it('held round twice is a Butter 720 (paying the difference), and popped off the snow it carries on in the air', () => {
+    const s = newTricks();
+    const ev: TrickEvent[] = [];
+    for (let t = 0; t < TRICK.butterSpinSecs * 2.05; t += dt) ev.push(...stepTricks(s, { held: true, sx: -1, sy: 0 }, false, dt));
+    expect(ev.filter((e) => e.type === 'butter').map((e) => e.trick!.name)).toEqual(['Butter 360', 'Butter 720']);
+    expect(s.score).toBe(TRICK.butterSpinPoints * 2);
+    // half way round the next one, off the snow
+    const k = newTricks();
+    for (let t = 0; t < TRICK.butterSpinSecs * 0.5; t += dt) stepTricks(k, { held: true, sx: 1, sy: 0 }, false, dt);
+    const at = k.spin;
+    stepTricks(k, idle, true, dt);
+    expect(k.spin).toBeGreaterThan(at);
+    expect(k.spinRate).not.toBe(0);
   });
 });
