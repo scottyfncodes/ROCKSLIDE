@@ -6,6 +6,8 @@
  *   is on, so you commit to a 360 or a 720 by when you let go.
  * - Stick forward or back with TRICK: a front or back flip, finished the same way.
  * - Everything in one jump chains into a combo: each trick multiplies the jump's score.
+ * - On the snow, TRICK with the stick forward or back is a butter: a nose or a tail press, held for at
+ *   least half a second, scored when it ends (the longer, the more, up to two seconds' worth).
  *
  * The landing grades it: within 40 degrees of a finished rotation is clean (points, a speed boost and
  * style), up to 100 a stumble (no points, a short wobble), past that a wipeout (a tumble you are up from
@@ -15,7 +17,7 @@
  * Pure: the game feeds it the glider's air state and the button; it never touches the scene.
  */
 
-export type TrickKind = 'grab' | 'spin' | 'flip';
+export type TrickKind = 'grab' | 'spin' | 'flip' | 'butter';
 
 export interface Trick {
   kind: TrickKind;
@@ -34,7 +36,7 @@ export interface TrickInput {
 export type Landing = 'clean' | 'stumble' | 'wipeout';
 
 export interface TrickEvent {
-  type: 'start' | 'trick' | 'land' | 'styleFull';
+  type: 'start' | 'trick' | 'land' | 'styleFull' | 'butter';
   trick?: Trick;
   landing?: Landing;
   /** points the jump scored (after the combo and the style multiplier); 0 unless clean */
@@ -79,6 +81,10 @@ export interface TrickState {
   recoverT: number;
   /** what the last landing was (for the pose) */
   last: Landing | null;
+  /** on the snow: the press, -1 (tail) .. 1 (nose), eased for the pose; the butter held and for how long */
+  press: number;
+  butterDir: number;
+  butterT: number;
   /** the session's points and best combo */
   score: number;
   best: number;
@@ -105,6 +111,11 @@ export const TRICK = {
   /** recovery (s) */
   stumbleSecs: 0.55,
   wipeoutSecs: 1.1,
+  /** a butter: at least this long (s) to count, its points per second held (up to 2 s), how fast the press goes on */
+  butterMin: 0.5,
+  butterPoints: 90,
+  butterMaxSecs: 2,
+  pressRate: 9,
   /** a clean landing's push (m/s), more for a bigger combo */
   boost: [2.2, 3, 3.8, 4.4],
 };
@@ -129,6 +140,9 @@ export const newTricks = (): TrickState => ({
   hotT: 0,
   recoverT: 0,
   last: null,
+  press: 0,
+  butterDir: 0,
+  butterT: 0,
   score: 0,
   best: 0,
 });
@@ -168,8 +182,24 @@ export function grade(spin: number, flip: number): { landing: Landing; off: numb
  * One step. `airborne`: the glider is in the air. `landedHard`: the touchdown's speed into the slope
  * (m/s) on the step it lands. `fastLine`: on the snow at speed and in control (feeds the meter).
  */
-export function stepTricks(s: TrickState, input: TrickInput, airborne: boolean, dt: number, fastLine = false): TrickEvent[] {
+export function stepTricks(s: TrickState, input: TrickInput, airborne: boolean, dt: number, fastLine = false, rolling = true): TrickEvent[] {
   const ev: TrickEvent[] = [];
+  // a butter on the snow: the press follows the stick while TRICK is held; it ends (and scores) when it
+  // lets go, changes ends, stops rolling or leaves the snow
+  const want = !airborne && rolling && input.held && s.recoverT <= 0 ? (input.sy > 0.5 ? 1 : input.sy < -0.5 ? -1 : 0) : 0;
+  s.press += (want - s.press) * Math.min(1, dt * TRICK.pressRate);
+  if (want !== s.butterDir) {
+    if (s.butterDir && s.butterT >= TRICK.butterMin) {
+      const secs = Math.min(TRICK.butterMaxSecs, s.butterT);
+      const t: Trick = { kind: 'butter', name: s.butterDir > 0 ? 'Nose butter' : 'Tail butter', points: Math.round(TRICK.butterPoints * secs * (s.hotT > 0 ? TRICK.hotScore : 1)) };
+      s.score += t.points;
+      s.style = Math.min(1, s.style + t.points * TRICK.stylePerPoint);
+      ev.push({ type: 'butter', trick: t, points: t.points });
+    }
+    s.butterDir = want;
+    s.butterT = 0;
+  }
+  if (want) s.butterT += dt;
   s.hotT = Math.max(0, s.hotT - dt);
   s.recoverT = Math.max(0, s.recoverT - dt);
   const pressed = input.held && !s.wasHeld;
