@@ -1,4 +1,4 @@
-"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.4. Laid out in GITCRAFT DesignCraft from captures of the
+"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.5. Laid out in GITCRAFT DesignCraft from captures of the
 running game and colour tokens read from the game's own code. Reproducible end to end:
 
   npm ci && npx vite build && (npx vite preview --port 4173 &)
@@ -96,7 +96,7 @@ d = None
 
 def chrome(sp, n, section, source, dark=False):
     ink = MUTED if dark else BTN
-    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.4", J, "SemiBold", 7.5, ink, tracking=300)
+    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.5", J, "SemiBold", 7.5, ink, tracking=300)
     d.text(sp, [W - M - 300, 26, W - M, 38], f"{section}   {n:02d} / {PAGES}", J, "SemiBold", 7.5, ink, tracking=300, align="right")
     d.rect(sp, [M, 42, W - M, 42.75], fill=MUTED if not dark else "#6A4552")
     if source:
@@ -167,7 +167,7 @@ def p_cover(sp):
     d.gradient(sp, [428, 0, 800, H], [{"location": 0, "color": INK, "opacity": 100}, {"location": 40, "color": INK, "opacity": 78}, {"location": 100, "color": INK, "opacity": 0}])
     d.rect(sp, [20, 20, W - 20, H - 20], stroke=CREAM, weight=1.5)
     d.tool("place_image", {"path": os.path.join(WORK, "emblem-round.png"), "x": 72, "y": 76, "width": 96, "spread": sp})
-    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.4", J, "Medium", 10, PINK, tracking=420)
+    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.5", J, "Medium", 10, PINK, tracking=420)
     d.text(sp, [66, 242, 900, 330], "SNOW PATROL", J, "SemiBold", 72, CREAM, tracking=110, leading=80)
     d.text(sp, [72, 334, 800, 360], "KESSEL VALLEY", J, "Medium", 20, PINK, tracking=520)
     d.rect(sp, [72, 386, 118, 387.5], fill=CREAM)
@@ -504,7 +504,7 @@ def p_vince(sp):
     bullets(sp, [M + cw + 30, 580, W - M, 760], [
         "Always: the honey-blonde curls out from under the hat, the red shell, the green scarf. Those three read him at 40 px tall; the wardrobe may change the jacket and hat, never the hair.",
         "Never: a different hair colour or length for Vince, a hood over the hair, skis carried upright (they read as antennae), flat-shaded gem facets, outlines. Reference and marketing images show the default outfit (patrol red, charcoal beanie).",
-        "New gear fits the same joints and pivots, and is painted in palette roles through grade().",
+        "New gear fits the same joints and pivots, in roles the mesh already has: the belt, first-aid pouch and sleeve cross added no draw calls.",
     ], size=9.2, gap=4)
 
 
@@ -549,8 +549,8 @@ def p_station(sp):
     figure(sp, [716, 196 + fw * 0.55 + 40, W - M, 196 + fw * 1.1 + 40], "env-yard", "capture", "env-yard · the yard at 09:00: garage, kennel, poles")
     figure(sp, [M, 560, M + 300, 560 + 300 * 0.5], "env-pad", "capture", "env-pad · the helipad and hangar")
     bullets(sp, [M + 320, 560, 700, 760], [
-        "Logs weathered grey-brown (#886C5C), end grain showing at the corners; dark standing-seam roof under a thick snow load.",
-        "Shuttered windows that glow warm (#DFC8A6) from dusk; a lantern by the door that swings.",
+        "Logs weathered grey-brown (#886C5C) on a fieldstone socle, end grain at the corners; the roof under a soft snow load that rolls over the eaves, icicles below (alpine_kit.py).",
+        "Shuttered windows that glow warm (#DFC8A6) from dusk; a lantern by the door; on the yard wall the patrol plaque under a lamp, split wood and skis.",
         "The yard: the garage (barn-red board and batten on a concrete stem wall, cream trim, a timber-framed bay, stovepipe, woodpile, icicles), kennel, equipment room, hangar, radio mast. Buildings are built the way they would be: footing, frame, trim, overhang.",
         "Inside: hearth, mission table, bunk, wardrobe, armchair, books, Koda's bed, a hanging lamp.",
     ], size=9, gap=4)
@@ -647,7 +647,7 @@ def p_markers(sp):
         f"Snow poles: dark {WORLD['poleShaft']} shafts with an orange tip ({WORLD['poleTip']}, picked as #FF7A1A), along every road and track, about 1.6 m tall.",
         "Beacon: a soft vertical beam and a ground ring. Amber #F2C230 for a call waiting, cyan #5AD1FF for the active objective. Additive, never graded.",
         "Route line (assist): dotted along the roads to the objective, on the snow, not on the screen.",
-        "Machines: the snowmobile and helicopter carry the patrol red and cream cross; the helicopter is SKYTRACE's.",
+        "Machines: the snowmobile and helicopter carry the patrol red and cream cross; the helicopter is SKYTRACE's. The sled shows how it works: bogie wheels, coil-overs, strapped bags.",
     ], size=9, gap=4)
 
 
@@ -679,7 +679,7 @@ def p_checklist(sp):
         ("Layer", "Belong to one layer: storybook interface or high-country world. Never mix them."),
         ("Colour", "Interface: only the CSS tokens on page 4. World: palette roles picked in kit.ts and passed through grade() (page 5)."),
         ("Type", "Jost, Courier Prime or IBM Plex Mono, in the jobs on page 6. 12 px minimum on a phone."),
-        ("Shape", "Cards: 8 radius, 1 px cream rule, the soft deep shadow. 44 px touch targets. World: soft carved figures, built buildings, smooth light, no outlines."),
+        ("Shape", "Cards: 8 radius, 1 px cream rule, the soft deep shadow. 44 px touch targets. World: soft carved figures, built buildings on a stone socle, snow as a soft load (never a slab), no outlines."),
         ("People", "Fit the 25-bone patroller or 21-bone Koda skeleton at the code's pivots; Vince keeps his hair, shell and scarf."),
         ("Light", "Look right at 06:40, 12:00, 18:40 and 21:30 and in a storm (pages 15 and 16)."),
         ("Proof", "Be checked in the running game: a capture at 1440 x 900 and on a 390 x 844 phone."),
@@ -768,7 +768,7 @@ def main():
     shots, _ = captures()
     shutil.copy(os.path.join(REPO, "public/og-image.jpg"), os.path.join(CAPS, "share-card.jpg"))
     d = DC(REPO, os.path.join(WORK, "designcraft.log"))
-    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.4"})
+    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.5"})
     d.tool("save_document", {"path": DOC})
     r = d.tool("open_document", {"path": DOC})
     print("document fonts:", r.get("documentFonts"))
@@ -796,7 +796,7 @@ def main():
     elif over:
         raise SystemExit(f"overset text: {json.dumps([(s['id'], s.get('preview')) for s in over])[:1500]}")
     d.tool("save_document", {"path": DOC})
-    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.4", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
+    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.5", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
     print("pdf:", r)
     os.makedirs(os.path.join(WORK, "pages"), exist_ok=True)
     for i in range(PAGES):
