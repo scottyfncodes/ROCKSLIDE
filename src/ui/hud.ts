@@ -9,6 +9,7 @@ export const ICON = {
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
   bark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 10h4l5-4v12l-5-4H4z"/><path d="M16 9c1.5 1.5 1.5 4.5 0 6M19 6.5c3 3 3 8 0 11"/></svg>',
   trick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M17 2.5v4h4"/></svg>',
+  jump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20c2.5-2.2 13.5-2.2 16 0"/></svg>',
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
   down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
 };
@@ -67,6 +68,9 @@ export class Hud {
   private altEl: HTMLElement;
   private hintEl: HTMLElement;
   readonly trickBtn: HTMLButtonElement;
+  readonly jumpBtn: HTMLButtonElement;
+  private jumpRing: SVGCircleElement;
+  private actions: HTMLElement;
   private speedLines: HTMLElement;
   private popEl: HTMLElement;
   private popT = 0;
@@ -146,19 +150,34 @@ export class Hud {
     input.bind(this.trickBtn, 'trick');
     this.act = el('button', 'act') as HTMLButtonElement;
     this.actLabel = el('span');
-    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    ring.setAttribute('viewBox', '0 0 100 100');
-    ring.classList.add('ring');
-    this.ringCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    this.ringCircle.setAttribute('cx', '50');
-    this.ringCircle.setAttribute('cy', '50');
-    this.ringCircle.setAttribute('r', '46');
-    this.ringCircle.setAttribute('stroke-dasharray', `${Math.PI * 92}`);
-    this.ringCircle.setAttribute('stroke-dashoffset', `${Math.PI * 92}`);
-    ring.appendChild(this.ringCircle);
-    this.act.append(ring, this.actLabel);
+    // the progress ring round a round button: a hold's work on the action button, the crouch on JUMP
+    const ring = () => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.classList.add('ring');
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', '50');
+      c.setAttribute('cy', '50');
+      c.setAttribute('r', '46');
+      c.setAttribute('stroke-dasharray', `${Math.PI * 92}`);
+      c.setAttribute('stroke-dashoffset', `${Math.PI * 92}`);
+      svg.appendChild(c);
+      return { svg, c };
+    };
+    const ar = ring();
+    this.ringCircle = ar.c;
+    this.act.append(ar.svg, this.actLabel);
     input.bind(this.act, 'action');
-    actions.append(side, this.lever, this.trickBtn, this.act);
+    // JUMP: on skis, the corner button. Hold to crouch (the ring fills with the charge), let go to jump
+    this.jumpBtn = el('button', 'act jump hidden', `${ICON.jump}<span>Jump</span>`) as HTMLButtonElement;
+    this.jumpBtn.setAttribute('aria-label', 'Jump: hold to crouch, let go to jump. Longer is higher; let go at the lip for big air');
+    const jr = ring();
+    this.jumpRing = jr.c;
+    this.jumpBtn.prepend(jr.svg);
+    input.bind(this.jumpBtn, 'jump');
+    actions.append(side, this.lever, this.trickBtn, this.act, this.jumpBtn);
+    this.actions = actions;
 
     this.speedo = el('div', 'speedo housing hidden');
     this.aimEl = el('div', 'aimpanel housing hidden');
@@ -447,12 +466,24 @@ export class Hud {
     this.put('speedo', this.speedo, `<span class="v">${Math.round(kmh)}</span><span class="u">km/h</span><span class="u">${sub}</span>${meter}`, true);
   }
 
-  /** The TRICK button: shown on skis, lit while you are in the air. */
-  setTrick(show: boolean, air: boolean) {
-    this.trickBtn.classList.toggle('hidden', !show);
+  /**
+   * The ski buttons. `skiing`: JUMP takes the corner and the action button moves out to the slot beside
+   * it, which it shares with TRICK (`trick`: TRICK is up there; a job or a lift on the snow takes it back).
+   * `air`: TRICK is lit. `charge`: JUMP is held, 0..1 into the crouch (its ring fills), else null.
+   */
+  setSki(skiing: boolean, trick: boolean, air: boolean, charge: number | null) {
+    this.actions.classList.toggle('skiing', skiing);
+    this.jumpBtn.classList.toggle('hidden', !skiing);
+    this.trickBtn.classList.toggle('hidden', !trick);
     this.trickBtn.classList.toggle('air', air);
     // the trick takes the action button's slot while it is up (the two never show together)
-    this.trickBtn.parentElement?.classList.toggle('tricking', show);
+    this.actions.classList.toggle('tricking', trick);
+    this.jumpBtn.classList.toggle('held', charge !== null);
+    const off = (Math.PI * 92 * (1 - (charge ?? 0))).toFixed(1);
+    if (this.cache.get('jumpRing') !== off) {
+      this.cache.set('jumpRing', off);
+      this.jumpRing.setAttribute('stroke-dashoffset', off);
+    }
   }
 
   /** Speed lines at the edges of the screen, 0..1. */

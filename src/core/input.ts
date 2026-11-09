@@ -3,7 +3,7 @@
  * turn the camera, and big buttons for the rest. Keyboard and mouse do the same on a desktop.
  */
 
-export type Btn = 'action' | 'alt' | 'up' | 'down' | 'boost' | 'trick' | 'bark';
+export type Btn = 'action' | 'alt' | 'up' | 'down' | 'boost' | 'trick' | 'bark' | 'jump';
 
 /** Below this share of the stick's throw nothing moves: a resting thumb never creeps. */
 export const STICK_DEAD = 0.14;
@@ -37,6 +37,8 @@ export class Input {
   /** last time any touch happened: hides keyboard hints on phones */
   touch = false;
   enabled = true;
+  /** on skis Space is the jump (E and Enter still act); everywhere else it is the action key */
+  spaceJumps = false;
   readonly stickEl: HTMLElement;
   readonly knobEl: HTMLElement;
   private radius = 56;
@@ -183,7 +185,7 @@ export class Input {
     if (this.btn.get(b)) return true;
     switch (b) {
       case 'action':
-        return this.key('KeyE', 'Space', 'Enter');
+        return this.key('KeyE', 'Enter') || (!this.spaceJumps && this.key('Space'));
       case 'alt':
         return this.key('KeyF');
       case 'up':
@@ -196,12 +198,19 @@ export class Input {
         return this.key('KeyT');
       case 'bark':
         return this.key('KeyB');
+      case 'jump':
+        return this.spaceJumps && this.key('Space');
     }
   }
 
   /** Pressed this frame (keyboard code or `btn:name`). */
   pressed(code: string): boolean {
     return this.pressedSet.has(code);
+  }
+
+  /** The action was pressed this frame: its button, E, Enter, or Space where Space is not the jump. */
+  actionPressed(): boolean {
+    return this.pressed('btn:action') || this.pressed('KeyE') || this.pressed('Enter') || (!this.spaceJumps && this.pressed('Space'));
   }
 
   /** Call once per frame: read the stick (keyboard merged), the look drag, and clear edges. */

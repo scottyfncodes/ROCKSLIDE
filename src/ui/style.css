@@ -3055,3 +3055,86 @@ body.titled #loading .loading-bar {
   user-select: text;
   -webkit-user-select: text;
 }
+
+/* ---------------------------------------------------------------- JUMP on skis
+   On skis the corner belongs to JUMP: the thumb rests on it, presses to crouch and lets go to jump. TRICK
+   (or, on the snow, a job or a lift: the two share the slot) sits one short roll of the thumb to its
+   left, a little smaller and a little higher, so a pop and a trick are one movement. The chips step up
+   onto an arc above the pair. JUMP is the paper disc of the action button with graphite lettering; its
+   ring fills in the nav pencil as the crouch charges. */
+.act.jump {
+  color: var(--graphite);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.act.jump > svg:not(.ring) {
+  width: 26px;
+  height: 26px;
+}
+.act.jump.hidden {
+  display: none;
+}
+.act.jump svg.ring circle {
+  stroke: var(--nav-ink);
+  stroke-width: 6;
+}
+/* an empty ring would still draw its round cap as a dot: only while it is loading */
+.act.jump:not(.held) svg.ring {
+  visibility: hidden;
+}
+/* held from the keyboard (Space) as well as under a thumb: the disc sinks while it is loaded */
+.act.jump.held {
+  transform: translateY(2px);
+  filter: brightness(0.95);
+}
+/* the slot beside JUMP: TRICK, or the action button when a job or a lift is on the snow */
+.actions.skiing > .act:not(.jump) {
+  width: 70px;
+  height: 70px;
+  margin: 0 0 22px;
+  font-size: 11px;
+}
+.actions.skiing > .act:not(.jump) svg.ring {
+  width: 82px;
+  height: 82px;
+}
+.actions.skiing > .act.trick svg {
+  width: 23px;
+  height: 23px;
+}
+@media (max-width: 520px) {
+  /* a phone held upright: two columns, the left one riding about 19 px higher so the rows follow the
+     thumb's arc. JUMP in the corner with Skis and Bark above it; the shared slot beside JUMP with Koda
+     above it. 30 to 46 px between buttons, every one in the right half of the screen, clear of the stick */
+  .actions.skiing > .act:not(.jump) {
+    position: absolute;
+    right: 105px;
+    bottom: 24px;
+    width: 68px;
+    height: 68px;
+    margin: 0;
+  }
+  .actions.skiing > .act:not(.jump) svg.ring {
+    width: 80px;
+    height: 80px;
+  }
+  .hud .actions.skiing .side .chip[data-slot='0'] {
+    right: 11px;
+    bottom: 108px;
+  }
+  .hud .actions.skiing .side .chip[data-slot='1'] {
+    right: 111px;
+    bottom: 127px;
+  }
+  .hud .actions.skiing .side .chip[data-slot='2'] {
+    right: 11px;
+    bottom: 194px;
+  }
+  .hud .actions.skiing .side .chip[data-slot='3'] {
+    right: 111px;
+    bottom: 213px;
+  }
+}
