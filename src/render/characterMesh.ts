@@ -281,7 +281,7 @@ export class PatrollerMesh {
     this.trim = facetPaint(PAL.white);
     this.hatMain = facetPaint(PAL.red);
     this.hatSecond = facetPaint(PAL.white);
-    this.lens = new THREE.MeshLambertMaterial({ color: 0xf2a33a, emissive: 0x3a2000, flatShading: true });
+    this.lens = new THREE.MeshLambertMaterial({ color: 0xf2a33a, emissive: 0x3a2000 });
     this.skiMat = facetPaint(PAL.wood);
     const trousers = facet(PAL.trousers);
     const boot = facet(PAL.boot);
@@ -428,12 +428,16 @@ export class PatrollerMesh {
         this.pack.add(pocket);
       }
       this.pack.add(packMain, flap, crossBg, crossV, crossH);
-      for (const s of [-1, 1]) {
-        // A-framed: the tips meet behind the head instead of splaying out like antlers
-        const sk = box(0.065, 1.3, 0.03, this.skiMat, s * 0.1, 0.26, 0.37);
-        sk.rotation.z = s * 0.065;
-        this.skisOnBack.add(sk);
+      for (const k of [0, 1]) {
+        // carried diagonally across the pack (as the model: art/3d/scripts/patrol_people.py), tails at the
+        // left hip, tips past the right shoulder below the hat; from behind the hair and cross still read
+        const sk = box(0.075, 1.32, 0.026, this.skiMat, 0.02 + k * 0.03, 0.12 - k * 0.012, 0.37 + k * 0.035);
+        sk.rotation.z = -0.98;
+        const tip = box(0.075, 0.12, 0.026, this.skiMat, 0.57 + k * 0.03, 0.51 - k * 0.012, 0.39 + k * 0.035);
+        tip.rotation.set(-0.35, 0, -0.98);
+        this.skisOnBack.add(sk, tip);
       }
+      this.skisOnBack.add(box(0.05, 0.03, 0.12, strapMat, 0.02, 0.13, 0.4));
       this.pack.add(this.skisOnBack);
       this.chest.add(this.pack);
     }

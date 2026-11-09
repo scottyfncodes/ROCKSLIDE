@@ -135,9 +135,10 @@ export class StationView {
     this.group.add(this.baseKennel);
     // merge everything that does not move into a few meshes per building
     for (const r of this.rooms) {
-      // the MeshCraft lodge is painted in many roles: bake its plain colours per vertex, so each
-      // cut-away wall still draws in a couple of calls
-      const vc = this.lodgeModelled && r === this.rooms[0];
+      // the MeshCraft lodge and garage are painted in many roles (the garage: concrete, boards, battens,
+      // trim, timber, roof, doors): bake their plain colours per vertex, so each cut-away wall still draws
+      // in a couple of calls (the lit glass keeps its own material)
+      const vc = (this.lodgeModelled && r === this.rooms[0]) || (!!this.ym && r === this.rooms[1]);
       for (const w of r.walls) bakeInPlace(w.obj, [...this.badgePins.values()].filter((p) => isUnder(p, w.obj)), vc);
       bakeInPlace(r.roof, [], vc);
       const keep: THREE.Object3D[] = [...r.walls.map((w) => w.obj), r.roof];
@@ -456,8 +457,9 @@ export class StationView {
     g.position.set(G.x, y, G.z);
     const hw = G.w / 2;
     const hd = G.d / 2;
-    // the garage: painted mint boards
-    const plank = 0x8fbfa8;
+    // the garage: barn-red board and batten on a concrete stem wall (Art Direction 2.0 Phase B: a
+    // working building, warm because people made it; the mint boards read as a toy)
+    const plank = 0xa4483c;
     const walls: Room['walls'] = [];
     let roof: THREE.Group;
     if (this.ym) {
@@ -465,7 +467,9 @@ export class StationView {
       const m = this.yard('rs_garage', {
         boards: mat(plank),
         batten: mat(shade(plank, 0.8)),
-        header: mat(shade(plank, 0.7)),
+        header: mat(0x5a3a26),
+        timber: mat(0x5a3a26),
+        concrete: mat(0xa39e96),
         floor: mat(0x9c9a94),
         rolled: mat(0xe9e2d0),
         roofDark: mat(0x4a4f55),
