@@ -9,8 +9,8 @@ import { voiceFor, type VoiceLine } from './lines';
 /** 0 patrol, 1 on a mission, 2 avalanche emergency */
 export type Intensity = 0 | 1 | 2;
 export type Sting = 'complete' | 'rankup' | 'avalanche';
-/** One-shot impact sets (public/audio/sfx/<set>_<n>): boots on snow, heavy snow and timber landing. */
-export const SFX_SETS = { step: 6, thud: 4 } as const;
+/** One-shot impact sets (public/audio/sfx/<set>_<n>): heavy snow and timber landing. (Boots on snow are synthesised: crunch.ts.) */
+export const SFX_SETS = { thud: 4 } as const;
 export type SfxSet = keyof typeof SFX_SETS;
 
 export const THEME_LAYERS = ['patrol', 'mission', 'emergency'] as const;
