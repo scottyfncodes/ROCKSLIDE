@@ -10,6 +10,7 @@ construction logic, and walls in shade take light bounced from the snow. Palette
 | Every page with a world capture | The range eases up out of the valley instead of a 100 m step (no grey wall under the foothills) | Re-captured |
 | 13 Places | The yard livery and construction rule | Caption |
 | 15 Light | The snow bounce | A rule beside the sky ramp |
+| 4 Colour tokens, 7 Shapes, 9 Interface | The in-play HUD is a field notebook (new tokens `--kraft`, `--graphite`, `--nav-ink`); panels keep the storybook card stock | Tokens, captions, HUD captures |
 | Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.5 |
 
 # Art bible edition 2.4: Field Guide Alpine, Phase B (2026-11-09)

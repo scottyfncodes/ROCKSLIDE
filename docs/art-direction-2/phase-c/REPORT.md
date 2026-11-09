@@ -60,6 +60,17 @@ the foothills.
   (before left, after right; the same camera, south across the valley at 08:49).
 - `tests/field-guide.test.ts` still passes. From the station, the bands' crests stand where they did.
 
+### The HUD: less plum, more field notes (`src/ui/style.css`, block "the field notebook HUD")
+In play, every HUD card is now a page from a pocket field notebook:
+- **Paper and ink.** Cream paper with a faint blue graph rule, a kraft board edge, graphite text.
+- **Pencils.** Red pencil for the patrol and emergencies (DISPATCH, north). The blue nav pencil for the
+  waypoint and its distance.
+- **Buttons.** Paper pills for the chips, and a paper act disc on a kraft lip.
+- **Tokens.** New `:root` tokens: `--kraft`, `--graphite`, `--nav-ink`.
+- **Unchanged.** The panels (map board, pause, wardrobe) keep the storybook card stock, and every control and
+  44 px touch target stays. See [compare-hud-field-notes.jpg](compare-hud-field-notes.jpg): the plum glass
+  left, the field notebook at 09:30 and 18:50.
+
 ## Evidence
 Captured on both builds with the same cameras, clock and weather ([`capture.mjs`](capture.mjs)). Before is `main`
 at `6b00f9a`. The phone shots are portrait 390 × 844 at 2x; the desktop shots are 1440 × 900. The yard upgrades
