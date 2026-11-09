@@ -234,3 +234,25 @@ export class MissionProps {
     }
   }
 }
+
+/** A mountain hare in its white winter coat: Koda's favourite distraction. */
+export function hareMesh(): THREE.Group {
+  const g = new THREE.Group();
+  const fur = new THREE.MeshLambertMaterial({ color: 0xece8e1 });
+  const dark = new THREE.MeshLambertMaterial({ color: 0x3a2632 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), fur);
+  body.scale.set(1, 0.8, 1.5);
+  body.position.y = 0.2;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), fur);
+  head.position.set(0, 0.32, 0.28);
+  g.add(body, head);
+  for (const x of [-0.05, 0.05]) {
+    const ear = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.18, 3, 6), fur);
+    ear.position.set(x, 0.48, 0.24);
+    ear.rotation.x = -0.4;
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 5, 4), dark);
+    tip.position.set(x, 0.6, 0.2);
+    g.add(ear, tip);
+  }
+  return g;
+}

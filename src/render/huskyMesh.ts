@@ -499,6 +499,72 @@ export class HuskyMesh {
         tailBase = 0.25;
         break;
       }
+      case 'dig': {
+        // front paws flinging snow back between the hind legs, nose down in the hole
+        const d = Math.sin(t * 16);
+        up[0] = 0.5 + d * 0.6;
+        up[1] = 0.5 - d * 0.6;
+        lo[0] = -0.6 - Math.max(0, d) * 0.6;
+        lo[1] = -0.6 - Math.max(0, -d) * 0.6;
+        bodyX = -0.32;
+        bodyY = 0.44;
+        flex = -0.1;
+        headX = -0.75;
+        wagAmp = 0.5;
+        wagSpeed = 12;
+        tailBase = 0.3;
+        break;
+      }
+      case 'paw': {
+        // the alert: one paw striking the snow, head up toward you, barking between strikes
+        const s2 = Math.max(0, Math.sin(t * 6));
+        up[0] = -0.2 + s2 * 0.9;
+        lo[0] = -s2 * 0.9;
+        bodyX = -0.12;
+        headX = 0.3 - s2 * 0.4;
+        mouth = s2 > 0.5 ? 1 : 0.3;
+        wagAmp = 0.6;
+        wagSpeed = 14;
+        tailBase = 0.25;
+        break;
+      }
+      case 'roll': {
+        // on his back in fresh snow, legs going
+        bodyZ = 2.6 + Math.sin(t * 3) * 0.35;
+        bodyY = 0.32;
+        up[0] = up[1] = 0.6 + Math.sin(t * 7) * 0.5;
+        up[2] = up[3] = -0.4 + Math.sin(t * 7 + 1) * 0.4;
+        lo[0] = lo[1] = -0.9;
+        headX = 0.3;
+        mouth = 1;
+        wagAmp = 0.5;
+        wagSpeed = 8;
+        break;
+      }
+      case 'shake': {
+        // the full-body shake, head to tail
+        bodyZ = Math.sin(t * 34) * 0.22;
+        headZ = Math.sin(t * 34 + 0.6) * 0.5;
+        headY = Math.sin(t * 34 + 0.3) * 0.25;
+        flex = Math.sin(t * 34 + 1) * 0.08;
+        wagAmp = 0.8;
+        wagSpeed = 34;
+        mouth = 0.3;
+        break;
+      }
+      case 'snap': {
+        // looking up and snapping at falling snowflakes
+        const j = Math.max(0, Math.sin(t * 3.2));
+        headX = 0.9 + j * 0.2;
+        headY = Math.sin(t * 1.6) * 0.5;
+        mouth = j > 0.8 ? 1 : 0.1;
+        bodyY += j * 0.12;
+        up[0] = up[1] = -0.3 - j * 0.3;
+        bodyX = 0.1 + j * 0.12;
+        wagAmp = 0.5;
+        wagSpeed = 10;
+        break;
+      }
       default: {
         // standing about: looking round, panting, the odd curious head tilt
         headY = Math.sin(t * 0.4) * 0.4;

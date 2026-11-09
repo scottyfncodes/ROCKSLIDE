@@ -1,4 +1,5 @@
 import { mission, MISSIONS, WIND_LOADS } from '../missions/catalog';
+import type { ControlDay } from '../missions/control';
 import { mulberry32 } from '../sim/noise';
 import type { MissionRun } from '../missions/runner';
 import { newWeather, type WeatherState } from '../world/weather';
@@ -71,6 +72,15 @@ export interface Profile {
   /** tricks on skis: every clean landing's points, and the best single jump */
   trickPoints: number;
   trickBest: number;
+  /** Koda's bond (0..100), treats in your pocket, and pets that counted today (and which day) */
+  bond: number;
+  treats: number;
+  pets: { day: number; n: number };
+  /** best rescue score and rescues done */
+  rescues: number;
+  bestRescue: number;
+  /** today's avalanche control (the snowpack, what has been shot), kept for the day it belongs to */
+  control: (ControlDay & { day: number }) | null;
   played: number;
   /** a new save that has not seen the opening yet */
   fresh: boolean;
@@ -103,6 +113,12 @@ export function newProfile(): Profile {
     settings: { sound: true, music: true, look: 1, invertY: false, quality: 'auto', vibrate: true, heliAssist: false, sledAssist: false, routeLine: false },
     trickPoints: 0,
     trickBest: 0,
+    bond: 10,
+    treats: 0,
+    pets: { day: 0, n: 0 },
+    rescues: 0,
+    bestRescue: 0,
+    control: null,
     played: 0,
     fresh: true,
     savedAt: 0,
@@ -134,6 +150,14 @@ export function migrate(raw: unknown): Profile {
   if (!Number.isFinite(p.cleanReads)) p.cleanReads = 0;
   if (!Number.isFinite(p.trickPoints)) p.trickPoints = 0;
   if (!Number.isFinite(p.trickBest)) p.trickBest = 0;
+  // Koda's bond starts where the affection the old save built up puts it
+  if (!Number.isFinite((raw as Partial<Profile>).bond)) p.bond = Math.min(60, 10 + Math.floor((Number.isFinite(p.affection) ? p.affection : 0) / 3));
+  p.bond = Math.max(0, Math.min(100, p.bond));
+  if (!Number.isFinite(p.treats) || p.treats < 0) p.treats = 0;
+  if (!p.pets || !Number.isFinite(p.pets.day) || !Number.isFinite(p.pets.n)) p.pets = { day: 0, n: 0 };
+  if (!Number.isFinite(p.rescues)) p.rescues = 0;
+  if (!Number.isFinite(p.bestRescue)) p.bestRescue = 0;
+  if (!p.control || typeof p.control !== 'object' || !Array.isArray(p.control.zones) || !Number.isFinite(p.control.day)) p.control = null;
   // bowl calls without a loaded bowl behind them (a damaged save) go
   if (!p.loaded.length) p.events = p.events.filter((e) => !mission(e).bowl);
   if (p.active && !MISSIONS.some((m) => m.id === p.active!.id)) p.active = null;

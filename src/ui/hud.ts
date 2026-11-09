@@ -7,6 +7,7 @@ export const ICON = {
   off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4M6 12h9"/></svg>',
   skis: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 3l12 17M10 3l9 13"/><path d="M15 20h4"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  bark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 10h4l5-4v12l-5-4H4z"/><path d="M16 9c1.5 1.5 1.5 4.5 0 6M19 6.5c3 3 3 8 0 11"/></svg>',
   trick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M17 2.5v4h4"/></svg>',
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
   down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
@@ -51,7 +52,9 @@ export class Hud {
   private act: HTMLButtonElement;
   private actLabel: HTMLElement;
   private ringCircle: SVGCircleElement;
-  readonly chips: Record<'off' | 'skis' | 'koda' | 'map', HTMLButtonElement>;
+  readonly chips: Record<'off' | 'skis' | 'koda' | 'map' | 'bark', HTMLButtonElement>;
+  private aimEl: HTMLElement;
+  private beaconEl: HTMLElement;
   readonly pause: HTMLButtonElement;
   private lever: HTMLElement;
   private speedo: HTMLElement;
@@ -118,9 +121,9 @@ export class Hud {
       const b = el('button', 'chip', `${icon}<span>${label}</span>`) as HTMLButtonElement;
       return b;
     };
-    this.chips = { koda: chip(ICON.paw, 'Koda'), skis: chip(ICON.skis, 'Skis'), off: chip(ICON.off, 'Get off'), map: map };
+    this.chips = { koda: chip(ICON.paw, 'Koda'), skis: chip(ICON.skis, 'Skis'), off: chip(ICON.off, 'Get off'), map: map, bark: chip(ICON.bark, 'Bark') };
     // the thumb cluster: round buttons on an arc round the action button, filled in order (setChips)
-    side.append(this.chips.off, this.chips.skis, this.chips.koda);
+    side.append(this.chips.off, this.chips.skis, this.chips.koda, this.chips.bark);
     // the map button is a minimap: the ground round you, north up (the district you are in is read
     // out with its name, and called out on screen as you enter it)
     this.miniCanvas = document.createElement('canvas');
@@ -158,6 +161,10 @@ export class Hud {
     actions.append(side, this.lever, this.trickBtn, this.act);
 
     this.speedo = el('div', 'speedo housing hidden');
+    this.aimEl = el('div', 'aimpanel housing hidden');
+    this.beaconEl = el('div', 'beaconpanel housing hidden');
+    this.beaconEl.setAttribute('role', 'status');
+    this.beaconEl.setAttribute('aria-label', 'Avalanche transceiver');
     this.speedLines = el('div', 'speedlines');
     this.speedLines.setAttribute('aria-hidden', 'true');
     this.popEl = el('div', 'trickpop');
@@ -185,7 +192,7 @@ export class Hud {
     const stack = el('div', 'stack');
     stack.append(this.task, this.compass, this.wpDist, this.toastEl, this.radioEl);
     this.cond = cond;
-    this.root.append(this.speedLines, stack, cond, actions, this.speedo, this.alertEl, this.scanEl, this.altEl, this.hintEl, this.popEl);
+    this.root.append(this.speedLines, stack, cond, actions, this.speedo, this.aimEl, this.beaconEl, this.alertEl, this.scanEl, this.altEl, this.hintEl, this.popEl);
     window.addEventListener('resize', () => this.layout());
     window.visualViewport?.addEventListener('resize', () => this.layout());
     // compass ticks
@@ -375,7 +382,8 @@ export class Hud {
    * order (nearest the action button first), so the cluster never leaves a gap. `on` marks a state that
    * is engaged (skis on, Koda told to stay or on a scent) with the nav-pencil blue ring.
    */
-  setChips(c: { off?: string | null; skis?: string | null; koda?: string | null; kodaOn?: boolean; skisOn?: boolean }) {
+  setChips(c: { off?: string | null; skis?: string | null; koda?: string | null; kodaOn?: boolean; skisOn?: boolean; bark?: boolean }) {
+    this.chips.bark.classList.toggle('hidden', !c.bark);
     const set = (b: HTMLButtonElement, t: string | null | undefined) => {
       b.classList.toggle('hidden', !t);
       if (t) {
@@ -391,10 +399,36 @@ export class Hud {
     this.chips.skis.setAttribute('aria-pressed', String(!!c.skisOn));
     this.chips.koda.setAttribute('aria-label', c.koda ? `Koda: ${c.koda}` : 'Koda');
     let slot = 0;
-    for (const b of [this.chips.off, this.chips.skis, this.chips.koda]) {
+    for (const b of [this.chips.off, this.chips.skis, this.chips.koda, this.chips.bark]) {
       const v = b.classList.contains('hidden') ? '' : String(slot++);
       if (b.dataset.slot !== v) b.dataset.slot = v;
     }
+  }
+
+  /** The gun's sight: charge, elevation, where the round lands, and whether it is safe to fire. */
+  setAim(a: { gun: string; charge: number; elev: number; range: number; target: string | null; status: string; safe: boolean } | null) {
+    this.aimEl.classList.toggle('hidden', !a);
+    if (!a) return;
+    this.put('aim', this.aimEl, `<div class="label">${a.gun} · charge ${'●'.repeat(a.charge)}${'○'.repeat(3 - a.charge)}</div><div class="big">${Math.round(a.elev)}°<span class="u"> elevation · ${Math.round(a.range)} m</span></div><div class="tgt ${a.target ? 'on' : ''}">${a.target ? `On target: ${a.target}` : 'Off target: aim at a start zone'}</div><div class="small">${a.status}</div><div class="safe ${a.safe ? 'good' : 'bad'}"><i></i>${a.safe ? 'Runs closed, path clear' : 'Not safe to fire'}</div>`, true);
+  }
+
+  /**
+   * The avalanche transceiver and the survival clock: the search stage, the distance, the arrow (turned
+   * to the screen: \`turn\` radians, null when there is none), the odds and the minutes, and while you are
+   * caught, how much air you have.
+   */
+  setBeacon(b: { stage: string; distance: number; turn: number | null; odds: number; minutes: number; left: number; air?: number | null } | null) {
+    this.beaconEl.classList.toggle('hidden', !b);
+    if (!b) return;
+    if (b.air !== undefined && b.air !== null) {
+      this.put('beacon', this.beaconEl, `<div class="label">Caught: swim!</div><div class="meter air"><i style="width:${Math.round(b.air * 100)}%"></i></div><div class="small">Mash the button to stay on top</div>`, true);
+      return;
+    }
+    const stage = b.stage === 'signal' ? 'Signal search' : b.stage === 'coarse' ? 'Coarse search' : 'Fine search';
+    const hint = b.stage === 'signal' ? 'No signal: sweep the debris in strips' : b.stage === 'coarse' ? 'Follow the arrow' : 'Go low: find the lowest reading, then probe';
+    const arrow = b.turn === null ? '' : `<svg class="arrow" viewBox="0 0 40 40" style="transform:rotate(${Math.round((b.turn * 180) / Math.PI)}deg)"><path d="M20 4l10 22-10-6-10 6z"/></svg>`;
+    const pct = Math.round(b.odds * 100);
+    this.put('beacon', this.beaconEl, `<div class="label">${stage} · ${b.left} buried</div><div class="row">${arrow}<div class="big">${b.stage === 'signal' ? '--' : b.distance.toFixed(1)}<span class="u"> m</span></div></div><div class="small">${hint}</div><div class="meter ${pct > 80 ? 'good' : pct > 40 ? 'warn' : 'bad'}" role="progressbar" aria-label="Survival odds" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div><div class="small">${pct}% survival · ${Math.floor(b.minutes)} min buried</div>`, true);
   }
 
   setLever(on: boolean) {
