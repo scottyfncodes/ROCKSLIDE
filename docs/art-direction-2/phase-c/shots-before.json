@@ -1,0 +1,124 @@
+{
+ "shots": [
+  {
+   "name": "p-hangar",
+   "kind": "env",
+   "note": "Phone: Hangar 1 and the pad, 10:30",
+   "viewport": "390x844",
+   "calls": 384,
+   "tris": 303594
+  },
+  {
+   "name": "p-equipment",
+   "kind": "env",
+   "note": "Phone: The equipment room, 11:00",
+   "viewport": "390x844",
+   "calls": 329,
+   "tris": 293302
+  },
+  {
+   "name": "p-kennel",
+   "kind": "env",
+   "note": "Phone: Koda's kennel, 11:00",
+   "viewport": "390x844",
+   "calls": 378,
+   "tris": 282751
+  },
+  {
+   "name": "p-mast",
+   "kind": "env",
+   "note": "Phone: The radio mast and its hut, 11:00",
+   "viewport": "390x844",
+   "calls": 317,
+   "tris": 257657
+  },
+  {
+   "name": "p-yard-dusk",
+   "kind": "env",
+   "note": "Phone: The yard at dusk, 18:50",
+   "viewport": "390x844",
+   "calls": 363,
+   "tris": 296128
+  },
+  {
+   "name": "p-hollin",
+   "kind": "env",
+   "note": "Phone: Hollin: the Kettle and the village row",
+   "viewport": "390x844",
+   "calls": 288,
+   "tris": 351987
+  },
+  {
+   "name": "p-chapel",
+   "kind": "env",
+   "note": "Phone: Hollin chapel, 15:00",
+   "viewport": "390x844",
+   "calls": 358,
+   "tris": 388426
+  },
+  {
+   "name": "p-house",
+   "kind": "env",
+   "note": "Phone: A Hollin house, 11:00",
+   "viewport": "390x844",
+   "calls": 423,
+   "tris": 342401
+  },
+  {
+   "name": "p-cabin",
+   "kind": "env",
+   "note": "Phone: Fernhut cabin, 12:00",
+   "viewport": "390x844",
+   "calls": 179,
+   "tris": 218755
+  },
+  {
+   "name": "p-topstation",
+   "kind": "env",
+   "note": "Phone: Tannberg top station hut, 11:00",
+   "viewport": "390x844",
+   "calls": 159,
+   "tris": 172271
+  },
+  {
+   "name": "p-boathouse",
+   "kind": "env",
+   "note": "Phone: The boathouse on Mirror Lake, 13:00",
+   "viewport": "390x844",
+   "calls": 122,
+   "tris": 172836
+  },
+  {
+   "name": "p-barrier",
+   "kind": "env",
+   "note": "Phone: The pass barrier hut, 12:00",
+   "viewport": "390x844",
+   "calls": 156,
+   "tris": 197534
+  },
+  {
+   "name": "p-minecabin",
+   "kind": "env",
+   "note": "Phone: The old mine cabin, 12:00",
+   "viewport": "390x844",
+   "calls": 110,
+   "tris": 155546
+  },
+  {
+   "name": "d-yard",
+   "kind": "env",
+   "note": "The whole yard, every upgrade, 10:00",
+   "viewport": "1440x900",
+   "calls": 449,
+   "tris": 553106
+  },
+  {
+   "name": "d-hollin",
+   "kind": "env",
+   "note": "Hollin from the edge of the village",
+   "viewport": "1440x900",
+   "calls": 472,
+   "tris": 629411
+  }
+ ]
+}

@@ -84,7 +84,25 @@ are all switched on for both builds.
 | [compare-valley-2.jpg](compare-valley-2.jpg) | Top-station hut, boathouse, barrier hut |
 | [compare-desktop.jpg](compare-desktop.jpg) | The whole yard; Hollin from the edge of the village |
 
-COST_TABLE
+## Cost (renderer.info, the same views)
+
+| Shot | Draw calls before → after | Triangles before → after |
+| --- | --- | --- |
+| p-hangar | 384 → 336 (-48) | 303,594 → 318,262 (+4.8 %) |
+| p-equipment | 329 → 290 (-39) | 293,302 → 305,926 (+4.3 %) |
+| p-kennel | 378 → 335 (-43) | 282,751 → 294,587 (+4.2 %) |
+| p-mast | 317 → 290 (-27) | 257,657 → 269,129 (+4.5 %) |
+| p-yard-dusk | 363 → 321 (-42) | 296,128 → 306,696 (+3.6 %) |
+| p-hollin | 288 → 295 (+7) | 351,987 → 375,535 (+6.7 %) |
+| p-chapel | 358 → 362 (+4) | 388,426 → 414,940 (+6.8 %) |
+| p-house | 423 → 394 (-29) | 342,401 → 364,257 (+6.4 %) |
+| p-cabin | 179 → 194 (+15) | 218,755 → 232,875 (+6.5 %) |
+| p-topstation | 159 → 165 (+6) | 172,271 → 182,503 (+5.9 %) |
+| p-boathouse | 122 → 130 (+8) | 172,836 → 179,388 (+3.8 %) |
+| p-barrier | 156 → 156 (+0) | 197,534 → 202,838 (+2.7 %) |
+| p-minecabin | 110 → 110 (+0) | 155,546 → 160,026 (+2.9 %) |
+| d-yard | 449 → 416 (-33) | 553,106 → 569,778 (+3.0 %) |
+| d-hollin | 472 → 470 (-2) | 629,411 → 660,205 (+4.9 %) |
 
 **Not measured:** frame time on a real phone. Captures run in SwiftShader.
 
