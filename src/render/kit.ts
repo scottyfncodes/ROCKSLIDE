@@ -155,6 +155,29 @@ export function facet(color: number): THREE.MeshLambertMaterial {
   return m;
 }
 export const facetPaint = (color: number) => dusted(new THREE.MeshLambertMaterial({ color: grade(color) }));
+/**
+ * The figures' one material for every colour the game never repaints: the colour is in the model's
+ * vertex colours (graded once on load by gradeVertexColors), so a character's boots, gloves, face,
+ * straps and pack draw in one call instead of one per colour.
+ */
+export const facetBaked = () => dusted(new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true }));
+
+/** Pass a model's baked vertex colours through the storybook grade, once per geometry. */
+export function gradeVertexColors(geo: THREE.BufferGeometry) {
+  const col = geo.getAttribute('color') as THREE.BufferAttribute | undefined;
+  if (!col || geo.userData.graded) return;
+  geo.userData.graded = true;
+  const seen = new Map<number, THREE.Color>();
+  const c = new THREE.Color();
+  for (let i = 0; i < col.count; i++) {
+    c.setRGB(col.getX(i), col.getY(i), col.getZ(i), THREE.LinearSRGBColorSpace);
+    const hex = c.getHex(THREE.SRGBColorSpace);
+    let g = seen.get(hex);
+    if (!g) seen.set(hex, (g = new THREE.Color().setHex(grade(hex), THREE.SRGBColorSpace)));
+    col.setXYZ(i, g.r, g.g, g.b);
+  }
+  col.needsUpdate = true;
+}
 
 /** A cut gem: an icosahedron (detail 0 or 1), the faceted building block of the people and Koda. */
 export function gem(r: number, m: THREE.Material | number, x = 0, y = 0, z = 0, detail = 1): THREE.Mesh {

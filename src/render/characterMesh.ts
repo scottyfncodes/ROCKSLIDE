@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ball, box, cyl, facet, facetPaint, gem, PAL, repaint } from './kit';
+import { ball, box, cyl, facet, facetBaked, facetPaint, gem, gradeVertexColors, PAL, repaint } from './kit';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { cullAsCharacter, dressModel, retire } from './patrolModels';
 import { ANKLE, footAt, gaitShape, legIK, LEG, pelvisBob, SHIN, Spring, THIGH, type Foot, type LegAngles } from './gait';
@@ -319,6 +319,7 @@ export class PatrollerMesh {
       cheek: facet(0xeea295),
       smile: facet(0x8e3f4c),
       metal: facet(PAL.metal),
+      baked: facetBaked(),
     };
 
     this.group.add(this.body);
@@ -579,6 +580,10 @@ export class PatrollerMesh {
     if (!this.civilian) parts.push('pat_gear', 'pat_skis_back');
     const n = dressModel(root, [...bones, ...parts], this.roles);
     if (!n) return false;
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && m.material === this.roles.baked) gradeVertexColors(m.geometry);
+    });
     // one sphere that holds every pose: the poles, swung while skiing, reach furthest (~2 m)
     cullAsCharacter(root, new THREE.Vector3(0, 0.9, 0), 2.3);
     // carry the current look across
@@ -594,8 +599,6 @@ export class PatrollerMesh {
       [this.neck, 'neck'],
       [this.head, 'head'],
       [this.pack, 'pack'],
-      [this.poms[0], 'pom_beanie'],
-      [this.poms[1], 'pom_bobble'],
       [this.tails[0].a, 'scarf_a_0'],
       [this.tails[0].b, 'scarf_b_0'],
       [this.tails[1].a, 'scarf_a_1'],
@@ -613,7 +616,8 @@ export class PatrollerMesh {
       b.scale.copy(a.scale);
     }
     // the model's eyes sit lower on its face (clear of the hat band) and blink about their own
-    // centres, so their bones keep the model's pivots and only take the current blink
+    // centres, so their bones keep the model's pivots and only take the current blink; the pom-poms
+    // keep the model's pivots too (on top of its own hats), and only swing
     n.eye_L.scale.copy(this.eyes[0].scale);
     n.eye_R.scale.copy(this.eyes[1].scale);
     // the cat (or whatever is held) stays in the right glove
@@ -626,7 +630,15 @@ export class PatrollerMesh {
     this.chest = n.chest;
     this.neck = n.neck;
     this.head = n.head;
-    if (this.longHair) this.head.add(this.longHair);
+    // Vince's long hair: the model's own when it has one (a mesh on the head bone), else the code-built
+    const modelHair = root.getObjectByName('pat_hair_long');
+    if (modelHair) {
+      modelHair.visible = !!this.longHair;
+      if (this.longHair) {
+        retire([this.longHair]);
+        this.longHair = modelHair;
+      }
+    } else if (this.longHair) this.head.add(this.longHair);
     this.pack = n.pack;
     for (const [side, s] of [
       [this.L, 'L'],

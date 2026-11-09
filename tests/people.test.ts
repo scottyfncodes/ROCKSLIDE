@@ -154,9 +154,12 @@ describe('the patroller model (MeshCraft, skinned)', () => {
       }
       const a = drawnBounds(code.group);
       const b = drawnBounds(model.group);
+      // Character Evolution: Vince's boots have a real heel (it swings ~7 cm further back at toe-off) and
+      // his head and hat are 12 % larger, so front-back and height get 9 cm; side to side stays 6
       for (const k of ['x', 'y', 'z'] as const) {
-        expect(Math.abs(a.min[k] - b.min[k]), `${pose} min ${k}`).toBeLessThan(0.06);
-        expect(Math.abs(a.max[k] - b.max[k]), `${pose} max ${k}`).toBeLessThan(0.06);
+        const tol = k === 'x' ? 0.06 : 0.09;
+        expect(Math.abs(a.min[k] - b.min[k]), `${pose} min ${k}`).toBeLessThan(tol);
+        expect(Math.abs(a.max[k] - b.max[k]), `${pose} max ${k}`).toBeLessThan(tol);
       }
     }
     // boots on the snow as before (both sink a few cm into it)
@@ -164,8 +167,11 @@ describe('the patroller model (MeshCraft, skinned)', () => {
     const b = drawnBounds(model.group);
     expect(Math.abs(a.min.y - b.min.y)).toBeLessThan(0.02);
     // Art Direction 2.0 Phase B: the model is the soft, smooth-shaded figure (rounder forms, more sides),
-    // so it draws about twice the code-built figure's triangles; a fixed phone budget holds it
-    expect(visibleTris(model.group)).toBeLessThan(5200);
+    // so it draws about twice the code-built figure's triangles; a fixed phone budget holds it.
+    // Character Evolution: the redesigned Vince (lofted clothing, the larger face, his hair, the rescue
+    // pack) draws ~12,500 triangles in a third of the draw calls (fixed colours in one material): on a
+    // phone the calls are the cost (art/docs CONVENTIONS rule 7), and the valley draws ~260,000 a frame
+    expect(visibleTris(model.group)).toBeLessThan(13500);
     const drawn = (root: THREE.Object3D) => {
       let n = 0;
       root.traverse((o) => {
