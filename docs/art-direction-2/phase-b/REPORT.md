@@ -85,7 +85,24 @@ Same cameras, clock and weather on both builds (`capture.mjs`); before = `main` 
 
 Per-shot draw calls and triangles are in [`shots-before.json`](shots-before.json) and [`shots-after.json`](shots-after.json).
 
-COST_TABLE
+## Cost (renderer.info, the same views)
+
+| Shot | Draw calls before → after | Triangles before → after |
+| --- | --- | --- |
+| p-title | 269 → 256 (-13) | 229,927 → 241,499 (+5.0 %) |
+| p-yard-hud | 318 → 290 (-28) | 269,992 → 282,204 (+4.5 %) |
+| p-back-hud | 278 → 265 (-13) | 270,846 → 282,418 (+4.3 %) |
+| p-garage | 296 → 269 (-27) | 260,014 → 272,238 (+4.7 %) |
+| p-garage-dusk | 308 → 280 (-28) | 268,054 → 279,458 (+4.3 %) |
+| p-cast | 272 → 259 (-13) | 212,645 → 224,217 (+5.4 %) |
+| p-cast-night | 276 → 263 (-13) | 216,337 → 227,933 (+5.4 %) |
+| d-garage | 339 → 320 (-19) | 462,200 → 495,134 (+7.1 %) |
+| d-cast | 303 → 290 (-13) | 392,865 → 404,437 (+2.9 %) |
+| d-yard-hud | 364 → 336 (-28) | 465,188 → 477,400 (+2.6 %) |
+
+Draw calls **fall** in every view (13 to 28 fewer): the garage's many paint roles are baked to vertex colour
+per cut-away node (the lodge's existing path, `bakeInPlace(..., byColor)`), so it draws in fewer calls than the
+old four-role garage, in the shadow pass too. Triangles rise 3 to 7 %: the rounder figures and the garage.
 
 ### What was and was not measured
 - **Measured here:** draw calls and triangles per view (`renderer.info`) on both builds; model triangle counts
