@@ -58,19 +58,19 @@
   },
   {
    "path": "../public/models/rs_barrier_hut.glb",
-   "bytes": 22284,
+   "bytes": 50408,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_barrier_hut: pass barrier hut; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "9bec8475a54b2c420829e5eb019086617de0c392c77dda55d5fb18924f3e0843"
+   "sha256": "08e8cb4534e264cb4537838db911f94530a5c2b3e923b0353c958a99541fa0e2"
   },
   {
    "path": "../public/models/rs_boathouse.glb",
-   "bytes": 58668,
+   "bytes": 133520,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_boathouse: Mirror Lake boathouse, board-and-batten, lake doors, jetty; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "99b65e412f3369bd1bd9a9333aedc0f789b2cc48168d239b7c91440f38db4100"
+   "sha256": "9a9f05af45182df3eead502a89138cf3fc021b681f50064a912364bb20cd14a6"
   },
   {
    "path": "../public/models/rs_boulder_a.glb",
@@ -90,11 +90,11 @@
   },
   {
    "path": "../public/models/rs_cabin.glb",
-   "bytes": 109980,
+   "bytes": 182548,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_cabin: log cabin with notched corners (Fernhut; fitted to the Tannberg top-station hut); art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "b7af9036c6fa84414142cb71ebc8ca3600e44128d8f0c1d738b1a3726f836d2c"
+   "sha256": "feed94cf94052d67c06cd757f5eda4b0b27778125bc18328a29b6fbf62a98614"
   },
   {
    "path": "../public/models/rs_cache.glb",
@@ -122,35 +122,35 @@
   },
   {
    "path": "../public/models/rs_chalet.glb",
-   "bytes": 135540,
+   "bytes": 194060,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_chalet: two-storey Hollin chalet (houses, baker, clinic): body/roof/balcony/door/chimney nodes fitted per house; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "ee5d8b834d0e510f668db9e56c4ca98d2ea411353c68a93f294be9afa5c1fb63"
+   "sha256": "ae70fab83ef5e4c3ab871ce2a8ccf9497f333b325a9df008c9111814104adba3"
   },
   {
    "path": "../public/models/rs_chalet_small.glb",
-   "bytes": 86652,
+   "bytes": 131292,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_chalet_small: single-storey chalet (the weather station hut); art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "33e136df8726290d8c945da6efb5f1e556c6dbc9a1ec347bb32e24b1f2544ede"
+   "sha256": "a9e44efc7e3ab1314acfd6647d6280d066ed554b898255c3c52c63d19a8759e7"
   },
   {
    "path": "../public/models/rs_chalet_wide.glb",
-   "bytes": 158600,
+   "bytes": 248968,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_chalet_wide: wide two-storey chalet (the Kettle, the Tannberg base lodge); art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "9f2e566e59383d16e52b670b57d08f5285549d8e326caf735916807ddc7fa139"
+   "sha256": "a63e7834ce43f565b0159474bf9e36d725f2cfdd61d0082ead4c561b6336e6e1"
   },
   {
    "path": "../public/models/rs_chapel.glb",
-   "bytes": 99672,
+   "bytes": 125028,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_chapel: Hollin chapel with bell tower, belfry louvres, clocks and onion dome; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "b2fd02de75167298361d6b9a0880edecbd25674bb03f152ba844499630778a58"
+   "sha256": "6e9854a787951a7b19854fd4d80abd5781214e137dda62afa31524cbdecb48fa"
   },
   {
    "path": "../public/models/rs_crag_a.glb",

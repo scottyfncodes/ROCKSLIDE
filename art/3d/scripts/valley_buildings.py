@@ -168,6 +168,18 @@ def side_window(x, y, z, face, w=0.6, h=0.7):
             B("roofSnow", 0.28, 0.1, w + 0.25, (x + s * 0.1, y - h / 2 - 0.1, z))]
 
 
+def woodpile(x, z0, z1, s, rows=3, r=0.13, depth=0.5):
+    """Split logs stacked against a wall that runs along z, ends out (facing +x for s 1): Phase C."""
+    p = [B("grain", depth, rows * r * 1.9, z1 - z0, (x, rows * r * 0.95, (z0 + z1) / 2))]
+    n = int((z1 - z0) / (r * 2.1))
+    for row in range(rows):
+        for k in range(n):
+            z = z0 + r * 1.05 + k * r * 2.1 + (r if row % 2 else 0)
+            if z > z1 - r: continue
+            p.append(C("log", r, r, depth + 0.04, 5, (x + s * 0.02, r + row * r * 1.85, z), (0, 0, math.pi / 2)))
+    return p
+
+
 # ------------------------------------------------------------------ the chalet
 def chalet(w, d, floors, wins):
     """An alpine chalet: stone ground floor with quoins, a painted timber upper floor with plank lines,
@@ -198,6 +210,10 @@ def chalet(w, d, floors, wins):
             for s in (-1, 1):
                 body.append(B("plank", w - 0.2, 0.04, 0.02, (0, y, s * (d / 2 + 0.01))))
                 body.append(B("plank", 0.02, 0.04, d - 0.2, (s * (w / 2 + 0.01), y, 0)))
+    # Phase C: the winter's wood under the east eave, and a bench by the door
+    body += woodpile(w / 2 + 0.3, -d / 4, d / 2 - 0.6, 1, rows=3)
+    body += [B("logDark", 1.3, 0.08, 0.36, (-w * 0.12, 0.45, d / 2 + 0.32)), B("logDark", 0.08, 0.42, 0.3, (-w * 0.12 - 0.55, 0.21, d / 2 + 0.32)),
+             B("logDark", 0.08, 0.42, 0.3, (-w * 0.12 + 0.55, 0.21, d / 2 + 0.32)), B("roofSnow", 1.25, 0.06, 0.3, (-w * 0.12, 0.52, d / 2 + 0.32))]
     wy = h1 + 1.3 if floors > 1 else 1.5
     xs = [-w / 4, w / 4] if wins == 2 else [-w / 3, 0, w / 3]
     for s in (-1, 1):
@@ -220,6 +236,9 @@ def chalet(w, d, floors, wins):
             roof.append(B("logDark", L, 0.18, 0.08, (sx * (w / 2 + 0.8) / 2, H / 2 + 0.02, s * (d / 2 + 0.88)), (0, 0, -sx * a)))
         for x in (-w / 3, 0, w / 3):
             roof.append(B("logDark", 0.16, 0.16, 0.9, (x, H * (1 - abs(x) / (w / 2 + 0.8)) - 0.25, s * (d / 2 + 0.4))))
+    # Phase C: icicles along both eaves
+    for sx in (-1, 1):
+        roof += icicles(-(d + 1.6) / 2, (d + 1.6) / 2, sx * (w / 2 + 0.75), -0.02, max(8, int(d * 1.6)), seed=sx + w, along_z=True)
     bal = []
     if floors > 1:
         bw = w * 0.8
@@ -264,6 +283,9 @@ def chapel():
     p[-1].location.y += 4.2
     for o in p[2:2 + 7]:
         o.location.y += 4.2
+    # Phase C: icicles down both eaves of the nave
+    for sx in (-1, 1):
+        p += icicles(-4.3, 4.3, sx * 2.88, 4.18, 12, seed=sx * 3, along_z=True)
     # arched windows down both sides, a rose window and the door at the front
     for s in (-1, 1):
         for z in (-1.8, 0.4, 2.6):
@@ -325,13 +347,19 @@ def cabin():
             for ex in (-1, 1):
                 body.append(C("grain", r * 0.92, r * 0.92, 0.04, 7, (ex * 2.76, y0, s * 2.0), (0, 0, math.pi / 2)))
             body.append(C("logShade" if i % 2 else "log", r, r, 4.5, 7, (s * 2.5, y0 + r, 0), (math.pi / 2, 0, 0)))
-    body += window(0.6, 1.4, 2.2, 1, shutter=False, w=0.8, h=0.7)
+    body += window(0.6, 1.4, 2.2, 1, shutter=True, w=0.8, h=0.7)
+    # Phase C: the wood stacked against the west wall, a chopping block with its axe, the step
+    body += woodpile(-2.95, -1.6, 1.4, -1, rows=4)
+    body += [C("grain", 0.22, 0.24, 0.45, 9, (-1.9, 0.22, 2.9)), B("logDark", 0.05, 0.6, 0.05, (-1.82, 0.62, 2.92), (0, 0, 0.5)),
+             B("trim", 0.16, 0.1, 0.04, (-1.95, 0.88, 2.92), (0, 0, 0.5)), B("stoneDark", 1.1, 0.16, 0.6, (-1.3, 0.08, 2.5))]
     body += [B("logDark", 1.0, 2.0, 0.12, (-1.3, 1.0, 2.15)), B("door", 0.8, 1.85, 0.1, (-1.3, 0.95, 2.2)),
              B("stone", 0.6, 1.8, 0.6, (2.3, 3.2, 1.0)), B("roofSnow", 0.66, 0.12, 0.66, (2.3, 4.16, 1.0))]
     roof = snow_roof(5.6, 6.0, 1.7)
     for s in (-1, 1):
         roof.append(gable_end("log", 4.0, 1.7, s * 2.45))
     turn(roof, math.pi / 2)  # the ridge runs along the long side (x), as the code's roof does
+    for sz in (-1, 1):
+        roof += icicles(-2.9, 2.9, sz * 2.75, -0.02, 9, seed=sz * 1.4)
     objs = [finish(body, "body"), finish(roof, "roof", (0, 0, 0))]
     objs[1].location = TO_BLENDER @ Vector((0, h, 0))
     return objs
@@ -339,44 +367,81 @@ def cabin():
 
 # ------------------------------------------------------------------ the boathouse and the barrier hut
 def boathouse():
-    """The Mirror Lake boathouse: dark board-and-batten walls 5 x 7 m, a pair of lake doors with
-    braces, a roof with its ridge along the length, and a jetty on posts."""
-    p = [B("boat", 5, 2.4, 7, (0, 1.2, 0))]
+    """The Mirror Lake boathouse (Phase C): dark board-and-batten walls 5 x 7 m on stone piers, cream
+    corner boards and fascia, a pair of braced lake doors under a lantern, a framed window in each long
+    wall, a roof that overhangs on rafter tails with icicles, a jetty on posts and the patrol's red canoe
+    upturned on two trestles beside it."""
+    p = [B("boat", 5, 2.2, 7, (0, 1.3, 0))]
+    for sx in (-1, 1):
+        for z in (-3.2, -1.1, 1.1, 3.2):
+            p.append(B("stoneDark", 0.42, 0.45, 0.42, (sx * 2.3, 0.2, z)))
+    p.append(B("stoneDark", 5.0, 0.18, 7.0, (0, 0.28, 0)))
     for i in range(9):
         x = -2.2 + i * 0.55
         for s in (-1, 1):
             if abs(x) > 1.5 or s < 0:
-                p.append(B("boatDark", 0.07, 2.3, 0.05, (x, 1.15, s * 3.52)))
+                p.append(B("boatDark", 0.07, 2.1, 0.05, (x, 1.3, s * 3.52)))
     for i in range(12):
         z = -3.25 + i * 0.59
         for s in (-1, 1):
-            p.append(B("boatDark", 0.05, 2.3, 0.07, (s * 2.52, 1.15, z)))
+            if abs(z) > 0.7:
+                p.append(B("boatDark", 0.05, 2.1, 0.07, (s * 2.52, 1.3, z)))
     for sx in (-1, 1):
-        p.append(B("boatDark", 1.45, 2.0, 0.1, (sx * 0.76, 1.0, 3.55)))
-        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 1.6, 3.61)))
-        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 0.4, 3.61)))
-        p.append(B("logDark", 1.4, 0.08, 0.06, (sx * 0.76, 1.0, 3.62), (0, 0, sx * 0.72)))
+        for sz in (-1, 1):
+            p.append(B("trim", 0.16, 2.2, 0.16, (sx * 2.5, 1.3, sz * 3.5)))
+        p += lite_x(sx * 2.5, 1.55, 0, sx, ww=1.0, hh=0.7, t=0.12, frame="trim", panes=2)
+    p.append(B("trim", 5.1, 0.16, 7.1, (0, 2.36, 0)))
+    for sx in (-1, 1):
+        p.append(B("boatDark", 1.45, 1.9, 0.1, (sx * 0.76, 1.3, 3.55)))
+        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 1.85, 3.61)))
+        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 0.65, 3.61)))
+        p.append(B("logDark", 1.4, 0.08, 0.06, (sx * 0.76, 1.25, 3.62), (0, 0, sx * 0.72)))
+    # the lantern over the lake doors (it lights with the windows)
+    p += [B("logDark", 0.06, 0.06, 0.35, (0, 2.5, 3.7)), B("logDark", 0.22, 0.06, 0.22, (0, 2.42, 3.85)), B("window", 0.16, 0.22, 0.16, (0, 2.27, 3.85))]
     p.append(B("logDark", 1.6, 0.15, 6, (0, 0.3, 6.5)))
     for z in (4.2, 6.5, 8.8):
         for sx in (-1, 1):
             p.append(C("logDark", 0.08, 0.08, 0.9, 5, (sx * 0.7, -0.05, z)))
-    roof = snow_roof(5.8, 7.8, 1.8, roof="boatDark")
+    # the red canoe upturned on trestles by the west wall
+    for z in (-1.4, 1.4):
+        p += [B("logDark", 0.06, 0.55, 0.06, (-3.55, 0.28, z), (0, 0, 0.25)), B("logDark", 0.06, 0.55, 0.06, (-3.05, 0.28, z), (0, 0, -0.25)),
+              B("logDark", 0.7, 0.06, 0.08, (-3.3, 0.55, z))]
+    p.append(B("roof", 0.62, 0.22, 4.2, (-3.3, 0.7, 0)))
+    p += [B("roof", 0.42, 0.18, 0.4, (-3.3, 0.68, 2.25)), B("roof", 0.42, 0.18, 0.4, (-3.3, 0.68, -2.25)), B("roofSnow", 0.5, 0.06, 4.0, (-3.3, 0.84, 0))]
+    pitch = 1.9
+    roof = snow_roof(6.2, 8.0, pitch, roof="boatDark")
     for s in (-1, 1):
-        roof.append(gable_end("boat", 5, 1.8, s * 3.45))
+        roof.append(gable_end("boat", 5, pitch, s * 3.45))
+        roof.append(B("trim", 0.06, 0.24, 8.0, (s * 3.08, -0.07, 0)))
+        for k in range(8):
+            roof.append(B("logDark", 0.5, 0.1, 0.09, (s * 2.75, -0.1, -3.4 + k * 6.8 / 7), (0, 0, s * -math.atan2(pitch, 3.1))))
+        roof += icicles(-3.9, 3.9, s * 3.05, -0.02, 11, seed=s * 2.1, along_z=True)
     for o in roof:
         o.location.y += 2.4
     return [finish(p + roof, "boathouse")]
 
 
 def barrier_hut():
-    """The pass barrier hut: a cream 2 m box with a red snow roof, a window toward the road and a door."""
-    p = [B("trim", 2, 2.2, 2, (0, 1.1, 0)), B("stoneDark", 2.08, 0.2, 2.08, (0, 0.1, 0))]
-    p += window(0, 1.4, 1.06, 1, shutter=False, w=0.8, h=0.6)
-    p += [B("logDark", 0.9, 1.9, 0.1, (1.05, 0.95, 0.2), (0, math.pi / 2, 0)), B("roof", 0.75, 1.75, 0.08, (1.08, 0.9, 0.2), (0, math.pi / 2, 0))]
-    roof = snow_roof(2.6, 2.6, 0.7, snow=0.2)
+    """The pass barrier hut (Phase C): a cream 2 m box on a concrete plinth with a red and white control
+    band, a framed window toward the road with its sill, a framed door with a lamp over it, a red snow
+    roof that overhangs on a fascia, icicles."""
+    p = [B("stoneDark", 2.2, 0.32, 2.2, (0, 0.16, 0)), B("trim", 2, 1.9, 2, (0, 1.27, 0))]
+    for k in range(8):
+        p.append(B("roof" if k % 2 == 0 else "trim", 2.04 / 8, 0.2, 2.04, (-1.02 + (k + 0.5) * 2.04 / 8, 2.08, 0)))
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            p.append(B("logDark", 0.08, 1.9, 0.08, (sx * 1.0, 1.27, sz * 1.0)))
+    p += lite(0, 1.45, 1.0, 1, ww=1.0, hh=0.6, t=0.12, frame="logDark", panes=2)
+    p += [B("logDark", 0.1, 1.95, 0.95, (1.03, 1.3, 0.2)), B("roof", 0.08, 1.75, 0.75, (1.06, 1.2, 0.2)),
+          B("trim", 0.06, 0.06, 0.06, (1.12, 1.15, -0.05)), B("stoneDark", 0.45, 0.14, 1.0, (1.3, 0.07, 0.2)),
+          B("logDark", 0.3, 0.05, 0.05, (1.2, 2.32, 0.2)), B("window", 0.12, 0.12, 0.12, (1.33, 2.25, 0.2))]
+    roof = snow_roof(2.8, 2.8, 0.8, snow=0.2)
     for s in (-1, 1):
-        roof.append(gable_end("trim", 2, 0.7, s * 0.95))
+        roof.append(gable_end("trim", 2, 0.8, s * 0.95))
+        roof.append(B("logDark", 0.05, 0.14, 2.8, (s * 1.38, -0.05, 0)))
     turn(roof, math.pi / 2)
+    for sz in (-1, 1):
+        roof += icicles(-1.3, 1.3, sz * 1.37, -0.02, 5, seed=sz)
     for o in roof:
         o.location.y += 2.2
     return [finish(p + roof, "barrier_hut")]
