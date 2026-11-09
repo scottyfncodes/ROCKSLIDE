@@ -39,7 +39,7 @@ ROLES = {
     "dome": "Mustard", "spire": "Caution Amber", "belfry": "#262A30", "boat": "#6B4428", "boatDark": "#3D2A1C",
     # the patrol station's yard
     "boards": "#A4483C", "batten": "#8A3B32", "header": "#5A3A26", "concrete": "#A39E96", "timber": "#5A3A26",
-    "opsDoor": "#3F5F55", "ice": "#D6E6F0", "floor": "#9C9A94", "rolled": "#E9E2D0",
+    "opsDoor": "#3F5F55", "ice": "#D6E6F0", "clad": "#E6DCC8", "cladRib": "#CFC3AC", "ochre": "#A9793F", "ochreDark": "#8A5F2E", "floor": "#9C9A94", "rolled": "#E9E2D0",
     "roofDark": "#4A4F55", "steel": "#6E7A85", "rib": "#58626A", "arch": "#4F5A64", "red": "Patrol Red",
     "white": "Paper", "metal": "Steel", "hut": "#5E6266", "dark": "#1A1512",
     # mission props and the chairlift
@@ -176,6 +176,18 @@ def side_window(x, y, z, face, w=0.6, h=0.7):
             B("roofSnow", 0.28, 0.1, w + 0.25, (x + s * 0.1, y - h / 2 - 0.1, z))]
 
 
+def woodpile(x, z0, z1, s, rows=3, r=0.13, depth=0.5):
+    """Split logs stacked against a wall that runs along z, ends out (facing +x for s 1): Phase C."""
+    p = [B("grain", depth, rows * r * 1.9, z1 - z0, (x, rows * r * 0.95, (z0 + z1) / 2))]
+    n = int((z1 - z0) / (r * 2.1))
+    for row in range(rows):
+        for k in range(n):
+            z = z0 + r * 1.05 + k * r * 2.1 + (r if row % 2 else 0)
+            if z > z1 - r: continue
+            p.append(C("log", r, r, depth + 0.04, 5, (x + s * 0.02, r + row * r * 1.85, z), (0, 0, math.pi / 2)))
+    return p
+
+
 # ------------------------------------------------------------------ the chalet
 def chalet(w, d, floors, wins):
     """An alpine chalet: stone ground floor with quoins, a painted timber upper floor with plank lines,
@@ -206,6 +218,10 @@ def chalet(w, d, floors, wins):
             for s in (-1, 1):
                 body.append(B("plank", w - 0.2, 0.04, 0.02, (0, y, s * (d / 2 + 0.01))))
                 body.append(B("plank", 0.02, 0.04, d - 0.2, (s * (w / 2 + 0.01), y, 0)))
+    # Phase C: the winter's wood under the east eave, and a bench by the door
+    body += woodpile(w / 2 + 0.3, -d / 4, d / 2 - 0.6, 1, rows=3)
+    body += [B("logDark", 1.3, 0.08, 0.36, (-w * 0.12, 0.45, d / 2 + 0.32)), B("logDark", 0.08, 0.42, 0.3, (-w * 0.12 - 0.55, 0.21, d / 2 + 0.32)),
+             B("logDark", 0.08, 0.42, 0.3, (-w * 0.12 + 0.55, 0.21, d / 2 + 0.32)), B("roofSnow", 1.25, 0.06, 0.3, (-w * 0.12, 0.52, d / 2 + 0.32))]
     wy = h1 + 1.3 if floors > 1 else 1.5
     xs = [-w / 4, w / 4] if wins == 2 else [-w / 3, 0, w / 3]
     for s in (-1, 1):
@@ -228,6 +244,9 @@ def chalet(w, d, floors, wins):
             roof.append(B("logDark", L, 0.18, 0.08, (sx * (w / 2 + 0.8) / 2, H / 2 + 0.02, s * (d / 2 + 0.88)), (0, 0, -sx * a)))
         for x in (-w / 3, 0, w / 3):
             roof.append(B("logDark", 0.16, 0.16, 0.9, (x, H * (1 - abs(x) / (w / 2 + 0.8)) - 0.25, s * (d / 2 + 0.4))))
+    # Phase C: icicles along both eaves
+    for sx in (-1, 1):
+        roof += icicles(-(d + 1.6) / 2, (d + 1.6) / 2, sx * (w / 2 + 0.75), -0.02, max(8, int(d * 1.6)), seed=sx + w, along_z=True)
     bal = []
     if floors > 1:
         bw = w * 0.8
@@ -272,6 +291,9 @@ def chapel():
     p[-1].location.y += 4.2
     for o in p[2:2 + 7]:
         o.location.y += 4.2
+    # Phase C: icicles down both eaves of the nave
+    for sx in (-1, 1):
+        p += icicles(-4.3, 4.3, sx * 2.88, 4.18, 12, seed=sx * 3, along_z=True)
     # arched windows down both sides, a rose window and the door at the front
     for s in (-1, 1):
         for z in (-1.8, 0.4, 2.6):
@@ -333,13 +355,19 @@ def cabin():
             for ex in (-1, 1):
                 body.append(C("grain", r * 0.92, r * 0.92, 0.04, 7, (ex * 2.76, y0, s * 2.0), (0, 0, math.pi / 2)))
             body.append(C("logShade" if i % 2 else "log", r, r, 4.5, 7, (s * 2.5, y0 + r, 0), (math.pi / 2, 0, 0)))
-    body += window(0.6, 1.4, 2.2, 1, shutter=False, w=0.8, h=0.7)
+    body += window(0.6, 1.4, 2.2, 1, shutter=True, w=0.8, h=0.7)
+    # Phase C: the wood stacked against the west wall, a chopping block with its axe, the step
+    body += woodpile(-2.95, -1.6, 1.4, -1, rows=4)
+    body += [C("grain", 0.22, 0.24, 0.45, 9, (-1.9, 0.22, 2.9)), B("logDark", 0.05, 0.6, 0.05, (-1.82, 0.62, 2.92), (0, 0, 0.5)),
+             B("trim", 0.16, 0.1, 0.04, (-1.95, 0.88, 2.92), (0, 0, 0.5)), B("stoneDark", 1.1, 0.16, 0.6, (-1.3, 0.08, 2.5))]
     body += [B("logDark", 1.0, 2.0, 0.12, (-1.3, 1.0, 2.15)), B("door", 0.8, 1.85, 0.1, (-1.3, 0.95, 2.2)),
              B("stone", 0.6, 1.8, 0.6, (2.3, 3.2, 1.0)), B("roofSnow", 0.66, 0.12, 0.66, (2.3, 4.16, 1.0))]
     roof = snow_roof(5.6, 6.0, 1.7)
     for s in (-1, 1):
         roof.append(gable_end("log", 4.0, 1.7, s * 2.45))
     turn(roof, math.pi / 2)  # the ridge runs along the long side (x), as the code's roof does
+    for sz in (-1, 1):
+        roof += icicles(-2.9, 2.9, sz * 2.75, -0.02, 9, seed=sz * 1.4)
     objs = [finish(body, "body"), finish(roof, "roof", (0, 0, 0))]
     objs[1].location = TO_BLENDER @ Vector((0, h, 0))
     return objs
@@ -347,44 +375,81 @@ def cabin():
 
 # ------------------------------------------------------------------ the boathouse and the barrier hut
 def boathouse():
-    """The Mirror Lake boathouse: dark board-and-batten walls 5 x 7 m, a pair of lake doors with
-    braces, a roof with its ridge along the length, and a jetty on posts."""
-    p = [B("boat", 5, 2.4, 7, (0, 1.2, 0))]
+    """The Mirror Lake boathouse (Phase C): dark board-and-batten walls 5 x 7 m on stone piers, cream
+    corner boards and fascia, a pair of braced lake doors under a lantern, a framed window in each long
+    wall, a roof that overhangs on rafter tails with icicles, a jetty on posts and the patrol's red canoe
+    upturned on two trestles beside it."""
+    p = [B("boat", 5, 2.2, 7, (0, 1.3, 0))]
+    for sx in (-1, 1):
+        for z in (-3.2, -1.1, 1.1, 3.2):
+            p.append(B("stoneDark", 0.42, 0.45, 0.42, (sx * 2.3, 0.2, z)))
+    p.append(B("stoneDark", 5.0, 0.18, 7.0, (0, 0.28, 0)))
     for i in range(9):
         x = -2.2 + i * 0.55
         for s in (-1, 1):
             if abs(x) > 1.5 or s < 0:
-                p.append(B("boatDark", 0.07, 2.3, 0.05, (x, 1.15, s * 3.52)))
+                p.append(B("boatDark", 0.07, 2.1, 0.05, (x, 1.3, s * 3.52)))
     for i in range(12):
         z = -3.25 + i * 0.59
         for s in (-1, 1):
-            p.append(B("boatDark", 0.05, 2.3, 0.07, (s * 2.52, 1.15, z)))
+            if abs(z) > 0.7:
+                p.append(B("boatDark", 0.05, 2.1, 0.07, (s * 2.52, 1.3, z)))
     for sx in (-1, 1):
-        p.append(B("boatDark", 1.45, 2.0, 0.1, (sx * 0.76, 1.0, 3.55)))
-        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 1.6, 3.61)))
-        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 0.4, 3.61)))
-        p.append(B("logDark", 1.4, 0.08, 0.06, (sx * 0.76, 1.0, 3.62), (0, 0, sx * 0.72)))
+        for sz in (-1, 1):
+            p.append(B("trim", 0.16, 2.2, 0.16, (sx * 2.5, 1.3, sz * 3.5)))
+        p += lite_x(sx * 2.5, 1.55, 0, sx, ww=1.0, hh=0.7, t=0.12, frame="trim", panes=2)
+    p.append(B("trim", 5.1, 0.16, 7.1, (0, 2.36, 0)))
+    for sx in (-1, 1):
+        p.append(B("boatDark", 1.45, 1.9, 0.1, (sx * 0.76, 1.3, 3.55)))
+        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 1.85, 3.61)))
+        p.append(B("logDark", 1.3, 0.1, 0.06, (sx * 0.76, 0.65, 3.61)))
+        p.append(B("logDark", 1.4, 0.08, 0.06, (sx * 0.76, 1.25, 3.62), (0, 0, sx * 0.72)))
+    # the lantern over the lake doors (it lights with the windows)
+    p += [B("logDark", 0.06, 0.06, 0.35, (0, 2.5, 3.7)), B("logDark", 0.22, 0.06, 0.22, (0, 2.42, 3.85)), B("window", 0.16, 0.22, 0.16, (0, 2.27, 3.85))]
     p.append(B("logDark", 1.6, 0.15, 6, (0, 0.3, 6.5)))
     for z in (4.2, 6.5, 8.8):
         for sx in (-1, 1):
             p.append(C("logDark", 0.08, 0.08, 0.9, 5, (sx * 0.7, -0.05, z)))
-    roof = snow_roof(5.8, 7.8, 1.8, roof="boatDark")
+    # the red canoe upturned on trestles by the west wall
+    for z in (-1.4, 1.4):
+        p += [B("logDark", 0.06, 0.55, 0.06, (-3.55, 0.28, z), (0, 0, 0.25)), B("logDark", 0.06, 0.55, 0.06, (-3.05, 0.28, z), (0, 0, -0.25)),
+              B("logDark", 0.7, 0.06, 0.08, (-3.3, 0.55, z))]
+    p.append(B("roof", 0.62, 0.22, 4.2, (-3.3, 0.7, 0)))
+    p += [B("roof", 0.42, 0.18, 0.4, (-3.3, 0.68, 2.25)), B("roof", 0.42, 0.18, 0.4, (-3.3, 0.68, -2.25)), B("roofSnow", 0.5, 0.06, 4.0, (-3.3, 0.84, 0))]
+    pitch = 1.9
+    roof = snow_roof(6.2, 8.0, pitch, roof="boatDark")
     for s in (-1, 1):
-        roof.append(gable_end("boat", 5, 1.8, s * 3.45))
+        roof.append(gable_end("boat", 5, pitch, s * 3.45))
+        roof.append(B("trim", 0.06, 0.24, 8.0, (s * 3.08, -0.07, 0)))
+        for k in range(8):
+            roof.append(B("logDark", 0.5, 0.1, 0.09, (s * 2.75, -0.1, -3.4 + k * 6.8 / 7), (0, 0, s * -math.atan2(pitch, 3.1))))
+        roof += icicles(-3.9, 3.9, s * 3.05, -0.02, 11, seed=s * 2.1, along_z=True)
     for o in roof:
         o.location.y += 2.4
     return [finish(p + roof, "boathouse")]
 
 
 def barrier_hut():
-    """The pass barrier hut: a cream 2 m box with a red snow roof, a window toward the road and a door."""
-    p = [B("trim", 2, 2.2, 2, (0, 1.1, 0)), B("stoneDark", 2.08, 0.2, 2.08, (0, 0.1, 0))]
-    p += window(0, 1.4, 1.06, 1, shutter=False, w=0.8, h=0.6)
-    p += [B("logDark", 0.9, 1.9, 0.1, (1.05, 0.95, 0.2), (0, math.pi / 2, 0)), B("roof", 0.75, 1.75, 0.08, (1.08, 0.9, 0.2), (0, math.pi / 2, 0))]
-    roof = snow_roof(2.6, 2.6, 0.7, snow=0.2)
+    """The pass barrier hut (Phase C): a cream 2 m box on a concrete plinth with a red and white control
+    band, a framed window toward the road with its sill, a framed door with a lamp over it, a red snow
+    roof that overhangs on a fascia, icicles."""
+    p = [B("stoneDark", 2.2, 0.32, 2.2, (0, 0.16, 0)), B("trim", 2, 1.9, 2, (0, 1.27, 0))]
+    for k in range(8):
+        p.append(B("roof" if k % 2 == 0 else "trim", 2.04 / 8, 0.2, 2.04, (-1.02 + (k + 0.5) * 2.04 / 8, 2.08, 0)))
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            p.append(B("logDark", 0.08, 1.9, 0.08, (sx * 1.0, 1.27, sz * 1.0)))
+    p += lite(0, 1.45, 1.0, 1, ww=1.0, hh=0.6, t=0.12, frame="logDark", panes=2)
+    p += [B("logDark", 0.1, 1.95, 0.95, (1.03, 1.3, 0.2)), B("roof", 0.08, 1.75, 0.75, (1.06, 1.2, 0.2)),
+          B("trim", 0.06, 0.06, 0.06, (1.12, 1.15, -0.05)), B("stoneDark", 0.45, 0.14, 1.0, (1.3, 0.07, 0.2)),
+          B("logDark", 0.3, 0.05, 0.05, (1.2, 2.32, 0.2)), B("window", 0.12, 0.12, 0.12, (1.33, 2.25, 0.2))]
+    roof = snow_roof(2.8, 2.8, 0.8, snow=0.2)
     for s in (-1, 1):
-        roof.append(gable_end("trim", 2, 0.7, s * 0.95))
+        roof.append(gable_end("trim", 2, 0.8, s * 0.95))
+        roof.append(B("logDark", 0.05, 0.14, 2.8, (s * 1.38, -0.05, 0)))
     turn(roof, math.pi / 2)
+    for sz in (-1, 1):
+        roof += icicles(-1.3, 1.3, sz * 1.37, -0.02, 5, seed=sz)
     for o in roof:
         o.location.y += 2.2
     return [finish(p + roof, "barrier_hut")]
@@ -542,87 +607,222 @@ def garage():
             finish(front, "front"), finish(roof, "roof")]
 
 
+# ---------------------------------------------- construction details shared by the working buildings
+# (Art Direction 2.0, Phase C: every building gets the garage's construction logic: a footing that
+# keeps the walls out of the snow, framed openings with sills, trim at corners and eaves, overhangs on
+# visible rafter tails, icicles, and one or two signs that people work here)
+def lite(x, y, z, s, ww=1.2, hh=0.8, t=0.3, frame="trim", panes=3):
+    """A framed window in a wall running along x, facing +z (s 1) or -z (s -1): glass through the wall,
+    a frame, mullions, a sill with snow on it."""
+    f = z + s * (t / 2 + 0.035)
+    p = [B("window", ww, hh, t + 0.04, (x, y, z))]
+    for yy in (y + hh / 2 + 0.05, y - hh / 2 - 0.05):
+        p.append(B(frame, ww + 0.2, 0.1, 0.07, (x, yy, f)))
+    for xx in (x - ww / 2 - 0.05, x + ww / 2 + 0.05):
+        p.append(B(frame, 0.1, hh, 0.07, (xx, y, f)))
+    for k in range(1, panes):
+        p.append(B(frame, 0.05, hh, 0.06, (x - ww / 2 + k * ww / panes, y, f)))
+    p += [B(frame, ww + 0.34, 0.07, 0.2, (x, y - hh / 2 - 0.11, z + s * (t / 2 + 0.09))),
+          B("roofSnow", ww + 0.26, 0.06, 0.15, (x, y - hh / 2 - 0.06, z + s * (t / 2 + 0.1)))]
+    return p
+
+
+def lite_x(x, y, z, s, ww=1.0, hh=0.8, t=0.3, frame="trim", panes=2):
+    """The same window in a wall running along z, facing +x (s 1) or -x (s -1)."""
+    f = x + s * (t / 2 + 0.035)
+    p = [B("window", t + 0.04, hh, ww, (x, y, z))]
+    for yy in (y + hh / 2 + 0.05, y - hh / 2 - 0.05):
+        p.append(B(frame, 0.07, 0.1, ww + 0.2, (f, yy, z)))
+    for zz in (z - ww / 2 - 0.05, z + ww / 2 + 0.05):
+        p.append(B(frame, 0.07, hh, 0.1, (f, y, zz)))
+    for k in range(1, panes):
+        p.append(B(frame, 0.06, hh, 0.05, (f, y, z - ww / 2 + k * ww / panes)))
+    p += [B(frame, 0.2, 0.07, ww + 0.34, (x + s * (t / 2 + 0.09), y - hh / 2 - 0.11, z)),
+          B("roofSnow", 0.15, 0.06, ww + 0.26, (x + s * (t / 2 + 0.1), y - hh / 2 - 0.06, z))]
+    return p
+
+
+def door(x, z, s, w=1.0, h=2.15, role="opsDoor", lamp=True, awning=True, frame="trim"):
+    """A crew door in a wall along x facing +z (s 1) or -z (s -1): leaf with a small light, handle,
+    frame, a concrete step, a shed-roof awning on brackets and a lamp that lights with the windows."""
+    dz = z
+    o = lambda d: dz + s * d  # noqa: E731
+    p = [B(role, w, h, 0.08, (x, h / 2 + 0.1, o(0.02))), B("window", w * 0.42, 0.4, 0.09, (x, h - 0.45, o(0.03))),
+         B("metal", 0.06, 0.16, 0.06, (x - s * w * 0.36, h / 2, o(0.08))),
+         B(frame, w + 0.24, 0.1, 0.07, (x, h + 0.16, o(0.04))),
+         B(frame, 0.1, h + 0.05, 0.07, (x - w / 2 - 0.07, h / 2 + 0.1, o(0.04))), B(frame, 0.1, h + 0.05, 0.07, (x + w / 2 + 0.07, h / 2 + 0.1, o(0.04))),
+         B("concrete", w + 0.5, 0.2, 0.75, (x, 0.1, o(0.35)))]
+    if awning:
+        p += [B("roofDark", w + 0.8, 0.08, 1.0, (x, h + 0.55, o(0.47)), (s * 0.28, 0, 0)),
+              B("roofSnow", w + 0.7, 0.14, 0.92, (x, h + 0.66, o(0.45)), (s * 0.28, 0, 0))]
+        for k in (-1, 1):
+            p.append(B("header", 0.08, 0.7, 0.08, (x + k * (w / 2 + 0.25), h + 0.2, o(0.25)), (-s * 0.8, 0, 0)))
+    if lamp:
+        lx = x + w / 2 + 0.38
+        p += [B("metal", 0.06, 0.06, 0.3, (lx, h + 0.28, o(0.15))), C("roofDark", 0.06, 0.13, 0.12, 8, (lx, h + 0.25, o(0.28))),
+              B("window", 0.14, 0.05, 0.14, (lx, h + 0.17, o(0.28)))]
+    return p
+
+
+def icicles(x0, x1, z, y, n, seed=1.0, along_z=False):
+    """A fringe of icicles under an eave, uneven in length."""
+    p = []
+    for k in range(n):
+        u = x0 + (k + 0.5) * (x1 - x0) / n + 0.12 * math.sin(k * 2.3 + seed)
+        ln = 0.14 + 0.2 * abs(math.sin(k * 1.7 + seed))
+        pos = (z, y - ln / 2, u) if along_z else (u, y - ln / 2, z)
+        p.append(C("roofSnow", 0.03, 0.002, ln, 5, pos))
+    return p
+
+
 def hangar():
-    """Hangar 1: ribbed steel walls (open to the west for the helicopter) on a concrete floor, a low
-    arched roof with snow along its crown, and a vent on top."""
+    """Hangar 1, rebuilt (Phase C): a steel building that was a dark slate box is now the patrol's
+    livery: cream corrugated cladding on a concrete stem wall, red corner flashing and eave band, a
+    clerestory of framed lites down both sides, a red portal frame across the open west end with the
+    sliding doors parked open and their track over it, an arched charcoal roof that overhangs on its
+    end fascias, filled gable ends, a crew door with its awning and lamp, the roof vent, icicles.
+    Same footprint and open west end (src/world/station.ts HANGAR 14 x 16, walls 6)."""
     w, d, h = 14.0, 16.0, 6.0
-    p = [B("floor", w, 0.15, d, (0, 0.07, 0))]
-    p += [B("steel", w - 2, h, 0.3, (1, h / 2, -d / 2)), B("steel", w - 2, h, 0.3, (1, h / 2, d / 2)), B("steel", 0.3, h, d, (w / 2, h / 2, 0))]
-    for i in range(10):
-        x = -w / 2 + 2 + i * ((w - 2) / 10)
-        for s in (-1, 1):
-            p.append(B("rib", 0.12, h, 0.36, (x, h / 2, s * d / 2)))
-    for i in range(12):
-        z = -d / 2 + 0.7 + i * (d - 1.4) / 11
-        p.append(B("rib", 0.36, h, 0.12, (w / 2, h / 2, z)))
-    # the arch: a flattened half cylinder along x, ribs over it, snow along the crown
-    R = d / 2 + 0.4
+    foot = 0.9
+    x0, x1 = -w / 2 + 2, w / 2  # the long walls run from the portal to the east wall
+    xc, L = (x0 + x1) / 2, x1 - x0
+    p = [B("floor", w + 3, 0.15, d, (-1.5, 0.07, 0))]
+    hb = h - foot
+    for sz in (-1, 1):
+        z = sz * d / 2
+        p += [B("concrete", L + 0.1, foot, 0.42, (xc, foot / 2, z)), B("clad", L, hb, 0.3, (xc, foot + hb / 2, z)),
+              B("red", L + 0.06, 0.3, 0.36, (xc, h - 0.15, z)), B("trim", L + 0.04, 0.08, 0.4, (xc, foot + 0.04, z))]
+        for i in range(int(L / 0.5)):
+            p.append(B("cladRib", 0.08, hb - 0.3, 0.36, (x0 + 0.25 + i * 0.5, foot + (hb - 0.3) / 2, z)))
+        for k in range(4):
+            p += lite(x0 + 1.5 + k * 2.4, 4.6, z, sz, ww=1.6, hh=0.6, t=0.3, panes=4)
+        p.append(B("red", 0.42, hb, 0.42, (x1, foot + hb / 2, z)))
+    # east wall
+    p += [B("concrete", 0.42, foot, d + 0.1, (x1, foot / 2, 0)), B("clad", 0.3, hb, d, (x1, foot + hb / 2, 0)),
+          B("red", 0.36, 0.3, d + 0.06, (x1, h - 0.15, 0)), B("trim", 0.4, 0.08, d + 0.04, (x1, foot + 0.04, 0))]
+    for i in range(int(d / 0.5)):
+        p.append(B("cladRib", 0.36, hb - 0.3, 0.08, (x1, foot + (hb - 0.3) / 2, -d / 2 + 0.25 + i * 0.5)))
+    # a crew door in the south wall, by the east end
+    p += door(x1 - 1.6, d / 2 + 0.15, 1, w=1.0)
+    # the portal frame across the open west end, the door track over it, the doors parked open
+    p += [B("red", 0.5, h, 0.5, (x0 - 0.1, h / 2, sz * (d / 2 - 0.1))) for sz in (-1, 1)]
+    p += [B("red", 0.55, 0.6, d + 0.4, (x0 - 0.1, h - 0.3, 0)), B("metal", 0.2, 0.12, d + 4.6, (x0 - 0.42, h - 0.06, 0))]
+    for sz in (-1, 1):
+        leaf = (x0 - 0.5, (h - 0.3) / 2 + 0.08, sz * (d / 2 - 0.9))
+        p += [B("red", 0.12, h - 0.45, 1.5, leaf), B("trim", 0.14, 0.1, 1.5, (leaf[0], 1.2, leaf[2])), B("trim", 0.14, 0.1, 1.5, (leaf[0], h - 1.2, leaf[2]))]
+        p.append(B("window", 0.14, 0.5, 1.0, (leaf[0], h - 2.0, leaf[2])))
+    # the arched roof: a flattened half barrel along x that overhangs at both ends, ribs, snow on the crown
+    R = d / 2 + 0.6
     seg = 14
-    arc = [(math.cos(math.pi * i / seg) * R, math.sin(math.pi * i / seg) * R * 0.35) for i in range(seg + 1)]
+    rise = 0.35
+    arc = [(math.cos(math.pi * i / seg) * R, math.sin(math.pi * i / seg) * R * rise) for i in range(seg + 1)]
+    rl = L + 2.4
     for i in range(seg):
         (z0, y0), (z1, y1) = arc[i], arc[i + 1]
-        L = math.hypot(z1 - z0, y1 - y0)
+        Ls = math.hypot(z1 - z0, y1 - y0)
         ang = math.atan2(y1 - y0, z1 - z0)
         mid = ((z0 + z1) / 2, (y0 + y1) / 2)
-        p.append(B("arch", w, 0.16, L + 0.02, (1, h + mid[1], mid[0]), (-ang, 0, 0)))
-        if 4 <= i <= 9:
-            p.append(B("roofSnow", w - 0.3, 0.2, L + 0.02, (1, h + mid[1] + 0.15, mid[0]), (-ang, 0, 0)))
-    for k in range(6):
-        x = -w / 2 + 1.5 + k * (w - 1) / 5
-        for i in range(seg):
-            (z0, y0), (z1, y1) = arc[i], arc[i + 1]
-            L = math.hypot(z1 - z0, y1 - y0)
-            p.append(B("rib", 0.14, 0.2, L + 0.02, (x, h + (y0 + y1) / 2 + 0.06, (z0 + z1) / 2), (-math.atan2(y1 - y0, z1 - z0), 0, 0)))
-    p += [C("metal", 0.35, 0.35, 0.8, 8, (3, h + R * 0.35 + 0.3, 0)), C("hut", 0.5, 0.5, 0.15, 8, (3, h + R * 0.35 + 0.75, 0))]
+        p.append(B("arch", rl, 0.16, Ls + 0.02, (xc - 0.4, h + mid[1], mid[0]), (-ang, 0, 0)))
+        if 3 <= i <= 10:
+            p.append(B("roofSnow", rl - 0.3, 0.24, Ls + 0.02, (xc - 0.4, h + mid[1] + 0.17, mid[0]), (-ang, 0, 0)))
+        for ex in (xc - 0.4 - rl / 2, xc - 0.4 + rl / 2):
+            p.append(B("trim", 0.1, 0.3, Ls + 0.02, (ex, h + mid[1] - 0.05, mid[0]), (-ang, 0, 0)))
+    # the gable ends: filled with cladding under the arch (the west one carries the HANGAR 1 sign)
+    for gx in (x0 - 0.1, x1):
+        outline = [(z, y) for z, y in arc]
+        p.append(place(K.prism("gable", [(-zz, yy) for zz, yy in outline], 0.26, (0, 0, 0), axis="Z"), (gx, h, 0), (0, math.pi / 2, 0), "clad"))
+    p += [C("metal", 0.35, 0.35, 0.8, 10, (3, h + R * rise + 0.3, 0)), C("roofDark", 0.55, 0.45, 0.18, 10, (3, h + R * rise + 0.78, 0))]
+    for sz in (-1, 1):
+        p += icicles(x0 - 1.2, x1 + 1.0, sz * (R - 0.05), h - 0.02, 16, seed=sz)
     return [finish(p, "hangar")]
 
 
 def equipment():
-    """The equipment room: board-and-batten walls on a stone footing, a door, a window each side, a
-    snowy roof with board gables (the code's had open triangles)."""
+    """The equipment room, rebuilt (Phase C): stained-ochre board and batten on a concrete stem wall,
+    cream corner boards and frieze, framed windows with sills either side of a red crew door, a steeper
+    snow roof that overhangs on rafter tails, a vent pipe, icicles, and a snow shovel left by the door.
+    (No awning: the game hangs its EQUIPMENT sign over the door.)"""
     w, d, h = 9.0, 6.0, 3.0
-    p = [B("boat", w, h, d, (0, h / 2, 0)), B("stoneDark", w + 0.1, 0.3, d + 0.1, (0, 0.15, 0))]
-    for i in range(12):
-        x = -w / 2 + 0.4 + i * 0.75
-        for s in (-1, 1):
-            if not (s > 0 and abs(x) < 0.9):
-                p.append(B("boatDark", 0.08, h, 0.05, (x, h / 2, s * (d / 2 + 0.02))))
-    # (no canopy over the door: the game hangs its EQUIPMENT sign there)
-    p += [B("logDark", 1.6, 2.35, 0.1, (0, 1.17, d / 2 + 0.03)), B("boatDark", 1.4, 2.2, 0.12, (0, 1.1, d / 2 + 0.06))]
-    for x in (-3, 3):
-        p += window(x, 1.7, d / 2 + 0.06, 1, shutter=False, w=0.9, h=0.7)
-    roof = snow_roof(d + 1, w + 1, 1.4)
-    for s in (-1, 1):
-        roof.append(gable_end("boat", d, 1.4, s * (w / 2 - 0.05)))
+    foot = 0.45
+    hb = h - foot
+    p = [B("concrete", w + 0.12, foot, d + 0.12, (0, foot / 2, 0)), B("ochre", w, hb, d, (0, foot + hb / 2, 0)),
+         B("trim", w + 0.1, 0.22, d + 0.1, (0, h - 0.11, 0)), B("trim", w + 0.14, 0.08, d + 0.14, (0, foot + 0.04, 0))]
+    for i in range(16):
+        x = -w / 2 + 0.28 + i * (w - 0.56) / 15
+        for sz in (-1, 1):
+            if not (sz > 0 and abs(x) < 0.85):
+                p.append(B("ochreDark", 0.07, hb, 0.05, (x, foot + hb / 2, sz * (d / 2 + 0.02))))
+    for i in range(10):
+        z = -d / 2 + 0.3 + i * (d - 0.6) / 9
+        for sx in (-1, 1):
+            p.append(B("ochreDark", 0.05, hb, 0.07, (sx * (w / 2 + 0.02), foot + hb / 2, z)))
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            p.append(B("trim", 0.3, hb, 0.3, (sx * (w / 2 - 0.1), foot + hb / 2, sz * (d / 2 - 0.1))))
+    p += door(0, d / 2, 1, w=1.1, h=2.1, role="red", lamp=False, awning=False)
+    for x in (-3.1, 3.1):
+        p += lite(x, 1.75, d / 2, 1, ww=1.0, hh=0.75, t=0.3, panes=2)
+    p += lite_x(w / 2, 1.75, 0, 1, 0.9, 0.7)
+    # the snow shovel by the door
+    p += [B("header", 0.04, 1.2, 0.04, (0.95, 0.75, d / 2 + 0.25), (0.15, 0, 0.05)), B("red", 0.32, 0.36, 0.03, (0.95, 0.22, d / 2 + 0.33), (0.15, 0, 0.05))]
+    pitch = 1.9
+    span = d + 1.4
+    roof = snow_roof(span, w + 0.9, pitch)
+    for sx in (-1, 1):
+        roof.append(gable_end("ochre", d, pitch, sx * (w / 2 - 0.05)))
+        roof.append(B("trim", 0.07, 0.28, w + 0.9, (sx * (span / 2 - 0.02), -0.08, 0)))
+        for k in range(10):
+            roof.append(B("header", 0.5, 0.11, 0.09, (sx * (d / 2 + 0.36), -0.1, -w / 2 + 0.2 + k * (w - 0.4) / 9), (0, 0, sx * -math.atan2(pitch, span / 2))))
     turn(roof, math.pi / 2)
+    zz = -1.2
+    ry = pitch * (1 - abs(zz) / (span / 2))
+    roof += [C("metal", 0.08, 0.08, 0.9, 8, (-2.4, ry + 0.35, zz)), C("roofDark", 0.17, 0.12, 0.1, 8, (-2.4, ry + 0.83, zz))]
+    for sz in (-1, 1):
+        roof += icicles(-w / 2 - 0.3, w / 2 + 0.3, sz * (span / 2 - 0.05), -0.04, 11, seed=2 + sz)
     for o in roof:
         o.location.y += h
     return [finish(p + roof, "equipment")]
 
 
 def doghouse():
-    """Koda's house: plank walls, a round-topped doorway, a pitched roof under snow (the kennel upgrade
-    scales it up and repaints it)."""
-    p = [B("wall", 1.8, 1.1, 2.2, (0, 0.55, 0)), B("stoneDark", 1.9, 0.12, 2.3, (0, 0.06, 0))]
+    """Koda's house, rebuilt (Phase C): plank walls on two sleeper beams, cream corner boards, a framed
+    round-topped doorway with straw at the sill, a pitched roof that overhangs with a fascia, a few
+    icicles (the kennel upgrade scales it up and repaints it)."""
+    p = [B("stoneDark", 0.22, 0.16, 2.4, (sx * 0.72, 0.08, 0)) for sx in (-1, 1)]
+    p += [B("wall", 1.8, 1.0, 2.2, (0, 0.62, 0))]
     for i in range(4):
-        y = 0.2 + i * 0.27
+        y = 0.3 + i * 0.25
         for s in (-1, 1):
-            p.append(B("plank", 0.02, 0.03, 2.1, (s * 0.91, y, 0)))
-    p += [B("dark", 0.6, 0.55, 0.05, (0, 0.37, 1.11)), C("dark", 0.3, 0.3, 0.05, 10, (0, 0.65, 1.11), (math.pi / 2, 0, 0)),
-          B("trim", 0.75, 0.06, 0.07, (0, 0.92, 1.12))]
-    roof = snow_roof(2.4, 2.6, 0.8, snow=0.18)
+            p.append(B("plank", 0.03, 0.035, 2.2, (s * 0.915, y, 0)))
+        p.append(B("plank", 1.8, 0.035, 0.03, (0, y, -1.115)))
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            p.append(B("trim", 0.1, 1.0, 0.1, (sx * 0.88, 0.62, sz * 1.08)))
+    p += [B("dark", 0.6, 0.5, 0.05, (0, 0.42, 1.11)), C("dark", 0.3, 0.3, 0.05, 12, (0, 0.67, 1.11), (math.pi / 2, 0, 0))]
+    # the door frame: two jambs and an arch of trim
+    for sx in (-1, 1):
+        p.append(B("trim", 0.07, 0.5, 0.07, (sx * 0.34, 0.42, 1.13)))
+    for k in range(7):
+        a = math.pi * k / 6
+        p.append(B("trim", 0.07, 0.07, 0.07, (math.cos(a) * 0.34, 0.67 + math.sin(a) * 0.34, 1.13), (0, 0, a)))
+    p += [B("rope", 0.62, 0.05, 0.25, (0, 0.2, 1.05)), B("plank", 0.9, 0.06, 0.35, (0, 0.13, 1.25))]
+    roof = snow_roof(2.6, 2.8, 0.85, snow=0.2)
     for s in (-1, 1):
-        roof.append(gable_end("wall", 1.8, 0.8, s * 1.08))
+        roof.append(gable_end("wall", 1.8, 0.85, s * 1.08))
+        roof.append(B("trim", 0.05, 0.16, 2.8, (s * 1.29, -0.05, 0)))
     for o in roof:
-        o.location.y += 1.1
+        o.location.y += 1.12
+    p += icicles(-1.0, 1.0, 1.42, 1.1, 4, seed=1.3)
     return [finish(p + roof, "doghouse")]
 
 
 def mast():
     """The radio mast: 20 m of red and white sections tapering up, a ladder, a work platform with its
-    arm, the dish, and the equipment hut at the foot (the beacon on top is the game's own light)."""
+    arm, the dish, and (Phase C) a proper equipment hut at the foot: concrete plinth, cream-trimmed
+    board walls, a framed door and vent, an overhanging roof under snow, a cable tray to the mast, a
+    lamp and a few icicles (the beacon on top is the game's own light)."""
     H = 20.0
-    p = []
+    p = [C("concrete", 0.9, 1.0, 0.3, 8, (0, 0.15, 0))]
     for i in range(8):
         r0, r1 = 0.6 - i * 0.04, 0.55 - i * 0.04
         p.append(C("red" if i % 2 == 0 else "white", r1, r0, H / 8, 4, (0, (i + 0.5) * H / 8, 0), (0, math.pi / 4, 0)))
@@ -632,8 +832,18 @@ def mast():
     p += [B("metal", 1.4, 0.2, 0.8, (0.5, 14, 0)), B("metal", 0.2, 1.4, 0.2, (1.1, 15, 0)), B("metal", 1.4, 0.5, 0.05, (0.5, 14.35, 0.4))]
     p.append(place(lathe("white", [(0.0, -0.32), (0.45, -0.25), (0.75, -0.08), (0.82, 0.0)], 12), (-0.6, 12, 0), (0, 0, math.pi / 2)))
     p.append(C("metal", 0.05, 0.05, 0.6, 5, (-0.95, 12, 0), (0, 0, math.pi / 2)))
-    hut = [B("hut", 2.2, 1.8, 1.8, (1.6, 0.9, 1.6)), B("roofDark", 2.4, 0.12, 2.0, (1.6, 1.86, 1.6)), B("roofSnow", 2.3, 0.1, 1.9, (1.6, 1.96, 1.6)),
-           B("logDark", 0.8, 1.5, 0.06, (1.6, 0.75, 2.52)), B("metal", 0.5, 0.3, 0.06, (2.2, 1.4, 2.52))]
+    hx, hz = 1.6, 1.6
+    hut = [B("concrete", 2.4, 0.3, 2.0, (hx, 0.15, hz)), B("hut", 2.2, 1.6, 1.8, (hx, 1.1, hz)),
+           B("trim", 2.26, 0.14, 1.86, (hx, 1.83, hz))]
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            hut.append(B("trim", 0.12, 1.6, 0.12, (hx + sx * 1.07, 1.1, hz + sz * 0.87)))
+    hut += [B("roofDark", 2.7, 0.12, 2.4, (hx, 2.0, hz), (0.08, 0, 0)), B("roofSnow", 2.6, 0.14, 2.3, (hx, 2.12, hz), (0.08, 0, 0)),
+            B("trim", 2.7, 0.14, 0.06, (hx, 1.92, hz + 1.2))]
+    hut += door(hx - 0.3, hz + 0.9, 1, w=0.8, h=1.55, role="opsDoor", lamp=True, awning=False)
+    hut += [B("metal", 0.5, 0.3, 0.06, (hx + 0.7, 1.4, hz + 0.93))]
+    hut += [B("metal", 0.06, 0.32, 0.5, (hx + 1.13, 1.4, hz)), B("metal", 0.08, 0.08, 1.4, (hx - 1.0, 1.6, hz - 0.2), (0.0, 0.75, 0))]
+    hut += icicles(hx - 1.3, hx + 1.3, hz + 1.2, 1.88, 5, seed=0.7)
     return [finish(p + hut, "mast")]
 
 

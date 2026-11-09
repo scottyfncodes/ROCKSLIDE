@@ -149,7 +149,7 @@ budgets for drawn triangles were not changed and still pass.
   plinth sits below the ground on purpose, as before); the two skinned figures report the same single
   `engine_base_on_ground` fail as `main` (poles below y = 0 at rest), recorded in Phase B.
 - `art/MANIFEST.json`: hashes, sizes and triangle counts updated for the four models.
-- Art bible rebuilt as edition 2.5 (`art/bible/CHANGES.md`), per CLAUDE.md.
+- Art bible rebuilt as edition 2.6 (`art/bible/CHANGES.md`), per CLAUDE.md.
 
 ## 6. Not in this milestone (next steps)
 1. **Roll the Alpine kit out**: the garage, the lodge wing (it still has the old slab roof; it appears only

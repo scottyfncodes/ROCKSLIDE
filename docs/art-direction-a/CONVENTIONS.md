@@ -2,7 +2,7 @@
 
 How new world assets are made so they belong to the same world as the lodge, the sled and the patroller.
 Tools: `art/3d/scripts/alpine_kit.py` (the shared kit) inside the existing MeshCraft scripts, built with
-`python3 art/pipeline/8_build_models.py <script> <asset> --ship`. The art bible (edition 2.5) stays canonical.
+`python3 art/pipeline/8_build_models.py <script> <asset> --ship`. The art bible (edition 2.6) stays canonical.
 
 ## Using the kit
 

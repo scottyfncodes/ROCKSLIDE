@@ -65,8 +65,9 @@ describe('the station yard (MeshCraft)', () => {
       const b = boundsNear(model, x, z, r);
       expect(Math.abs(a.min.y - b.min.y), `${name} base`).toBeLessThan(0.2);
       // (the hangar's roof vent, new on the model, stands 0.8 m above its arch; the Phase B garage has a
-      // steeper snow roof, 2.4 m instead of 1.8, and a stovepipe 1.5 m over it)
-      expect(Math.abs(a.max.y - b.max.y), `${name} height`).toBeLessThan(name === 'hangar' ? 1.0 : name === 'garage' ? 1.6 : 0.6);
+      // steeper snow roof, 2.4 m instead of 1.8, and a stovepipe 1.5 m over it; the Phase C equipment room's
+      // roof has its ridge, vent and rafters inside the sampled square, where the code-built roof had no vertices)
+      expect(Math.abs(a.max.y - b.max.y), `${name} height`).toBeLessThan(name === 'hangar' ? 1.0 : name === 'garage' ? 1.6 : name === 'equipment' ? 2.4 : 0.6);
     }
     expect(meshes(model.group)).toBeLessThan(meshes(code.group) * 1.25);
   });
