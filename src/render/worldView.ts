@@ -18,6 +18,10 @@ export class WorldView {
   private chairs: { m: THREE.Object3D; s: number }[] = [];
   private liftLine: { a: THREE.Vector3; b: THREE.Vector3; len: number; dir: THREE.Vector3 } | null = null;
   private windows: THREE.MeshLambertMaterial;
+  /** the lit windows' material (the lamplight finds the panes by it) */
+  get windowMaterial(): THREE.Material {
+    return this.windows;
+  }
   private streetLights: THREE.MeshBasicMaterial;
   private anemo: THREE.Group | null = null;
   /** the MeshCraft weather-station mast (art/3d/scripts/working_mountain.py), if it loaded */

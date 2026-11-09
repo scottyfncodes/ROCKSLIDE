@@ -1,0 +1,71 @@
+{
+ "note": "SwiftShader (CPU WebGL) on the build machine: relative only, not an iPhone measurement",
+ "before": {
+  "yard-day": {
+   "frames": 20,
+   "medianMs": 266.6,
+   "p95Ms": 933.3,
+   "calls": 318,
+   "tris": 250792,
+   "scale": 1
+  },
+  "north-day": {
+   "frames": 26,
+   "medianMs": 216.7,
+   "p95Ms": 533.2,
+   "calls": 266,
+   "tris": 205418,
+   "scale": 1
+  },
+  "lodge-dusk": {
+   "frames": 25,
+   "medianMs": 266.6,
+   "p95Ms": 350,
+   "calls": 311,
+   "tris": 233317,
+   "scale": 1
+  },
+  "lodge-night": {
+   "frames": 22,
+   "medianMs": 266.8,
+   "p95Ms": 516.8,
+   "calls": 320,
+   "tris": 234699,
+   "scale": 0.9
+  }
+ },
+ "after": {
+  "yard-day": {
+   "frames": 23,
+   "medianMs": 283.3,
+   "p95Ms": 549.9,
+   "calls": 318,
+   "tris": 269992,
+   "scale": 1
+  },
+  "north-day": {
+   "frames": 24,
+   "medianMs": 283.3,
+   "p95Ms": 433.3,
+   "calls": 266,
+   "tris": 224618,
+   "scale": 1
+  },
+  "lodge-dusk": {
+   "frames": 21,
+   "medianMs": 233.3,
+   "p95Ms": 650,
+   "calls": 312,
+   "tris": 255973,
+   "scale": 1
+  },
+  "lodge-night": {
+   "frames": 21,
+   "medianMs": 300,
+   "p95Ms": 566.5,
+   "calls": 324,
+   "tris": 257591,
+   "scale": 1
+  }
+ }
+}

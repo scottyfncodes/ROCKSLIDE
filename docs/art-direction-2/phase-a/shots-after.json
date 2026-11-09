@@ -1,0 +1,151 @@
+{
+ "url": "http://localhost:4174/",
+ "taken": "2026-11-09T00:13:57.626Z",
+ "shots": [
+  {
+   "name": "d-lodge-day",
+   "kind": "env",
+   "note": "Lodge front, day 8 12:00, clear",
+   "viewport": "1440x900",
+   "calls": 345,
+   "tris": 452182
+  },
+  {
+   "name": "d-lodge-dusk",
+   "kind": "env",
+   "note": "Lodge front, day 8 18:50, clear dusk",
+   "viewport": "1440x900",
+   "calls": 347,
+   "tris": 452902
+  },
+  {
+   "name": "d-lodge-night",
+   "kind": "env",
+   "note": "Lodge front, day 8 21:30, clear night",
+   "viewport": "1440x900",
+   "calls": 355,
+   "tris": 471534
+  },
+  {
+   "name": "d-lodge-dusk-snow",
+   "kind": "env",
+   "note": "Lodge front, day 1 18:40, snow",
+   "viewport": "1440x900",
+   "calls": 351,
+   "tris": 462426
+  },
+  {
+   "name": "d-vince-range",
+   "kind": "env",
+   "note": "Vince, front, the range behind him, 11:00",
+   "viewport": "1440x900",
+   "calls": 269,
+   "tris": 395805
+  },
+  {
+   "name": "d-yard-day",
+   "kind": "env",
+   "note": "The station yard, 09:00",
+   "viewport": "1440x900",
+   "calls": 363,
+   "tris": 456532
+  },
+  {
+   "name": "d-yard-night",
+   "kind": "env",
+   "note": "The station yard, 21:00: the headlamp",
+   "viewport": "1440x900",
+   "calls": 337,
+   "tris": 441048
+  },
+  {
+   "name": "d-north",
+   "kind": "env",
+   "note": "Looking north up the valley, 09:40",
+   "viewport": "1440x900",
+   "calls": 302,
+   "tris": 437401
+  },
+  {
+   "name": "d-topstation",
+   "kind": "env",
+   "note": "Tannberg top station, 11:00",
+   "viewport": "1440x900",
+   "calls": 178,
+   "tris": 242961
+  },
+  {
+   "name": "d-topstation-dusk",
+   "kind": "env",
+   "note": "Tannberg top station, 18:50",
+   "viewport": "1440x900",
+   "calls": 180,
+   "tris": 246419
+  },
+  {
+   "name": "d-air-valley",
+   "kind": "env",
+   "note": "Over the station looking north, 10:30 (helicopter model hidden)",
+   "viewport": "1440x900",
+   "calls": 334,
+   "tris": 596683
+  },
+  {
+   "name": "d-air-bowl",
+   "kind": "env",
+   "note": "Kessel Bowl and the ridge from the air (helicopter model hidden)",
+   "viewport": "1440x900",
+   "calls": 115,
+   "tris": 314993
+  },
+  {
+   "name": "p-title",
+   "kind": "ui",
+   "note": "Title on a phone held upright",
+   "viewport": "390x844",
+   "calls": 269,
+   "tris": 229927
+  },
+  {
+   "name": "p-yard-day",
+   "kind": "ui",
+   "note": "Phone HUD in the yard, 09:30",
+   "viewport": "390x844",
+   "calls": 318,
+   "tris": 269992
+  },
+  {
+   "name": "p-north-day",
+   "kind": "ui",
+   "note": "Phone, looking north, 11:00",
+   "viewport": "390x844",
+   "calls": 266,
+   "tris": 224618
+  },
+  {
+   "name": "p-lodge-dusk",
+   "kind": "ui",
+   "note": "Phone, lodge at dusk, 18:50",
+   "viewport": "390x844",
+   "calls": 312,
+   "tris": 255973
+  },
+  {
+   "name": "p-lodge-night",
+   "kind": "ui",
+   "note": "Phone, lodge at night, 21:30",
+   "viewport": "390x844",
+   "calls": 325,
+   "tris": 257593
+  },
+  {
+   "name": "p-vince-night",
+   "kind": "env",
+   "note": "Phone, Vince at night, three-quarter",
+   "viewport": "390x844",
+   "calls": 275,
+   "tris": 218825
+  }
+ ],
+ "problems": []
+}
