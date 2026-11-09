@@ -274,11 +274,11 @@
   },
   {
    "path": "../public/models/rs_patroller.glb",
-   "bytes": 737160,
+   "bytes": 741592,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_patroller: the patroller (and villagers), skinned on a 25-bone skeleton of the code's own joints; face pass: eyes with catchlights blinking about their own centres, visible brows, button nose, blush discs, a smile crescent, rounded ears, temple tufts; hats cut as shells that stop above the brows; 2642 tris drawn with the beanie and gear; art/3d/scripts/patrol_people.py; Khronos 0 errors, engine-checked (three@0.170), motion matched to the code-built figure in tests/people.test.ts; Art Direction A milestone 1 (Stylized Alpine 3D, alpine_kit.py)",
-   "sha256": "5ee83004cdc80f98d3915d61981cc13a4d4e7425368c29572eea912960d24dd2"
+   "sha256": "b5412c3275e89d32503b5e38cb3ec07fcdddfbeffcabd2ee7f150cd1ef214083"
   },
   {
    "path": "../public/models/rs_sled.glb",

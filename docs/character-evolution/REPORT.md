@@ -32,7 +32,7 @@ tapered cross-sections rather than drums and spheres:
   tapers to the waist and square shoulders that roll into the collar; shoulder caps in the yoke colour; full
   insulated trousers tapering to articulated knees; substantial boots. The head is 12 % larger (about the head
   joint, so the skeleton is unchanged): a friendlier, more readable face at phone distance.
-- **Face**: large dark oval eyes with two catchlights and a lash line (they blink about their own centres),
+- **Face**: large blue eyes (a blue iris, a darker rim, a dark pupil) with two catchlights and a lash line (they blink about their own centres),
   warm brows lifted at the inner end, a small nose, freckles, blush, an open smile.
 - **Hair**: Vince's long honey-blonde hair is now part of the model (`pat_hair_long`): wavy locks that turn out
   into a curl at the collar, two framing the face. It replaces the code-built cluster of faceted balls.

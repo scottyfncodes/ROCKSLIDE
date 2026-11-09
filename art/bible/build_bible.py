@@ -489,7 +489,7 @@ def p_vince(sp):
             ("Below", "Insulated charcoal trousers, articulated knees, leather boots with a heel and mustard laces, gauntlet gloves"),
             ("Pack", f"Rescue pack with the cross, shovel and probe; radio, belt, first-aid pouch; the wooden tourers ({E['skisWood']}) on it"),
             ("Build", "Lofted, tapered, jointed on 25 bones (rs_patroller); the head 12% large for a readable face; fixed colours in one material"),
-            ("Face", "Large dark oval eyes with two catchlights and a lash line, brows, a small nose, freckles, blush, a smile; he blinks")]
+            ("Face", "Large blue eyes with a dark pupil, two catchlights and a lash line, brows, a small nose, freckles, blush, a smile; he blinks")]
     y = 216
     for k, v in rows:
         d.text(sp, [x2, y, x2 + 60, y + 11], k.upper(), J, "SemiBold", 7.5, BTN, tracking=160)

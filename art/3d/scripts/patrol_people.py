@@ -553,7 +553,7 @@ def vince():
         "baked": "#FFFFFF",
         "pants": "#34363E", "pantsDark": "#2A2C33", "knee": "#41444D", "boot": "#5B3B2A", "bootDark": "#3B2820",
         "sole": "#25211F", "lace": "#E0B042", "glove": "#2E3036", "gloveCuff": "#24262B", "skin": "#F2C9A8",
-        "eye": "#1E1B22", "white": "Cross White", "nose": "#E9A685", "cheek": "#EE9E8F", "mouth": "#8E3F4C",
+        "eye": "#1E1B22", "iris": "#3F86C9", "irisRim": "#24466E", "white": "Cross White", "nose": "#E9A685", "cheek": "#EE9E8F", "mouth": "#8E3F4C",
         "brow": "#9A6A34", "freckle": "#D9926F", "fleece": "#EFE4D2", "scarf": "#5F9C86", "scarfDark": "#4F8774",
         "strap": "#2B2D33", "web": "#3B3E46", "buckle": "#E0B042", "pack": "#3E4149", "packDark": "#30333A",
         "red": "Patrol Red", "orange": "#E8742A", "metal": "Steel", "black": "#232329", "frame": "#28282E",
@@ -699,9 +699,12 @@ def vince():
     # eyes: big dark ovals with two catchlights and a lash line; each blinks about its own centre
     for s_, sx in (("L", -1), ("R", 1)):
         e = J(f"eye_{s_}", (0, 0, 0))
-        add(body, f"eye_{s_}", G(f"eye{s_}", Hz(0.031), e, 1, (0.78, 1.22, 0.42)), "eye")
-        add(body, f"eye_{s_}", G(f"glint{s_}", Hz(0.0095), v3(e, (Hz(sx * 0.008), Hz(0.012), -Hz(0.011))), 0), "white")
-        add(body, f"eye_{s_}", G(f"glint2{s_}", Hz(0.005), v3(e, (-Hz(sx * 0.008), -Hz(0.011), -Hz(0.011))), 0), "white")
+        # Vince's eyes are blue: a blue iris with a darker rim, a dark pupil set into it
+        add(body, f"eye_{s_}", G(f"eye{s_}", Hz(0.031), e, 1, (0.78, 1.22, 0.42)), "irisRim")
+        add(body, f"eye_{s_}", G(f"iris{s_}", Hz(0.025), v3(e, (0, -Hz(0.002), -Hz(0.004))), 1, (0.8, 1.2, 0.42)), "iris")
+        add(body, f"eye_{s_}", G(f"pupil{s_}", Hz(0.0135), v3(e, (0, -Hz(0.002), -Hz(0.0085))), 1, (0.8, 1.15, 0.35)), "eye")
+        add(body, f"eye_{s_}", G(f"glint{s_}", Hz(0.0095), v3(e, (Hz(sx * 0.008), Hz(0.012), -Hz(0.0145))), 0), "white")
+        add(body, f"eye_{s_}", G(f"glint2{s_}", Hz(0.005), v3(e, (-Hz(sx * 0.008), -Hz(0.011), -Hz(0.0145))), 0), "white")
         add(body, f"eye_{s_}", B(f"lash{s_}", Hz(0.052), Hz(0.012), Hz(0.01), v3(e, (Hz(sx * 0.004), Hz(0.03), -Hz(0.008))), (0, 0, sx * -0.18), bevel=0.002), "eye")
         add(body, f"eye_{s_}", B(f"flick{s_}", Hz(0.018), Hz(0.009), Hz(0.009), v3(e, (Hz(sx * 0.028), Hz(0.036), -Hz(0.004))), (0, sx * 0.4, sx * -0.7)), "eye")
         # brows: a soft arch, lifted at the inner end (friendly, a little keen)
