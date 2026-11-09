@@ -50,6 +50,32 @@ export function grade(hex: number): number {
   return _c.getHex(THREE.SRGBColorSpace);
 }
 
+/**
+ * Snow bounce (Art Direction 2.0, Phase C): a snowfield throws a lot of light back up, so the shaded
+ * walls, soffits and eaves of a building in the snow are lit from below. Without it every wall out of
+ * the sun dropped to a near-black block against bright snow, while the terrain and the figures did not.
+ * One colour, set by the rig from the hemisphere's ground light, added to the plain kit materials in
+ * proportion to how much a face looks sideways or down (none on roofs and snow tops).
+ */
+export const snowBounce = { value: new THREE.Vector3() };
+export function bounced<M extends THREE.MeshLambertMaterial>(m: M): M {
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uSnowBounce = snowBounce;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uSnowBounce;')
+      .replace(
+        '#include <opaque_fragment>',
+        `{
+        vec3 nB = (vec4(normalize(normal), 0.0) * viewMatrix).xyz;
+        outgoingLight += diffuseColor.rgb * uSnowBounce * clamp(0.55 - 0.65 * nB.y, 0.0, 1.0);
+      }
+      #include <opaque_fragment>`,
+      );
+  };
+  m.customProgramCacheKey = () => 'snow-bounce-v1';
+  return m;
+}
+
 const matCache = new Map<string, THREE.MeshLambertMaterial>();
 export function mat(color: number, extra?: Partial<THREE.MeshLambertMaterialParameters>): THREE.MeshLambertMaterial {
   const key = extra ? '' : `${color}`;
@@ -58,12 +84,13 @@ export function mat(color: number, extra?: Partial<THREE.MeshLambertMaterialPara
     if (m) return m;
   }
   const m = new THREE.MeshLambertMaterial({ color: grade(color), ...extra });
+  if (!extra) bounced(m);
   if (key) matCache.set(key, m);
   return m;
 }
 
 /** A material that can be recoloured (customisation) without touching the shared cache. */
-export const paint = (color: number) => new THREE.MeshLambertMaterial({ color: grade(color) });
+export const paint = (color: number) => bounced(new THREE.MeshLambertMaterial({ color: grade(color) }));
 
 /** Recolour a `paint` material through the same grade. */
 export const repaint = (m: THREE.MeshLambertMaterial, color: number) => m.color.setHex(grade(color));
@@ -310,7 +337,7 @@ export function bake(g: THREE.Object3D, byColor = false): THREE.Group {
   g.updateMatrixWorld(true);
   const inv = g.matrixWorld.clone().invert();
   const byMat = new Map<THREE.Material, THREE.BufferGeometry[]>();
-  const vc = byColor ? (vertexColored ??= new THREE.MeshLambertMaterial({ vertexColors: true })) : null;
+  const vc = byColor ? (vertexColored ??= bounced(new THREE.MeshLambertMaterial({ vertexColors: true }))) : null;
   g.traverse((c) => {
     const m = c as THREE.Mesh;
     if (!m.isMesh || Array.isArray(m.material) || (m as THREE.InstancedMesh).isInstancedMesh || !visibleUpTo(m, g)) return;

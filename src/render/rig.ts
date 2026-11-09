@@ -3,7 +3,7 @@ import type { Conditions } from '../world/weather';
 import { shared } from './materials';
 import { FOG_GLOW, FOG_SUN, installAtmosphere } from './atmosphere';
 import { NIGHT, SNOW_LIGHT } from './fieldGuide';
-import { figureLight } from './kit';
+import { figureLight, snowBounce } from './kit';
 import { rangeUniforms, snowUniforms } from './terrainView';
 
 // the high-country air replaces three's fog in every shader (before anything compiles)
@@ -267,6 +267,9 @@ export class Rig {
     const nightK = Math.pow(1 - day, 1.2);
     figureLight.fill.value.set(NIGHT.figureFill[0], NIGHT.figureFill[1], NIGHT.figureFill[2]).multiplyScalar(nightK);
     figureLight.rim.value.set(NIGHT.figureRim[0], NIGHT.figureRim[1], NIGHT.figureRim[2]).multiplyScalar(nightK * (1 - indoors));
+    // light thrown back up by the snow onto walls and eaves (kit.ts snowBounce), from the ground light
+    const gc = this.hemi.groundColor;
+    snowBounce.value.set(gc.r, gc.g, gc.b).multiplyScalar(this.hemi.intensity * 0.5 * (1 - indoors));
     rangeUniforms.haze.value = 1 - c.fog * 0.4;
     // visibility: long on a clear day, closing right in for snow and storms
     const near = THREE.MathUtils.lerp(260, 15, c.fog);
