@@ -400,7 +400,8 @@ export function buildTerrain(t: Terrain): THREE.Group {
  */
 /** distances of the range's rings beyond the valley's edge (m): dense across each crest */
 export const RANGE_RINGS = (() => {
-  const r = new Set<number>([0, 60, 160, 300]);
+  // dense near the valley's edge, where the range eases up out of the valley floor (see buildBackdrop)
+  const r = new Set<number>([0, 25, 60, 105, 160, 225, 300, 380]);
   for (const b of RANGE_BANDS) for (let i = 0; i <= 12; i++) r.add(Math.round(b.d + b.w * 1.15 * (i / 6 - 1) * Math.abs(i / 6 - 1) ** 0.35));
   r.add(RANGE_BANDS[2].d + RANGE_BANDS[2].w * 1.25);
   return [...r].filter((v) => v >= 0).sort((a, b) => a - b);
@@ -513,6 +514,11 @@ function buildBackdrop(t: Terrain): THREE.Mesh {
       const e = 0.008;
       const hf = (rangeAt(hu, hv) * 2 + rangeAt(hu + e, hv) + rangeAt(hu - e, hv) + rangeAt(hu, hv + e) + rangeAt(hu, hv - e)) / 6;
       y += (hf - 0.45) * 90 * flank;
+      // Ease up out of the valley: the bands' smooth maximum and the flank erosion lifted the first rings
+      // about 100 m within 60 m of the valley's edge, a vertical grey curtain under the foothills seen from
+      // the valley floor. The surface now leaves the valley at the valley's own grade and steepens over
+      // the first 360 m, so that strip reads as snowy, timbered slope running up into the foothills.
+      y = foot + (y - foot) * smoothstep(0, 360, R) ** 0.8;
       if (r === 0) y = foot - 1;
       const o = (r * (seg + 1) + s) * 3;
       pos[o] = x;
