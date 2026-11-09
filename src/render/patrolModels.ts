@@ -102,9 +102,11 @@ export function dressModel(
     }
   }
   for (const m of meshes) {
-    m.material = materials[roleOf(m)];
-    // the game's materials take their colour from the material, not COLOR_0
-    m.geometry.deleteAttribute('color');
+    const mat = materials[roleOf(m)];
+    m.material = mat;
+    // the game's materials take their colour from the material, not COLOR_0, except the one drawn from
+    // vertex colours (the figures' "baked" role), which keeps them
+    if (!(mat as THREE.MeshLambertMaterial).vertexColors) m.geometry.deleteAttribute('color');
     m.castShadow = true;
   }
   return found;

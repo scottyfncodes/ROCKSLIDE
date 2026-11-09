@@ -31,7 +31,9 @@ for a in args[1:]:
     ok, ex = g.call("meshcraft", "export_asset", {"blend": blend, "profiles": ["three-web-toon"], "out_dir": f"{d}/exports"})
     if not ok: print(a, "EXPORT FAIL", ex); fails.append(a); continue
     glbs = [e["path"] for e in ex if isinstance(e, dict) and str(e.get("path", "")).endswith(".glb")] if isinstance(ex, list) else []
-    glb = next((p for p in glbs if ".lod" not in p and ".collision" not in p), f"{d}/exports/{a}.three-web-toon.glb")
+    # (newer MeshCraft names the export asset.<profile>.glb; take whichever main GLB is there)
+    glbs += [f"{d}/exports/{f}" for f in sorted(os.listdir(f"{d}/exports")) if f.endswith(".glb")]
+    glb = next((p for p in glbs if ".lod" not in p and ".collision" not in p and os.path.exists(p)), f"{d}/exports/{a}.three-web-toon.glb")
     ok, v = g.call("meshcraft", "validate_asset", {"blend": blend, "exports": [glb], "profiles": ["three-web-toon"]})
     summ = v.get("summary") if ok and isinstance(v, dict) else v
     ok, e = g.call("meshcraft", "engine_check", {"glb": glb, "out": f"{d}/engine.png", "size": 512, **({"contract": {"ground": False}} if sunk else {})})

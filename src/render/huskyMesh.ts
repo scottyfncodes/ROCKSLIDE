@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { DogAnim } from '../actors/husky';
 import { Jiggle } from './characterMesh';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { box, facet, facetPaint, gem, repaint } from './kit';
+import { box, facet, facetBaked, facetPaint, gem, gradeVertexColors, repaint } from './kit';
 import { cullAsCharacter, dressModel, retire } from './patrolModels';
 
 const GREY = 0x5f6873;
@@ -217,6 +217,8 @@ export class HuskyMesh {
       harnessSecond: this.harnessSecond,
       bandana: this.bandanaMat,
       glint: facet(0xf6ecdc),
+      // every colour the game never repaints, from the model's vertex colours (one draw call)
+      baked: facetBaked(),
     };
     this.bandana = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.2, 3), this.bandanaMat);
     this.bandana.rotation.set(Math.PI + 0.4, 0, 0);
@@ -251,6 +253,10 @@ export class HuskyMesh {
     const parts = ['koda_body', 'koda_eyes_open', 'koda_eyes_shut', 'koda_tongue', 'koda_harness', 'koda_harness_pack', 'koda_bandana'];
     const n = dressModel(root, [...bones, ...parts], this.roles);
     if (!n) return false;
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && m.material === this.roles.baked) gradeVertexColors(m.geometry);
+    });
     // one sphere that holds every pose, from a stretched gallop to a jump
     cullAsCharacter(root, new THREE.Vector3(0, 0.5, -0.1), 1.3);
     // every joint picks up where the code-built one is now (the ears' set, the current pose)

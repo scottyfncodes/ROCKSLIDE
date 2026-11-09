@@ -197,8 +197,13 @@ export function stepHusky(d: Husky, o: Owner, dt: number, t: Terrain, solid: Col
     }
     default: {
       if (d.happy > 0 && !ownerMoving) {
-        // petted: stay right here, wiggle, look up at you
-        d.speed = 0;
+        // petted: wiggle in to your hand (a few steps, if you reached from further off than an arm's
+        // length), then stay right there and look up at you
+        const reach = Math.hypot(o.x - d.x, o.z - d.z);
+        if (reach > PET_REACH + 0.15) {
+          const k = PET_REACH / reach;
+          moveToward(d, o.x + (d.x - o.x) * k, o.z + (d.z - o.z) * k, 1.8, dt, t, solid);
+        } else d.speed = 0;
         d.anim = 'happy';
         const want = Math.atan2(-(o.x - d.x), -(o.z - d.z));
         let a = want - d.yaw;
@@ -265,6 +270,9 @@ export function startTrack(d: Husky, trail: { x: number; z: number }[]): void {
   });
   d.trailI = best;
 }
+
+/** how far from you Koda stands to be petted (centre to centre, metres): the kneeling patroller's hand */
+export const PET_REACH = 1.1;
 
 export function pet(d: Husky): void {
   d.happy = 2.4;
