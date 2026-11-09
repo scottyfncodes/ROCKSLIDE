@@ -1266,19 +1266,19 @@
   },
   {
    "path": "kessel-art-bible.pdf",
-   "bytes": 6372841,
+   "bytes": 6363984,
    "tools": "DesignCraft layout and PDF export (Playwright captures of the game, colour tokens from the code)",
    "status": "shipped",
    "notes": "The art bible, edition 2: the canonical visual reference, 20 pages. Built by art/bible/build_bible.py from art/bible/captures (capture.mjs) and art/bible/tokens.json (tokens.ts); fonts pinned in art/bible/fonts.json; review in art/bible/QA.md. Supersedes edition 1 (dark slate).",
-   "sha256": "d465b2fa93087980bb420d638457b417b683fcd8f69212f9eef988f14418187e"
+   "sha256": "116b05241b68dc727e7933a693cc6cd80304f8263623ae1e396c4d77a6700f8e"
   },
   {
    "path": "bible/kessel-art-bible.designcraft",
-   "bytes": 6364482,
+   "bytes": 6355649,
    "tools": "DesignCraft",
    "status": "source",
    "notes": "The editable layout of the art bible (open beside a Document Fonts folder holding the fonts in art/bible/fonts.json)",
-   "sha256": "1308b7f8fd12a4d76ad516bf46a34dd1aa2ad7c8f6bf33232f8415cdf5987b6f"
+   "sha256": "fbf0457d7dae0cfb463d0e92546f8fe49146b7c6b30ca0832625c083202de872"
   },
   {
    "path": "bible/qa-contact-sheet.jpg",
