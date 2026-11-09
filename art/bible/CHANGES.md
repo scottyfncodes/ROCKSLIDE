@@ -7,6 +7,7 @@ construction logic, and walls in shade take light bounced from the snow. Palette
 | Page | What changed in the game | In the bible |
 | --- | --- | --- |
 | Every page with a world capture | Hangar, equipment room, kennel and mast hut rebuilt; chalets, chapel, cabin, boathouse and barrier hut detailed; shaded walls lifted by the snow bounce | All captures re-taken from the new build (`capture.mjs`) |
+| Every page with a world capture | The range eases up out of the valley instead of a 100 m step (no grey wall under the foothills) | Re-captured |
 | 13 Places | The yard livery and construction rule | Caption |
 | 15 Light | The snow bounce | A rule beside the sky ramp |
 | Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.5 |

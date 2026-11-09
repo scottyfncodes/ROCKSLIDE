@@ -48,6 +48,18 @@ material, including the vertex-coloured baked buildings, now adds light thrown b
 - It is weighted by how much a face looks sideways or down: walls, soffits and eaves, not roofs.
 - It costs a few ALU ops in the fragment shader, with no new pass and no new light.
 
+### The grey wall under the foothills (`src/render/terrainView.ts` `buildBackdrop`)
+Reported from a phone, riding a sled south across the valley floor: a flat grey curtain filled the frame under
+the foothills.
+- **Cause.** Phase A's range bands are joined by a smooth maximum, and erosion is added on the flanks. Together
+  they lifted the first rings about **100 m within 60 m** of the valley's edge (75 m → 177 m at the south edge).
+  From the valley floor that near-vertical step reads as a blank wall.
+- **Fix.** The surface now leaves the valley at the valley's own grade and steepens over its first 360 m:
+  75 → 89 → 107 → 137 → 187 → 250 m. Denser rings there carry the curve. The strip now reads as a snowy,
+  timbered slope running up into the foothills, as in [compare-range-foot.jpg](compare-range-foot.jpg)
+  (before left, after right; the same camera, south across the valley at 08:49).
+- `tests/field-guide.test.ts` still passes. From the station, the bands' crests stand where they did.
+
 ## Evidence
 Captured on both builds with the same cameras, clock and weather ([`capture.mjs`](capture.mjs)). Before is `main`
 at `6b00f9a`. The phone shots are portrait 390 × 844 at 2x; the desktop shots are 1440 × 900. The yard upgrades
