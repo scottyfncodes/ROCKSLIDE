@@ -256,3 +256,19 @@ export function hareMesh(): THREE.Group {
   }
   return g;
 }
+
+/** The rescue toboggan (an akja): an orange tub on runners with the patient strapped in. */
+export function tobogganMesh(): THREE.Group {
+  const g = new THREE.Group();
+  const tub = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.3, 2.2), new THREE.MeshLambertMaterial({ color: 0xf07a1a }));
+  tub.position.y = 0.2;
+  const patient = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 1.3, 4, 8), new THREE.MeshLambertMaterial({ color: 0x2f7fb8 }));
+  patient.rotation.x = Math.PI / 2;
+  patient.position.y = 0.45;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), new THREE.MeshLambertMaterial({ color: 0xe8b796 }));
+  head.position.set(0, 0.48, -0.85);
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.12), new THREE.MeshLambertMaterial({ color: 0x262a30 }));
+  strap.position.set(0, 0.62, 0.1);
+  g.add(tub, patient, head, strap);
+  return g;
+}

@@ -82,7 +82,7 @@ export interface Reading {
 export const beaconDistance = (x: number, z: number, v: Victim) => Math.hypot(x - v.x, z - v.z, v.depth);
 
 /** What the transceiver shows at (x, z): the nearest beacon not yet dug out, within range. */
-export function readBeacon(x: number, z: number, victims: readonly Victim[]): Reading {
+export function readBeacon(x: number, z: number, victims: readonly Victim[], rangeK = 1): Reading {
   let best: Victim | null = null;
   let bd = Infinity;
   for (const v of victims) {
@@ -93,7 +93,7 @@ export function readBeacon(x: number, z: number, victims: readonly Victim[]): Re
       best = v;
     }
   }
-  if (!best || bd > BEACON_RANGE) return { stage: 'signal', id: null, distance: 0, bearing: null };
+  if (!best || bd > BEACON_RANGE * rangeK) return { stage: 'signal', id: null, distance: 0, bearing: null };
   // the display reads in tenths, as a real one does
   const distance = Math.round(bd * 10) / 10;
   if (bd <= FINE_RANGE) return { stage: 'fine', id: best.id, distance, bearing: null };

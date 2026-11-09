@@ -104,6 +104,18 @@ for (const [name, width, height] of SIZES) {
   check(await until(() => !document.querySelector('.hud .beaconpanel').classList.contains('hidden'), 8000), `${name}: no transceiver on the debris`);
   r.hudBeacon = await hud('on a rescue');
   await P(() => { window.patrol.game.ops.reset(); window.patrol.teleport(395, 286, 0); });
+  // the Daily Storm through its own buttons: the mission table, the briefing, the report with its share card
+  await P(() => { const g = window.patrol.game; g.p.active = null; g.p.patrolDay = null; window.patrol.closePanel(); g.openBoard('calls'); });
+  check(await until(() => !!document.querySelector('.dayblock [data-a=storm]')), `${name}: no Daily Storm on the mission table`);
+  await page.tap('.dayblock [data-a=storm]').catch(() => page.click('.dayblock [data-a=storm]'));
+  check(await until(() => !!document.querySelector('.panel [data-a=skip]')), `${name}: no morning briefing`);
+  await page.tap('.panel [data-a=skip]').catch(() => page.click('.panel [data-a=skip]'));
+  check(await until(() => window.patrol.game.p.patrolDay?.phase === 'calls', 8000), `${name}: the runs did not open`);
+  await P(() => window.patrol.game.endDay());
+  check(await until(() => !!document.querySelector('.panel pre.share')), `${name}: no Daily Storm report`);
+  r.storm = await P(() => ({ share: document.querySelector('.panel pre.share').textContent.split('\n')[0], streak: window.patrol.game.p.storm.streak }));
+  check(r.storm.streak >= 1, `${name}: the streak did not count`);
+  await P(() => window.patrol.closePanel());
   // on skis in the terrain park: the TRICK button and the style meter join the HUD
   await P(() => window.patrol.teleport(410, 140, Math.PI));
   await page.keyboard.press('KeyQ');

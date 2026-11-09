@@ -284,14 +284,15 @@ export class Rig {
     // light thrown back up by the snow onto walls and eaves (kit.ts snowBounce), from the ground light
     const gc = this.hemi.groundColor;
     snowBounce.value.set(gc.r, gc.g, gc.b).multiplyScalar(this.hemi.intensity * 0.5 * (1 - indoors));
-    rangeUniforms.haze.value = 1 - c.fog * 0.4;
+    rangeUniforms.haze.value = 1 - Math.min(1, c.fog) * 0.4;
     // visibility: long on a clear day, closing right in for snow and storms
-    const near = THREE.MathUtils.lerp(260, 15, c.fog);
-    const far = THREE.MathUtils.lerp(7200, 260, c.fog);
+    const near = THREE.MathUtils.lerp(260, 15, Math.min(1, c.fog));
+    // past 1 (a whiteout) the cloud sits on the snow: under a hundred metres
+    const far = c.fog > 1 ? 260 / (1 + (c.fog - 1) * 4) : THREE.MathUtils.lerp(7200, 260, c.fog);
     this.fog.near = near;
     this.fog.far = far * (1 - indoors * 0.2);
     // aerial perspective: the far haze is a cold, slightly lifted blue, greyer in weather
-    this.fogColor.copy(hor).lerp(new THREE.Color(0x9fb8d6).lerp(new THREE.Color(0x101830), 1 - day), 0.45).lerp(grey, c.fog * 0.7);
+    this.fogColor.copy(hor).lerp(new THREE.Color(0x9fb8d6).lerp(new THREE.Color(0x101830), 1 - day), 0.45).lerp(grey, Math.min(1, c.fog) * 0.7);
     this.fog.color.copy(this.fogColor);
     FOG_SUN[0] = this.sunDir.x;
     FOG_SUN[1] = this.sunDir.y;
