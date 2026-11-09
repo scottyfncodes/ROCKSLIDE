@@ -72,6 +72,8 @@ export function buildColliders(): Colliders {
   c.add({ x: SPOTS.table.x, z: SPOTS.table.z, hw: 1.5, hd: 1, rot: 0 });
   c.add({ x: -35.6, z: 240.2, hw: 1.9, hd: 1.0, rot: 0 });
   c.add({ x: -37.6, z: 247.5, hw: 0.4, hd: 1.4, rot: 0 });
+  // outside the lodge's yard (south) wall: the woodpile under the eaves (Art Direction A, rs_lodge)
+  c.add({ x: LODGE.x + 3, z: LODGE.z + LODGE.d / 2 + 0.6, hw: 0.8, hd: 0.35, rot: 0 });
   for (const b of roomWalls(GARAGE.x, GARAGE.z, GARAGE.w, GARAGE.d, { side: 'w', width: 5.5 })) c.add(b);
   c.add({ x: SPOTS.workbench.x + 1.2, z: SPOTS.workbench.z, hw: 0.6, hd: 1.4, rot: 0, tag: 'workshop' });
   c.add({ x: HANGAR.x + 2, z: HANGAR.z - HANGAR.d / 2, hw: HANGAR.w / 2 - 2, hd: 0.3, rot: 0, tag: 'hangar' });

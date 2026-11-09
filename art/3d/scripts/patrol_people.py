@@ -255,6 +255,13 @@ def patroller(civilian=False):
         r.add(body, "chest", B("zip", 0.022, 0.4, 0.012, J("chest", (0, 0.16, -0.19)), (0.1, 0, 0)), "trim")
         r.add(body, "chest", C("collar", 0.13, 0.155, 0.1, 8, J("chest", (0, 0.41, 0))), "jacket")
         r.add(body, "chest", G("hood", 0.12, J("chest", (0, 0.43, 0.13)), 0, (1.3, 0.6, 0.8)), "jacket")
+        # Art Direction A, layered winter clothing: the shell is insulated, so it carries two quilted
+        # baffles (a ring proud of the jacket at the chest and the waist), a storm flap over the zip and
+        # a fleece edge to the collar; all inside the figure's outline
+        r.add(body, "chest", C("baffle", 0.265, 0.25, 0.05, 8, J("chest", (0, 0.06, 0)), scale=(1, 1, 0.77)), "jacket")
+        r.add(body, "spine", C("baffle2", 0.228, 0.232, 0.045, 8, J("spine", (0, 0.1, 0)), scale=(1, 1, 0.79)), "jacket")
+        r.add(body, "chest", B("flap", 0.05, 0.36, 0.016, J("chest", (0.03, 0.17, -0.197)), (0.1, 0, 0)), "jacket")
+        r.add(body, "chest", C("fleece", 0.138, 0.14, 0.03, 8, J("chest", (0, 0.465, 0))), "patchWhite")
     # the scarf, wound twice, and its two tails on their own joints
     r.add(body, "chest", C("wrap", 0.135, 0.165, 0.075, 8, J("chest", (0, 0.425, 0.005))), "scarf")
     r.add(body, "chest", C("wrap2", 0.125, 0.145, 0.06, 8, J("chest", (0, 0.475, 0.01)), (0, 0, 0.12)), "scarf")
@@ -270,6 +277,14 @@ def patroller(civilian=False):
         r.add(body, sh, limb(f"upper{s}", 0.08, 0.066, 0.3, J(sh, (0, 0, 0))), "jacket")
         r.add(body, el, limb(f"fore{s}", 0.068, 0.058, 0.26, J(el, (0, 0, 0))), "jacket")
         r.add(body, el, C(f"cuff{s}", 0.07, 0.07, 0.05, 7, J(el, (0, -0.24, 0))), "trim")
+        if not civilian:
+            # the mittens' gauntlets come up over the cuffs (a second layer at the wrist)
+            r.add(body, el, C(f"gauntlet{s}", 0.078, 0.07, 0.07, 8, J(el, (0, -0.275, -0.005))), "glove")
+            if s == "L":
+                # the patrol cross on the left sleeve: a cream disc with the red cross, facing out
+                r.add(body, sh, C("sleeveDisc", 0.042, 0.042, 0.012, 9, J(sh, (-0.074, -0.09, 0)), (0, 0, math.pi / 2)), "patchWhite")
+                r.add(body, sh, B("sleeveV", 0.014, 0.05, 0.016, J(sh, (-0.081, -0.09, 0))), "jacket")
+                r.add(body, sh, B("sleeveH", 0.014, 0.016, 0.05, J(sh, (-0.081, -0.09, 0))), "jacket")
         if civilian:
             # leather elbow patches
             r.add(body, el, G(f"patch{s}", 0.045, J(el, (0, -0.04, 0.058)), 0, (0.85, 1.2, 0.3)), "boot")
@@ -290,10 +305,19 @@ def patroller(civilian=False):
         e = f"eye_{s_}"
         r.add(body, e, G(f"eye{s_}", 0.024, J(e, (0, 0, 0.003)), 0, (0.82, 1.3, 0.45)), "eye")
         r.add(body, e, B(f"glint{s_}", 0.011, 0.011, 0.006, J(e, (0.007, 0.01, -0.0075)), (0, 0, 0.6)), "patchWhite")
+        # Art Direction A, an expressive face: a lash line over each eye, flicked up at the outer corner
+        # (bound to the eye, so it closes with the blink)
+        r.add(body, e, B(f"lash{s_}", 0.044, 0.008, 0.008, J(e, (sx * 0.002, 0.03, -0.008)), (0, 0, sx * -0.18)), "eye")
+        r.add(body, e, B(f"flick{s_}", 0.014, 0.007, 0.008, J(e, (sx * 0.025, 0.035, -0.006)), (0, 0, sx * -0.75)), "eye")
         # brows: a soft arch just under the band, lifted at the inner end (friendly, a little keen)
         r.add(body, "head", B(f"brow{s_}", 0.046, 0.009, 0.01, hd((sx * 0.064, 0.16, -0.177)), (-0.25, sx * 0.15, sx * 0.14)), "hair")
     # a button nose
     r.add(body, "head", G("nose", 0.026, hd((0, 0.098, -0.19)), 0, (1, 0.85, 0.95)), "nose")
+    if not civilian:
+        # a dusting of freckles across the nose and cheeks: an outdoor face
+        for k, (fx, fy) in enumerate(((-0.07, 0.102), (-0.05, 0.112), (-0.085, 0.118), (0.07, 0.102), (0.05, 0.112), (0.085, 0.118))):
+            fz = -math.sqrt(max(0.0, 0.181 ** 2 - fx * fx / 0.9 - (fy - 0.13) ** 2)) - 0.001
+            r.add(body, "head", B(f"freckle{k}", 0.008, 0.008, 0.004, hd((fx, fy, fz)), (0, -fx * 5, 0)), "nose")
     # blush: flat discs lying on the cheeks
     for sx in (-1, 1):
         # on the face's own surface there (x 0.098, 4.5 cm below its centre), facing the way it does
@@ -339,6 +363,16 @@ def patroller(civilian=False):
         r.add(gear, "chest", B("patch", 0.085, 0.085, 0.012, J("chest", (-0.11, 0.24, -0.185)), (0.1, 0, 0)), "patchWhite")
         r.add(gear, "chest", B("pv", 0.022, 0.06, 0.014, J("chest", (-0.11, 0.24, -0.19)), (0.1, 0, 0)), "patchRed")
         r.add(gear, "chest", B("ph", 0.06, 0.022, 0.014, J("chest", (-0.11, 0.24, -0.19)), (0.1, 0, 0)), "patchRed")
+        # Art Direction A, the patroller's kit: a sternum strap with a whistle, a hip belt with a buckle
+        # and the first-aid pouch on the right hip (red, with the cream cross). Only roles the gear
+        # already had: each role on a skinned mesh is another draw call
+        r.add(gear, "chest", B("sternum", 0.3, 0.025, 0.02, J("chest", (0, 0.23, -0.2)), (0.1, 0, 0)), "strap")
+        r.add(gear, "chest", C("whistle", 0.012, 0.012, 0.045, 6, J("chest", (-0.06, 0.2, -0.212)), (0, 0, 0.3)), "patchRed")
+        r.add(gear, "spine", C("belt", 0.236, 0.244, 0.045, 9, J("spine", (0, -0.02, 0)), scale=(1, 1, 0.8)), "strap")
+        r.add(gear, "spine", B("buckle", 0.06, 0.045, 0.02, J("spine", (0, -0.02, -0.198))), "trim")
+        r.add(gear, "spine", B("pouch", 0.075, 0.11, 0.12, J("spine", (0.215, -0.07, -0.04)), (0, 0.25, 0)), "patchRed")
+        r.add(gear, "spine", B("pouchV", 0.006, 0.05, 0.016, J("spine", (0.254, -0.065, -0.05)), (0, 0.25, 0)), "patchWhite")
+        r.add(gear, "spine", B("pouchH", 0.006, 0.016, 0.05, J("spine", (0.254, -0.065, -0.05)), (0, 0.25, 0)), "patchWhite")
         r.add(gear, "pack", G("packMain", 0.215, J("pack", (0, 0.15, 0.25)), 1, (0.86, 1.02, 0.42)), "pack")
         r.add(gear, "pack", G("packFlap", 0.2, J("pack", (0, 0.3, 0.255)), 1, (0.92, 0.38, 0.46)), "packDark")
         r.add(gear, "pack", C("crossBg", 0.115, 0.115, 0.012, 8, J("pack", (0, 0.13, 0.348)), (math.pi / 2, 0, 0)), "trim")

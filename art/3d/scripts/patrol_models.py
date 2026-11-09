@@ -78,64 +78,135 @@ def tris(objs):
 
 # ------------------------------------------------------------------ the patrol snowmobile
 def sled():
+    """Art Direction A ("Stylized Alpine 3D"): a working rescue machine, still a toy you could pick up.
+    A sculpted cowl with side vents, a cream cross on the nose and a bumper loop; twin headlight
+    bezels round the code's lamp; a framed, tinted screen; hand guards; a two-tone seat; a tunnel
+    with grippy running boards; a lugged track you can see turning on a bogie rail with five wheels a
+    side; coil-over front suspension on A-arms; skis with curled tips and handles; dry bags strapped
+    beside Koda's rack; a rear grab bar and mud flap. Same size, pivots, nodes and paint roles as
+    before (the game's paint jobs, the code's lamps, crate and Koda's seat are unchanged)."""
     mats = K.Materials(pal, {"main": "Patrol Red", "second": "Cross White", "dark": "Slate Ink", "metal": "Steel",
                              "stripe": "Caution Amber", "glass": "Nav Cyan", "grip": "Aubergine", "lug": "Steel Dark",
                              "cross": "Cross White"}, prefix="RS")
     m = mats.__getitem__
     body = []
-    # cowl: a stretched, squashed ball, flattened underneath where it sits on the belly pan, and
-    # drawn to a blunt prow at the front
+    X = math.pi / 2
+    # ---- the cowl: a stretched, squashed ball, flat underneath, drawn to a blunt prow, a little
+    # waisted where the side vents are
     def cowl_shape(v):
         if v.y < -0.12: v.y = -0.12 + (v.y + 0.12) * 0.35
         if v.z < 0: v.x *= 1 + v.z * 0.12
+        if -0.4 < v.z < 0.2 and v.y > -0.1: v.x *= 0.97
         return v
-    body.append(S("cowl", 0.75, m("main"), (0, 0.62, -0.9), (0.95, 0.62, 1.35), segs=12, rings=7, fn=cowl_shape))
+    body.append(S("cowl", 0.75, m("main"), (0, 0.62, -0.9), (0.95, 0.62, 1.35), segs=16, rings=9, fn=cowl_shape))
+    # the hood: a raised, rounded spine over the engine instead of a slab
+    body.append(S("hood", 0.5, m("main"), (0, 0.78, -0.42), (0.86, 0.36, 1.25), segs=12, rings=6,
+                  fn=lambda v: Vector((v.x, max(v.y, -0.05), v.z))))
+    # side vents: three dark louvres on each flank
+    for sx in (-1, 1):
+        for k in range(3):
+            body.append(B(f"vent{sx}{k}", 0.03, 0.045, 0.32, m("dark"), (sx * 0.665, 0.74 - k * 0.075, -0.45 - k * 0.02), (0, sx * 0.18, 0)))
+    # the cream cross on the nose and on each flank
+    body.append(B("noseX1", 0.09, 0.025, 0.3, m("cross"), (0, 0.985, -1.02), (-0.32, 0, 0)))
+    body.append(B("noseX2", 0.3, 0.025, 0.09, m("cross"), (0, 0.985, -1.02), (-0.32, 0, 0)))
+    for s_ in (-1, 1):
+        body.append(B(f"crossv{s_}", 0.03, 0.26, 0.09, m("cross"), (s_ * 0.69, 0.66, -0.95)))
+        body.append(B(f"crossh{s_}", 0.03, 0.09, 0.26, m("cross"), (s_ * 0.69, 0.66, -0.95)))
+    # twin headlight bezels round the code's lamp (it glows at (0, 0.72, -1.55)), and a bumper loop
+    for sx in (-1, 1):
+        body.append(C(f"bezel{sx}", 0.13, 0.15, 0.08, 10, m("dark"), (sx * 0.17, 0.72, -1.5), (X - 0.3, 0, 0)))
+    body.append(B("lampHood", 0.62, 0.05, 0.16, m("dark"), (0, 0.83, -1.47), (-0.3, 0, 0)))
+    body.append(C("bumper", 0.035, 0.035, 0.9, 8, m("metal"), (0, 0.3, -1.78), (0, 0, X)))
+    for sx in (-1, 1):
+        body.append(C(f"bumperArm{sx}", 0.035, 0.035, 0.42, 8, m("metal"), (sx * 0.43, 0.32, -1.6), (X, 0, 0)))
+    # belly pan, the amber pinstripe
     body.append(B("pan", 1.15, 0.28, 2.1, m("second"), (0, 0.32, -0.55), bevel=0.06))
-    body.append(B("hood", 1.0, 0.18, 0.9, m("main"), (0, 0.78, -0.2), (-0.18, 0, 0), bevel=0.05))
-    body.append(B("stripe", 1.18, 0.1, 2.12, m("stripe"), (0, 0.5, -0.55), bevel=0.02))
-    # the screen: a cut trapezoid instead of a slab
-    screen = [(-0.46, -0.27), (0.46, -0.27), (0.42, 0.12), (0.3, 0.27), (-0.3, 0.27), (-0.42, 0.12)]
-    body.append(P("screen", screen, 0.05, m("glass"), (0, 1.15, -0.62), (-0.45, 0, 0)))
-    # bars, stem, grips
-    body.append(C("bar", 0.04, 0.04, 1.0, 6, m("dark"), (0, 1.05, -0.32), (0, 0, math.pi / 2)))
-    body.append(C("stem", 0.05, 0.05, 0.35, 6, m("dark"), (0, 0.92, -0.38)))
+    body.append(B("stripe", 1.18, 0.07, 2.12, m("stripe"), (0, 0.5, -0.55)))
+    # ---- the screen: a cut, tinted shield in a dark frame
+    screen = [(-0.5, -0.27), (0.5, -0.27), (0.47, 0.14), (0.34, 0.31), (-0.34, 0.31), (-0.47, 0.14)]
+    body.append(P("screen", screen, 0.04, m("glass"), (0, 1.15, -0.62), (-0.45, 0, 0)))
+    frame = [(-0.53, -0.3), (0.53, -0.3), (0.5, 0.15), (0.36, 0.34), (-0.36, 0.34), (-0.5, 0.15)]
+    inner = [(x * 0.9, y * 0.86 - 0.01) for x, y in frame]
+    for i in range(len(frame)):
+        a0, a1, b0, b1 = frame[i], frame[(i + 1) % len(frame)], inner[(i + 1) % len(frame)], inner[i]
+        body.append(P(f"frame{i}", [a0, a1, b0, b1], 0.05, m("dark"), (0, 1.15, -0.625), (-0.45, 0, 0)))
+    # ---- bars, stem, grips, hand guards, a mirror
+    body.append(C("bar", 0.035, 0.035, 1.0, 8, m("dark"), (0, 1.05, -0.32), (0, 0, X)))
+    body.append(C("stem", 0.05, 0.06, 0.35, 8, m("dark"), (0, 0.92, -0.38)))
     for x in (-0.5, 0.5):
-        body.append(C(f"grip{x}", 0.055, 0.055, 0.16, 6, m("grip"), (x, 1.05, -0.32), (0, 0, math.pi / 2)))
-    # seat, with a stitched seam, and its back
-    body.append(B("seat", 0.62, 0.22, 1.25, m("dark"), (0, 0.85, 0.45), bevel=0.06))
-    body.append(B("seam", 0.64, 0.03, 1.2, m("lug"), (0, 0.9, 0.45)))
-    body.append(B("seatBack", 0.62, 0.32, 0.15, m("dark"), (0, 1.0, 1.05), bevel=0.05))
-    # tunnel and its painted side rails; running boards for the rider's boots
-    body.append(B("tunnel", 0.95, 0.34, 2.2, m("second"), (0, 0.6, 0.75), bevel=0.03))
-    body.append(B("tunnelSide", 0.98, 0.1, 2.2, m("main"), (0, 0.75, 0.75), bevel=0.02))
-    for s in (-1, 1):
-        body.append(B(f"board{s}", 0.22, 0.04, 1.1, m("dark"), (s * 0.56, 0.47, 0.4)))
-        # the patrol cross on each flank of the cowl
-        body.append(B(f"crossv{s}", 0.03, 0.26, 0.09, m("cross"), (s * 0.69, 0.66, -0.95)))
-        body.append(B(f"crossh{s}", 0.03, 0.09, 0.26, m("cross"), (s * 0.69, 0.66, -0.95)))
-    # track, lugs and the bogie wheels at each end
-    body.append(B("track", 0.72, 0.42, 2.4, m("dark"), (0, 0.26, 0.8), bevel=0.08))
-    # (the code version ran its lugs 0.8 m past the end of the track; these stay on it)
+        body.append(C(f"grip{x}", 0.05, 0.05, 0.16, 8, m("grip"), (x, 1.05, -0.32), (0, 0, X)))
+        body.append(S(f"guard{x}", 0.16, m("main"), (x * 1.02, 1.08, -0.43), (0.5, 0.55, 0.9), segs=8, rings=5))
+    body.append(C("gauge", 0.07, 0.08, 0.06, 10, m("dark"), (0, 1.07, -0.42), (X - 0.5, 0, 0)))
+    # ---- seat: a two-tone, rounded saddle with a passenger hump and its back
+    body.append(B("seat", 0.62, 0.2, 1.2, m("dark"), (0, 0.84, 0.45), bevel=0.08))
+    body.append(B("seatTop", 0.58, 0.06, 0.95, m("grip"), (0, 0.96, 0.35)))
+    body.append(B("seam", 0.64, 0.025, 1.18, m("lug"), (0, 0.9, 0.45)))
+    body.append(B("seatBack", 0.62, 0.32, 0.16, m("dark"), (0, 1.0, 1.05), bevel=0.07))
+    # ---- tunnel, its painted side rails; running boards with grip studs for the rider's boots
+    body.append(B("tunnel", 0.95, 0.34, 2.2, m("second"), (0, 0.6, 0.75), bevel=0.04))
+    body.append(B("tunnelSide", 0.98, 0.1, 2.2, m("main"), (0, 0.75, 0.75)))
+    for s_ in (-1, 1):
+        body.append(B(f"board{s_}", 0.22, 0.04, 1.1, m("dark"), (s_ * 0.56, 0.47, 0.4)))
+        body.append(B(f"boardLip{s_}", 0.03, 0.08, 1.1, m("metal"), (s_ * 0.67, 0.49, 0.4)))
+        for k in range(4):
+            body.append(B(f"stud{s_}{k}", 0.16, 0.02, 0.05, m("lug"), (s_ * 0.56, 0.5, 0.0 + k * 0.27)))
+    # ---- the track: a belt with lugs above and below, on a bogie rail with five wheels a side, a
+    # drive sprocket up front, an idler behind
+    body.append(B("track", 0.72, 0.42, 2.4, m("dark"), (0, 0.26, 0.8), bevel=0.12))
     for i in range(9):
         body.append(B(f"lug{i}", 0.74, 0.06, 0.08, m("lug"), (0, 0.05, -0.25 + i * 0.27)))
+    for i in range(7):
+        body.append(B(f"tlug{i}", 0.74, 0.04, 0.07, m("lug"), (0, 0.48, 0.05 + i * 0.27)))
     for z in (-0.2, 1.8):
-        body.append(C(f"wheel{z}", 0.21, 0.21, 0.76, 10, m("metal"), (0, 0.26, z), (0, 0, math.pi / 2)))
-    # the rack where Koda rides
+        body.append(C(f"wheel{z}", 0.21, 0.21, 0.78, 12, m("metal"), (0, 0.26, z), (0, 0, X)))
+        for sx in (-1, 1):
+            body.append(C(f"hub{z}{sx}", 0.09, 0.09, 0.03, 8, m("dark"), (sx * 0.4, 0.26, z), (0, 0, X)))
+    for sx in (-1, 1):
+        body.append(B(f"rail{sx}", 0.04, 0.06, 1.75, m("metal"), (sx * 0.39, 0.2, 0.8)))
+        for k in range(5):
+            z = 0.12 + k * 0.34
+            body.append(C(f"bogie{sx}{k}", 0.085, 0.085, 0.05, 10, m("metal"), (sx * 0.4, 0.12, z), (0, 0, X)))
+            body.append(C(f"bhub{sx}{k}", 0.035, 0.035, 0.06, 6, m("dark"), (sx * 0.41, 0.12, z), (0, 0, X)))
+    # ---- Koda's rack, the dry bags strapped either side of it, a grab bar and mud flap behind
     body.append(B("rackPlate", 0.85, 0.05, 0.9, m("metal"), (0, 0.82, 1.5)))
     for x in (-0.42, 0.42):
         body.append(B(f"rail{x}", 0.05, 0.25, 0.9, m("metal"), (x, 0.94, 1.5)))
     body.append(B("rackBack", 0.85, 0.25, 0.05, m("metal"), (0, 0.94, 1.95)))
-    # ski arms and spindles (fixed); the skis themselves steer
+    for sx in (-1, 1):
+        body.append(B(f"bag{sx}", 0.18, 0.3, 0.62, m("dark"), (sx * 0.535, 0.72, 1.45), bevel=0.05))
+        for k in (-1, 1):
+            body.append(B(f"strap{sx}{k}", 0.2, 0.32, 0.05, m("stripe"), (sx * 0.535, 0.72, 1.45 + k * 0.18)))
+    body.append(C("grab", 0.03, 0.03, 0.9, 8, m("metal"), (0, 0.98, 2.05), (0, 0, X)))
+    for sx in (-1, 1):
+        body.append(C(f"grabPost{sx}", 0.03, 0.03, 0.2, 6, m("metal"), (sx * 0.43, 0.88, 2.02)))
+    body.append(B("flap", 0.7, 0.32, 0.03, m("dark"), (0, 0.33, 2.08), (0.15, 0, 0)))
+    body.append(B("tailHousing", 0.56, 0.14, 0.05, m("dark"), (0, 0.68, 1.93)))
+    # ---- front suspension (fixed to the body): A-arms, a coil-over and the spindle; the skis steer
+    # (each ski keeps to two paint roles, dark and metal: every role on a node is a draw call)
     skis = []
-    for s in (-1, 1):
-        body.append(B(f"arm{s}", 0.08, 0.08, 0.6, m("metal"), (s * 0.45, 0.35, -0.85), (0, 0, s * 0.4)))
-        body.append(C(f"spindle{s}", 0.05, 0.05, 0.4, 6, m("metal"), (s * 0.55, 0.22, -1.0)))
-        px, py, pz = s * 0.55, 0.04, -1.0
-        sk = [B("plank", 0.18, 0.06, 1.5, m("dark"), (px, py, pz), bevel=0.02),
-              B("tip", 0.18, 0.06, 0.4, m("dark"), (px, py + 0.1, pz - 0.88), (0.55, 0, 0), bevel=0.02),
-              B("keel", 0.04, 0.03, 1.3, m("metal"), (px, py - 0.04, pz + 0.05)),
-              B("saddle", 0.12, 0.08, 0.22, m("metal"), (px, py + 0.07, pz))]
-        skis.append(finish(sk, f"sled_ski_{'L' if s < 0 else 'R'}", (px, py, pz)))
+    for s_ in (-1, 1):
+        px, py, pz = s_ * 0.55, 0.04, -1.0
+        for dz in (-0.12, 0.12):
+            body.append(B(f"arm{s_}{dz}", 0.06, 0.06, 0.62, m("metal"), (s_ * 0.45, 0.35, pz + dz * 0.5 + 0.15), (0, 0, s_ * 0.4)))
+        body.append(C(f"shock{s_}", 0.05, 0.05, 0.42, 8, m("stripe"), (s_ * 0.5, 0.42, -0.95), (0, 0, s_ * 0.45)))
+        body.append(C(f"shockRod{s_}", 0.022, 0.022, 0.5, 6, m("metal"), (s_ * 0.5, 0.42, -0.95), (0, 0, s_ * 0.45)))
+        body.append(C(f"spindle{s_}", 0.05, 0.05, 0.4, 8, m("metal"), (px, 0.22, pz)))
+        # the ski: a plank, a tip curled up in three steps, a handle loop on the tip, keel and saddle
+        sk = [B("plank", 0.18, 0.06, 1.5, m("dark"), (px, py, pz), bevel=0.02)]
+        z, y = pz - 0.75, py
+        for k, ang in enumerate((0.3, 0.65, 1.0)):
+            ln = 0.16
+            z -= ln * math.cos(ang) * 0.5
+            y += ln * math.sin(ang) * 0.5
+            sk.append(B(f"tip{k}", 0.18 - k * 0.015, 0.06, ln + 0.02, m("dark"), (px, y, z), (ang, 0, 0)))
+            z -= ln * math.cos(ang) * 0.5
+            y += ln * math.sin(ang) * 0.5
+        sk += [C("handle", 0.022, 0.022, 0.22, 6, m("metal"), (px, py + 0.2, pz - 0.82), (0, 0, X)),
+               C("handleL", 0.02, 0.02, 0.2, 6, m("metal"), (px - 0.1, py + 0.12, pz - 0.78), (-0.6, 0, 0)),
+               C("handleR", 0.02, 0.02, 0.2, 6, m("metal"), (px + 0.1, py + 0.12, pz - 0.78), (-0.6, 0, 0)),
+               B("keel", 0.04, 0.03, 1.3, m("metal"), (px, py - 0.04, pz + 0.05)),
+               B("saddle", 0.12, 0.08, 0.22, m("metal"), (px, py + 0.07, pz))]
+        skis.append(finish(sk, f"sled_ski_{'L' if s_ < 0 else 'R'}", (px, py, pz)))
     objs = [finish(body, "sled_body")] + skis
     return objs, mats
 
@@ -302,10 +373,13 @@ BUILD = {
     "rs_spruce_b_far": lambda: spruce(47, (4, 4, 3, 3), 0.92, caps=False),
 }
 
+# Art Direction A: the sled is smooth shaded (hard only past 50 degrees), so its cowl takes the light
+# like the cast riding it; the helicopter and the spruce stay faceted for now
+SMOOTH = {"rs_sled": 50}
 objs, mats = BUILD[asset]()
 for o in objs:
     if mats is not None:
-        K.shade(o)  # flat: faceted like the rest of the valley
+        K.shade(o, SMOOTH.get(asset))  # flat (faceted like the rest of the valley) unless listed
         K.bake_vertex_colors(o, mats, jitter=0.03, seed=len(o.name))
     else:
         K.shade(o)
