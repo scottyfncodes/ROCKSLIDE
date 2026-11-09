@@ -109,7 +109,21 @@ automatic camera motion.
 
 Same cameras on both builds (`renderer.info`, SwiftShader):
 
-DRAWCALLS_TABLE
+| Shot | Draw calls before -> after | Triangles before -> after |
+| --- | --- | --- |
+| p-1-base | 256 -> 210 (-46) | 266,707 -> 278,111 (+4.3 %) |
+| p-2-walk-koda | 247 -> 198 (-49) | 241,173 -> 252,195 (+4.6 %) |
+| p-3-behind | 266 -> 216 (-50) | 308,692 -> 311,816 (+1.0 %) |
+| p-4-ski | 227 -> 158 (-69) | 266,734 -> 278,383 (+4.4 %) |
+| p-5-work | 236 -> 178 (-58) | 272,476 -> 266,504 (-2.2 %) |
+| p-6-pet | 245 -> 198 (-47) | 267,611 -> 277,825 (+3.8 %) |
+| p-7-heli | 244 -> 202 (-42) | 244,225 -> 251,873 (+3.1 %) |
+| p-8-sled | 205 -> 165 (-40) | 192,480 -> 203,684 (+5.8 %) |
+| p-9-face | 252 -> 207 (-45) | 239,985 -> 248,043 (+3.4 %) |
+| d-1-base | 303 -> 258 (-45) | 420,541 -> 435,145 (+3.5 %) |
+| d-4-ski | 275 -> 226 (-49) | 472,306 -> 488,086 (+3.3 %) |
+| d-6-pet | 303 -> 259 (-44) | 438,427 -> 453,033 (+3.3 %) |
+| d-9-face | 275 -> 231 (-44) | 408,218 -> 422,824 (+3.6 %) |
 
 Draw calls fall by 40 to 69 per frame in every view (the characters, twice each with shadows); triangles rise 1
 to 6 % (the richer figures). The shipped files grow: `rs_patroller.glb` 342 KB to 737 KB (it now carries the
