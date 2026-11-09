@@ -6,7 +6,7 @@ its domain `rockslide-game.vercel.app`, `art/rockslide-palette.json` and the rep
 
 ## Visual direction: the art bible is canonical
 
-`art/kessel-art-bible.pdf` (edition 2.6, built from `art/bible/`) is the visual reference for every
+`art/kessel-art-bible.pdf` (edition 2.7, built from `art/bible/`) is the visual reference for every
 DesignCraft, PixelCraft, PLAYCRAFT and Claude Code task. Before any visual, UI, asset or marketing
 work, check the relevant pages; page 19 is the checklist for new assets.
 

@@ -1,4 +1,4 @@
-"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.6. Laid out in GITCRAFT DesignCraft from captures of the
+"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.7. Laid out in GITCRAFT DesignCraft from captures of the
 running game and colour tokens read from the game's own code. Reproducible end to end:
 
   npm ci && npx vite build && (npx vite preview --port 4173 &)
@@ -96,7 +96,7 @@ d = None
 
 def chrome(sp, n, section, source, dark=False):
     ink = MUTED if dark else BTN
-    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.6", J, "SemiBold", 7.5, ink, tracking=300)
+    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.7", J, "SemiBold", 7.5, ink, tracking=300)
     d.text(sp, [W - M - 300, 26, W - M, 38], f"{section}   {n:02d} / {PAGES}", J, "SemiBold", 7.5, ink, tracking=300, align="right")
     d.rect(sp, [M, 42, W - M, 42.75], fill=MUTED if not dark else "#6A4552")
     if source:
@@ -167,7 +167,7 @@ def p_cover(sp):
     d.gradient(sp, [428, 0, 800, H], [{"location": 0, "color": INK, "opacity": 100}, {"location": 40, "color": INK, "opacity": 78}, {"location": 100, "color": INK, "opacity": 0}])
     d.rect(sp, [20, 20, W - 20, H - 20], stroke=CREAM, weight=1.5)
     d.tool("place_image", {"path": os.path.join(WORK, "emblem-round.png"), "x": 72, "y": 76, "width": 96, "spread": sp})
-    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.6", J, "Medium", 10, PINK, tracking=420)
+    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.7", J, "Medium", 10, PINK, tracking=420)
     d.text(sp, [66, 242, 900, 330], "SNOW PATROL", J, "SemiBold", 72, CREAM, tracking=110, leading=80)
     d.text(sp, [72, 334, 800, 360], "KESSEL VALLEY", J, "Medium", 20, PINK, tracking=520)
     d.rect(sp, [72, 386, 118, 387.5], fill=CREAM)
@@ -392,7 +392,7 @@ def p_shapes(sp):
     a = d.rect(sp, [400, 360, 462, 422], fill=PAPER, stroke="#B08A8E", weight=1, shape="ellipse")
     d.text(sp, [400, 386, 462, 398], "REPAIR", J, "SemiBold", 7.5, BTN, tracking=60, align="center")
     d.x("object.dropShadow", {"on": True, "distance": 3, "angle": 90, "size": 0, "opacity": 1, "color": d.swatch("#CBB79C"), "ids": [a]})
-    d.text(sp, [M + 8, 458, 552, 484], "Panel 8 radius, 1 px cream rule at 45%, shadow 0 20 50 black 40%. Tabs 34 tall, 8 radius. Buttons 44 tall, 6 radius: paper, red, ghost. In play the HUD is a field notebook: cream graph paper, a kraft edge, graphite text, red pencil, the blue nav pencil. Chips 44, pills on a phone. Act button 86 round (78 on a phone), paper with a burgundy inner ring and a 4 px lip.", P, "Medium", 6.4, MUTED, leading=8.5)
+    d.text(sp, [M + 8, 458, 552, 484], "Panel 8 radius, 1 px cream rule at 45%, shadow 0 20 50 black 40%. Tabs 34 tall, 8 radius. Buttons 44 tall, 6 radius: paper, red, ghost. In play the HUD is a field notebook: cream graph paper, a kraft edge, graphite text, red pencil, the blue nav pencil. Chips 44; on a phone 56 round buttons on an arc round the act button. Act button 86 round (78 on a phone), paper with a burgundy inner ring and a 4 px lip.", P, "Medium", 6.4, MUTED, leading=8.5)
     # chapter frame specimen
     d.rect(sp, [M, 494, 560, 700], fill="#E7AAA6", radius=0)
     d.rect(sp, [M + 120, 520, 440, 668], stroke=BURG, weight=1.5)
@@ -413,7 +413,7 @@ def p_shapes(sp):
         "It sits under the interface: cards and type are never graded.",
     ], size=9.2, gap=4)
     h3(sp, x0, 650, 520, "SHAPE LANGUAGE IN THE WORLD")
-    body(sp, [x0, 668, W - M, 750], "Carved-toy primitives: rounded icospheres and soft capsules for people and Koda, eleven-sided drums, boxes for gear and buildings, cones for spruce tiers. Smooth shading on soft forms, hard edges where faces meet sharply, so figures take the same sun, sky and snow light as the terrain. No outlines, no glossy plastic; silhouettes carry the read.", size=9.2)
+    body(sp, [x0, 668, W - M, 750], "Carved-toy forms: people and Koda are lofted, tapered shapes (a structured parka, booted legs, one barrel for Koda), eleven-sided drums, boxes for gear and buildings, cones for spruce tiers. Smooth shading on soft forms, hard edges where faces meet sharply, so figures take the same sun, sky and snow light as the terrain. No outlines, no glossy plastic; silhouettes carry the read.", size=9.2)
 
 
 def p_ui_title(sp):
@@ -447,8 +447,8 @@ def p_ui_hud(sp):
     h3(sp, x2, y2, fw, "THE RULES OF THE HUD")
     bullets(sp, [x2, y2 + 18, x2 + fw, 760], [
         "One act button, bottom right: paper, burgundy type, 86 px; red in an emergency. Hold to work (repairs, charges, first aid): a ring fills. Under a mouse it brightens and rises a pixel off its rim.",
-        "In play the HUD is written in a field notebook: cream graph paper, a kraft board edge, graphite text, red pencil for the patrol (DISPATCH, north), the blue nav pencil for the waypoint. Chips are 44 px paper pills down the right edge above the act button. Map, Koda, Skis on, Get off.",
-        "Top: a slim compass ribbon naming the objective and its distance; top right the clock and temperature, the danger number, funds and pause, in Plex Mono.",
+        "In play the HUD is written in a field notebook: cream graph paper, a kraft board edge, graphite text, red pencil for the patrol, the blue nav pencil for the waypoint. On a phone the controls that apply now (Get off, Skis, Koda) are 56 px round buttons on an arc round the act button; Pet Koda is a small paper act button.",
+        "Top: one bar edge to edge (the clock and temperature, the danger number, funds, then Map and Pause at 44 px); under it the compass and the waypoint's tag, in Plex Mono.",
         "The radio sits centred above the controls; toasts centred near the top in tracked caps (mint good, mustard warning). No minimap, no health bars: poles, beacons and the route line carry the rest.",
     ], size=9.2, gap=4)
 
@@ -482,14 +482,14 @@ def p_vince(sp):
     x2 = M + 3 * fw + 52
     h3(sp, x2, 196, W - M - x2, "THE SPEC")
     E = WORLD
-    rows = [("Hair", f"Honey blonde ({E['vinceHair']}), shoulder length: a ring of carved curls at the nape, locks over the ears, a fringe under the hat band. Always out from under the hat"),
-            ("Jacket", f"Patrol red shell ({E['jacketRed']}) with charcoal trim ({E['jacketTrim']}) at the yoke, cuffs and pack straps; a cream cross on the chest"),
+    rows = [("Hair", f"Honey blonde ({E['vinceHair']}), shoulder length: wavy locks that turn out into a curl at the collar, two framing the face. Always out from under the hat"),
+            ("Jacket", f"Patrol red parka ({E['jacketRed']}), charcoal ({E['jacketTrim']}) yoke, shoulders and cuffs; stand-up collar, storm flap, chest cross"),
             ("Scarf", f"Forest-service green ({WORLD['green']}), knitted, two tails on springs"),
-            ("Hat", f"Charcoal wool beanie ({E['beanie']}) with a mustard band and pom-pom ({E['beanieBand']}); amber goggles ({E['goggles']}) pushed up on it"),
-            ("Below", f"Soft-shell trousers ({WORLD['trousers']}), gaiters, worn boots, charcoal mitts"),
-            ("Pack", f"Patrol pack with the cross; the old wooden tourers ({E['skisWood']}) ride on it"),
-            ("Build", "Soft carved, jointed: pelvis, two-piece spine, neck, shoulders, elbows, hips, knees, ankles; 25 bones in rs_patroller"),
-            ("Face", "Dark round eyes with a highlight, brows, a small nose, pink blush, a smile; he blinks")]
+            ("Hat", f"Charcoal wool beanie ({E['beanie']}) with a mustard band and pom-pom ({E['beanieBand']}); amber goggles ({E['goggles']}) riding on it"),
+            ("Below", "Insulated charcoal trousers, articulated knees, leather boots with a heel and mustard laces, gauntlet gloves"),
+            ("Pack", f"Rescue pack with the cross, shovel and probe; radio, belt, first-aid pouch; the wooden tourers ({E['skisWood']}) on it"),
+            ("Build", "Lofted, tapered, jointed on 25 bones (rs_patroller); the head 12% large for a readable face; fixed colours in one material"),
+            ("Face", "Large dark oval eyes with two catchlights and a lash line, brows, a small nose, freckles, blush, a smile; he blinks")]
     y = 216
     for k, v in rows:
         d.text(sp, [x2, y, x2 + 60, y + 11], k.upper(), J, "SemiBold", 7.5, BTN, tracking=160)
@@ -505,7 +505,7 @@ def p_vince(sp):
     bullets(sp, [M + cw + 30, 580, W - M, 760], [
         "Always: the honey-blonde curls out from under the hat, the red shell, the green scarf. Those three read him at 40 px tall; the wardrobe may change the jacket and hat, never the hair.",
         "Never: a different hair colour or length for Vince, a hood over the hair, skis carried upright (they read as antennae), flat-shaded gem facets, outlines. Reference and marketing images show the default outfit (patrol red, charcoal beanie).",
-        "New gear fits the same joints and pivots, in roles the mesh already has: the belt, first-aid pouch and sleeve cross added no draw calls.",
+        "New gear fits the same joints and pivots. A colour the game never repaints is baked into the one vertex-colour material, so detail adds no draw calls.",
     ], size=9.2, gap=4)
 
 
@@ -517,9 +517,9 @@ def p_koda(sp):
     y = 196 + 420 * 0.625 + 44
     cw = 420
     h3(sp, M, y, cw, "KODA: THE SPEC")
-    rows = [("Coat", "Grey #6A737E saddle and mask over white #ECEAE5, dark #4A5059 points"), ("Ears", "Right ear stands tall; the left flops over. Always the left."),
+    rows = [("Coat", "Grey #6A737E crown, saddle and mask over white #ECEAE5 (bib, belly, legs), on one smooth barrel"), ("Ears", "Right ear stands tall; the left flops over. Always the left."),
             ("Eyes", "Pale ice blue #9FC9DD with dark pupils; open and shut eyes for blinking"), ("Face", "Jaw, tongue, a pink inner ear; tongue and ears flop on springs"),
-            ("Tail", "Four segments that wag in a wave"), ("Gear", f"Red collar ({WORLD['kodaCollar']}) with a mustard tag; the patrol harness, saddle pack and bandanas from the kennel")]
+            ("Tail", "A plume of four overlapping links, white tipped; it wags in a wave"), ("Gear", f"Red collar ({WORLD['kodaCollar']}) with a mustard tag; the patrol harness, saddle pack and bandanas from the kennel")]
     yy = y + 18
     for k, v in rows:
         d.text(sp, [M, yy, M + 56, yy + 11], k.upper(), J, "SemiBold", 7.5, BTN, tracking=160)
@@ -770,7 +770,7 @@ def main():
     shots, _ = captures()
     shutil.copy(os.path.join(REPO, "public/og-image.jpg"), os.path.join(CAPS, "share-card.jpg"))
     d = DC(REPO, os.path.join(WORK, "designcraft.log"))
-    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.6"})
+    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.7"})
     d.tool("save_document", {"path": DOC})
     r = d.tool("open_document", {"path": DOC})
     print("document fonts:", r.get("documentFonts"))
@@ -798,7 +798,7 @@ def main():
     elif over:
         raise SystemExit(f"overset text: {json.dumps([(s['id'], s.get('preview')) for s in over])[:1500]}")
     d.tool("save_document", {"path": DOC})
-    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.6", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
+    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.7", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
     print("pdf:", r)
     os.makedirs(os.path.join(WORK, "pages"), exist_ok=True)
     for i in range(PAGES):
