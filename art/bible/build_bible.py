@@ -392,7 +392,7 @@ def p_shapes(sp):
     a = d.rect(sp, [400, 360, 462, 422], fill=PAPER, stroke="#B08A8E", weight=1, shape="ellipse")
     d.text(sp, [400, 386, 462, 398], "REPAIR", J, "SemiBold", 7.5, BTN, tracking=60, align="center")
     d.x("object.dropShadow", {"on": True, "distance": 3, "angle": 90, "size": 0, "opacity": 1, "color": d.swatch("#CBB79C"), "ids": [a]})
-    d.text(sp, [M + 8, 458, 552, 484], "Panel 8 radius, 1 px cream rule at 45%, shadow 0 20 50 black 40%. Tabs 34 tall, 8 radius. Buttons 44 tall, 6 radius: paper, red, ghost. In play the HUD is a field notebook: cream graph paper, a kraft edge, graphite text, red pencil, the blue nav pencil. Chips 44; on a phone 56 round buttons on an arc round the act button. Act button 86 round (78 on a phone), paper with a burgundy inner ring and a 4 px lip.", P, "Medium", 6.4, MUTED, leading=8.5)
+    d.text(sp, [M + 8, 458, 552, 484], "Panel 8 radius, 1 px cream rule at 45%, shadow 0 20 50 black 40%. Tabs 34 tall, 8 radius. Buttons 44 tall, 6 radius: paper, red, ghost. In play the HUD is a field notebook (graph paper, kraft edge, graphite, red and blue pencil). Chips 44 (56 round on a phone). Act 86 round (78 on a phone), paper with a burgundy inner ring and a 4 px lip.", P, "Medium", 6.4, MUTED, leading=8.5)
     # chapter frame specimen
     d.rect(sp, [M, 494, 560, 700], fill="#E7AAA6", radius=0)
     d.rect(sp, [M + 120, 520, 440, 668], stroke=BURG, weight=1.5)

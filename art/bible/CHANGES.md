@@ -1,3 +1,18 @@
+# Art bible edition 2.7: Character Evolution (2026-11-09)
+
+Character Evolution (`docs/character-evolution/REPORT.md`): Vince and Koda rebuilt as characters on their existing
+skeletons, a phone-first camera and HUD, contact shadows. Palette roles, type, `grade()` and the `:root` tokens are
+unchanged.
+
+| Page | What changed in the game | In the bible |
+| --- | --- | --- |
+| Every page with a world capture | Vince: lofted parka, boots, gloves, a larger face, his hair as a model, the rescue pack; Koda: one lofted barrel with the husky coat, plume tail; contact shadows; a frosted far forest; the phone camera closer | All captures re-taken from the new build (`capture.mjs`) |
+| 7 Shapes | People and Koda are lofted, tapered forms; on a phone the chips are round buttons on an arc | Captions |
+| 9 Interface | One top bar (instruments, Map, Pause); the thumb cluster; Pet Koda as a small paper button | The rules of the HUD |
+| 11 Vince | The new figure | The spec |
+| 12 Koda | The new Koda | Coat and tail |
+| Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.7 |
+
 # Art bible edition 2.6: Art Direction A, Stylized Alpine 3D, milestone 1 (2026-11-09)
 
 Art Direction A (`docs/art-direction-a/REPORT.md`): the patroller, the lodge and the snowmobile, with the ground
