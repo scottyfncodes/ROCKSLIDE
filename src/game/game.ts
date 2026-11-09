@@ -28,6 +28,7 @@ import { catMesh, MissionProps } from '../render/missionProps';
 import { detectQuality, Rig } from '../render/rig';
 import { SledMesh } from '../render/sledMesh';
 import { StationView } from '../render/stationView';
+import { findPanes, Lamplight } from '../render/lamplight';
 import { buildTerrain, snowUniforms } from '../render/terrainView';
 import { drawTopo, topoJob } from '../render/topoMap';
 import { buildOps, opsObstacles } from '../render/opsView';
@@ -94,6 +95,8 @@ export class Game {
   private heli!: Heli;
   private dog!: Husky;
   private mode: Mode = 'foot';
+  private lamps!: Lamplight;
+  private lampAt = new THREE.Vector3();
   private pack!: Snowpack;
   private input!: Input;
   private hud!: Hud;
@@ -225,6 +228,10 @@ export class Game {
     this.tracks = new Tracks(this.terrain, this.rig.quality.tier === 'low' ? 1100 : 1800);
     scene.add(this.station.group, this.world.group, this.markers.group, this.avView.group, this.props.group, this.particles.points, this.snowfall.points, this.tracks.mesh, this.drift.group);
     scene.add(this.player.group, this.dogMesh.group, this.sledMesh.group, this.heliMesh.group);
+    // warm light thrown on the snow by the lit windows (one draw call) and Vince's headlamp
+    this.lamps = new Lamplight((x, z) => this.terrain.height(x, z));
+    this.lamps.setWindows(findPanes([this.station.group, this.world.group], [this.station.windowMaterial, this.world.windowMaterial]));
+    scene.add(this.lamps.group);
     progress(0.85, 'Waking Koda');
     await pause();
     this.pack = new Snowpack(this.terrain);
@@ -607,6 +614,7 @@ export class Game {
     this.station.update(dt, this.rig.night);
     this.world.update(dt, this.rig.night, this.cond.wind);
     this.kitView.update(dt, this.rig.night);
+    this.lamps.update(dt, this.rig.night, null);
     this.placeActors(dt, true);
     this.dogMesh.animate('sit', 0, dt);
     this.smoke(dt);
@@ -682,6 +690,7 @@ export class Game {
     this.station.update(dt, this.rig.night);
     this.world.update(dt, this.rig.night, c.wind);
     this.kitView.update(dt, this.rig.night);
+    this.updateLamps(dt);
     this.props.update(dt);
     for (const im of this.props.impacts) {
       const me = this.pos2();
@@ -1333,6 +1342,15 @@ export class Game {
       const m = mission(waiting);
       this.hud.alert(m.title, m.alert, () => this.accept(waiting), () => this.hud.toast('On the mission table'));
     }
+  }
+
+  /** Window light on the snow, and the headlamp when Vince is out on foot or on skis after dark. */
+  private updateLamps(dt: number) {
+    const onFoot = (this.mode === 'foot' || this.mode === 'skis') && this.indoors < 0.5 && this.player.group.visible;
+    const want = onFoot ? THREE.MathUtils.smoothstep(this.rig.night, 0.3, 0.6) : 0;
+    const at = this.player.headlamp(want, this.lampAt);
+    const yaw = this.mode === 'skis' ? this.skis.yaw : this.walker.yaw;
+    this.lamps.update(dt, this.rig.night, at ? { x: at.x, y: at.y, z: at.z, yaw } : null);
   }
 
   // ------------------------------------------------------------------ actors on screen

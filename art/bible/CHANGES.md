@@ -1,3 +1,15 @@
+# Art bible edition 2.3: Field Guide Alpine, Phase A (2026-11-09)
+
+Art Direction 2.0 (`docs/art-direction-2/PLAN.md`), Phase A: the world's light, air and horizon. The interface,
+type, palette roles and `grade()` are unchanged. The new world-light values live in `src/render/fieldGuide.ts`
+and are quoted in `tokens.json` under `light`; `tests/field-guide.test.ts` holds them to the game.
+
+| Page | What changed in the game | In the bible |
+| --- | --- | --- |
+| Every page with a world capture | The surround is three ridge bands (timbered foothills, a serrated granite range, separate summits), each a step further into the haze; snow is lit cream and shaded cobalt-violet, with wind drifts and sastrugi; the night has a cold moon, a fill and rim on the people, window light on the snow and Vince's headlamp | All captures re-taken from the new build (`capture.mjs`) |
+| 15 Light | The rules above | Captions and the rules beside the sky ramp; the sky ramp's night sun is now the moon (`#9FB4E8`) |
+| Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.3 |
+
 # Art bible edition 2.2: the game is now SNOW PATROL (2026-11-08)
 
 A naming edition. The game was renamed from ROCKSLIDE to SNOW PATROL; the art direction is unchanged (no new

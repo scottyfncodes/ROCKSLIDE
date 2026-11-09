@@ -4,6 +4,7 @@
 // and the sky colours from src/render/rig.ts.   npx tsx art/bible/tokens.ts > art/bible/tokens.json
 import { readFileSync } from 'node:fs';
 import { PAL, grade } from '../../src/render/kit';
+import { LAMPLIGHT, NIGHT, RANGE_BANDS, SNOW_LIGHT } from '../../src/render/fieldGuide';
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0').toUpperCase();
 const css = readFileSync(new URL('../../src/ui/style.css', import.meta.url), 'utf8');
 const root = css.slice(css.indexOf(':root'), css.indexOf('}', css.indexOf(':root')));
@@ -16,7 +17,8 @@ const pick = (re: RegExp) => { const m = rig.match(re); return m ? m.slice(1).ma
 const sky = {
   zenith: pick(/const zen = lerpC\(0x([0-9a-f]{6}), 0x([0-9a-f]{6}), day\)\.lerp\(new THREE\.Color\(0x([0-9a-f]{6})\)/),
   horizon: pick(/const hor = lerpC\(0x([0-9a-f]{6}), 0x([0-9a-f]{6}), day\)\.lerp\(new THREE\.Color\(0x([0-9a-f]{6})\)/),
-  sun: pick(/const sunCol = lerpC\(0x([0-9a-f]{6}), 0x([0-9a-f]{6}), day\)\.lerp\(new THREE\.Color\(0x([0-9a-f]{6})\)/),
+  // the night end of the sun is the moon (src/render/fieldGuide.ts NIGHT.moon)
+  sun: [hex(NIGHT.moon), ...(pick(/const sunCol = lerpC\(NIGHT\.moon, 0x([0-9a-f]{6}), sunUp\)\.lerp\(new THREE\.Color\(0x([0-9a-f]{6})\)/) ?? [])],
   note: 'zenith/horizon/sun: [night, day, golden-hour tint]',
 };
 // colours picked outside PAL that the bible quotes (source -> rendered through the same grade)
@@ -47,4 +49,11 @@ const extra: Record<string, { source: string; rendered: string; from: string }> 
 for (const [k, [v, from]] of Object.entries(picked)) extra[k] = { source: hex(v), rendered: hex(grade(v)), from };
 // unlit, so never graded: the mission beacon (src/render/markers.ts)
 const unlit = { beaconActive: '#5AD1FF', beaconWaiting: '#F2C230' };
-console.log(JSON.stringify({ generatedFrom: ['src/ui/style.css', 'src/render/kit.ts', 'src/render/rig.ts', 'src/render/huskyMesh.ts', 'src/render/missionProps.ts', 'src/game/game.ts'], ui, world, extra, unlit, sky }, null, 1));
+// Field Guide Alpine (Art Direction 2.0, Phase A): the world light, from src/render/fieldGuide.ts
+const light = {
+  bands: RANGE_BANDS.map((b) => ({ name: b.name, crestM: b.d, haze: b.haze, heightM: b.crest, northM: b.north })),
+  snow: SNOW_LIGHT,
+  night: { moon: hex(NIGHT.moon), moonIntensity: NIGHT.moonIntensity, sky: hex(NIGHT.sky), ground: hex(NIGHT.ground), skyIntensity: NIGHT.skyIntensity, figureFill: NIGHT.figureFill, figureRim: NIGHT.figureRim },
+  lamplight: { window: hex(LAMPLIGHT.window), headlamp: hex(LAMPLIGHT.headlamp) },
+};
+console.log(JSON.stringify({ generatedFrom: ['src/ui/style.css', 'src/render/kit.ts', 'src/render/rig.ts', 'src/render/fieldGuide.ts', 'src/render/huskyMesh.ts', 'src/render/missionProps.ts', 'src/game/game.ts'], ui, world, extra, unlit, sky, light }, null, 1));

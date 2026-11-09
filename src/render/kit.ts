@@ -77,19 +77,42 @@ export const repaint = (m: THREE.MeshLambertMaterial, color: number) => m.color.
  * the top of the pack, a hat, Koda's back, the toes of the boots), in world space, so it stays on top
  * whatever the figure is doing.
  */
+/**
+ * The people's night light (Field Guide Alpine, src/render/fieldGuide.ts): a cold fill on their colours
+ * and a rim from the sky round their edges, both zero by day, so at night a figure stays readable
+ * against moonlit snow without the night itself getting any brighter. Set by the rig.
+ */
+export const figureLight = {
+  fill: { value: new THREE.Vector3() },
+  rim: { value: new THREE.Vector3() },
+};
+
 function dusted(m: THREE.MeshLambertMaterial): THREE.MeshLambertMaterial {
   m.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <emissivemap_fragment>',
-      `#include <emissivemap_fragment>
+    shader.uniforms.uFigFill = figureLight.fill;
+    shader.uniforms.uFigRim = figureLight.rim;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uFigFill;\nuniform vec3 uFigRim;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
       {
         vec3 nW = (vec4(normal, 0.0) * viewMatrix).xyz;
         float dust = smoothstep(0.5, 0.9, nW.y) * 0.42;
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.94, 0.98), dust);
       }`,
-    );
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `{
+        float facing = saturate(dot(normalize(normal), normalize(vViewPosition)));
+        float rim = pow(1.0 - facing, 2.2);
+        outgoingLight += diffuseColor.rgb * uFigFill + uFigRim * rim * (0.35 + 0.65 * diffuseColor.rgb);
+      }
+      #include <opaque_fragment>`,
+      );
   };
-  m.customProgramCacheKey = () => 'facet-dusted';
+  m.customProgramCacheKey = () => 'facet-dusted-v2';
   return m;
 }
 const facetCache = new Map<number, THREE.MeshLambertMaterial>();

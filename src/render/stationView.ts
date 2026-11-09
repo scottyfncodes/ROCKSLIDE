@@ -80,6 +80,10 @@ export class StationView {
   readonly fireLight: THREE.PointLight;
   private fire: THREE.Mesh[] = [];
   private windows: THREE.MeshLambertMaterial;
+  /** the lit windows' material (the lamplight finds the panes by it) */
+  get windowMaterial(): THREE.Material {
+    return this.windows;
+  }
   private lamps: THREE.MeshBasicMaterial;
   private lampLights: THREE.PointLight[] = [];
   private beacon: THREE.Mesh;

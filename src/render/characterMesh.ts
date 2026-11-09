@@ -657,6 +657,24 @@ export class PatrollerMesh {
     return true;
   }
 
+  private lamp: THREE.Mesh | null = null;
+  /**
+   * Vince's headlamp after dark (Field Guide Alpine, A3): a small warm lamp on the front of the hat, on
+   * the head joint (the code's or the model's). Returns the lamp in world space, or null when it is off.
+   */
+  headlamp(on: number, out: THREE.Vector3): THREE.Vector3 | null {
+    if (!this.lamp) {
+      this.lamp = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff0d2, toneMapped: false }));
+      this.lamp.position.set(0, 0.3, -0.2);
+    }
+    if (this.lamp.parent !== this.head) this.head.add(this.lamp);
+    this.lamp.visible = on > 0.05;
+    if (!this.lamp.visible) return null;
+    (this.lamp.material as THREE.MeshBasicMaterial).color.setRGB(1, 0.94, 0.82).multiplyScalar(0.4 + on * 0.8);
+    this.lamp.updateWorldMatrix(true, false);
+    return this.lamp.getWorldPosition(out);
+  }
+
   setLook(jacket: number, trim: number, hatId: string, hatMain: number, hatSecond: number, lens: number, skis: number) {
     repaint(this.jacket, jacket);
     repaint(this.trim, trim);

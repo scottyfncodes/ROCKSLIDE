@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import type { Conditions } from '../world/weather';
 import { shared } from './materials';
 import { FOG_GLOW, FOG_SUN, installAtmosphere } from './atmosphere';
+import { NIGHT, SNOW_LIGHT } from './fieldGuide';
+import { figureLight } from './kit';
+import { rangeUniforms, snowUniforms } from './terrainView';
 
 // the high-country air replaces three's fog in every shader (before anything compiles)
 installAtmosphere();
@@ -85,6 +88,10 @@ const SKY_FRAG = /* glsl */ `
   }
 `;
 
+const _sd = new THREE.Vector3();
+const _md = new THREE.Vector3();
+const _t = new THREE.Vector3();
+
 export class Rig {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
@@ -141,7 +148,7 @@ export class Rig {
       uZenith: { value: new THREE.Color(0x3f7fc6) },
       uHorizon: { value: new THREE.Color(0xcfe3f2) },
       uGround: { value: new THREE.Color(0xdfe7ee) },
-      uSunDir: { value: this.sunDir },
+      uSunDir: { value: this.sunDir.clone() },
       uSunColor: { value: new THREE.Color(1, 0.9, 0.75) },
       uNight: { value: 0 },
       uCloud: { value: 0 },
@@ -228,18 +235,39 @@ export class Rig {
     (this.skyU.uGround.value as THREE.Color).copy(hor).multiplyScalar(0.9);
     this.skyU.uNight.value = this.night;
     this.skyU.uCloud.value = cloud;
-    // the sun (or the moon at night)
-    if (day > 0.05) this.sunDir.set(Math.cos(c.sunEl) * Math.sin(c.sunAz), Math.max(0.08, Math.sin(c.sunEl)), Math.cos(c.sunEl) * Math.cos(c.sunAz)).normalize();
-    else this.sunDir.set(-0.3, 0.75, -0.5).normalize();
-    // a hard, warm sun: at altitude the direct light is strong and the shadows are deep and blue
-    const sunCol = lerpC(0x8090c8, 0xfff0dc, day).lerp(new THREE.Color(0xff9e62), golden * 0.7);
+    // the sun, handing over to the moon through twilight (so the light never jumps)
+    const sunUp = THREE.MathUtils.smoothstep(day, 0.03, 0.3);
+    _sd.set(Math.cos(c.sunEl) * Math.sin(c.sunAz), Math.max(0.08, Math.sin(c.sunEl)), Math.cos(c.sunEl) * Math.cos(c.sunAz)).normalize();
+    _md.set(-0.3, 0.75, -0.5).normalize();
+    this.sunDir.copy(_md).lerp(_sd, sunUp).normalize();
+    // a hard, warm sun: at altitude the direct light is strong and the shadows are deep and blue; at
+    // night a cold moon bright enough to see the snow by
+    const sunCol = lerpC(NIGHT.moon, 0xfff0dc, sunUp).lerp(new THREE.Color(0xff9e62), golden * 0.7);
     this.sun.color.copy(sunCol);
     (this.skyU.uSunColor.value as THREE.Color).copy(sunCol);
-    this.sun.intensity = (day > 0.05 ? 3.6 * day : 0.45) * (1 - cloud * 0.72) + 0.05;
+    // the sky draws the sun where it really is (and the moon once it is down)
+    (this.skyU.uSunDir.value as THREE.Vector3).copy(day > 0.05 ? _sd : _md);
+    this.sun.intensity = THREE.MathUtils.lerp(NIGHT.moonIntensity, 3.6 * day, sunUp) * (1 - cloud * 0.72) + 0.05;
     // skylight: cold blue from above, snow bouncing a little of it back; kept low so form reads
-    this.hemi.color.copy(lerpC(0x28305a, 0x9fbbe6, day));
-    this.hemi.groundColor.copy(lerpC(0x1c2034, 0xd2dbe8, day));
-    this.hemi.intensity = 0.45 + day * 0.38 + cloud * 0.55;
+    this.hemi.color.copy(lerpC(NIGHT.sky, 0x9fbbe6, day));
+    this.hemi.groundColor.copy(lerpC(NIGHT.ground, 0xd2dbe8, day));
+    this.hemi.intensity = THREE.MathUtils.lerp(NIGHT.skyIntensity, 0.83, day) + cloud * 0.55;
+    // Field Guide Alpine: snow takes the sun's light cream (peach at golden hour, blue under the
+    // moon) and the sky's light cobalt-violet; the people get a cold fill and a sky rim at night
+    const tint = (k: 'lit' | 'shade', out: THREE.Vector3) => {
+      const n = SNOW_LIGHT.night[k];
+      const d = SNOW_LIGHT.day[k];
+      const g = SNOW_LIGHT.golden[k];
+      out.set(n[0], n[1], n[2]).lerp(_t.set(d[0], d[1], d[2]), day).lerp(_t.set(g[0], g[1], g[2]), golden * 0.85);
+      // overcast flattens the split: grey light from everywhere
+      return out.lerp(_t.set(1, 1, 1), cloud * 0.6);
+    };
+    tint('lit', snowUniforms.lit.value);
+    tint('shade', snowUniforms.shade.value).multiplyScalar(THREE.MathUtils.lerp(1, SNOW_LIGHT.shadeDepth, 1 - cloud));
+    const nightK = Math.pow(1 - day, 1.2);
+    figureLight.fill.value.set(NIGHT.figureFill[0], NIGHT.figureFill[1], NIGHT.figureFill[2]).multiplyScalar(nightK);
+    figureLight.rim.value.set(NIGHT.figureRim[0], NIGHT.figureRim[1], NIGHT.figureRim[2]).multiplyScalar(nightK * (1 - indoors));
+    rangeUniforms.haze.value = 1 - c.fog * 0.4;
     // visibility: long on a clear day, closing right in for snow and storms
     const near = THREE.MathUtils.lerp(260, 15, c.fog);
     const far = THREE.MathUtils.lerp(7200, 260, c.fog);

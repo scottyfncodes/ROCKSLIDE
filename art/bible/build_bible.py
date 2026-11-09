@@ -1,4 +1,4 @@
-"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.2. Laid out in GITCRAFT DesignCraft from captures of the
+"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.3. Laid out in GITCRAFT DesignCraft from captures of the
 running game and colour tokens read from the game's own code. Reproducible end to end:
 
   npm ci && npx vite build && (npx vite preview --port 4173 &)
@@ -96,7 +96,7 @@ d = None
 
 def chrome(sp, n, section, source, dark=False):
     ink = MUTED if dark else BTN
-    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.2", J, "SemiBold", 7.5, ink, tracking=300)
+    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.3", J, "SemiBold", 7.5, ink, tracking=300)
     d.text(sp, [W - M - 300, 26, W - M, 38], f"{section}   {n:02d} / {PAGES}", J, "SemiBold", 7.5, ink, tracking=300, align="right")
     d.rect(sp, [M, 42, W - M, 42.75], fill=MUTED if not dark else "#6A4552")
     if source:
@@ -167,7 +167,7 @@ def p_cover(sp):
     d.gradient(sp, [428, 0, 800, H], [{"location": 0, "color": INK, "opacity": 100}, {"location": 40, "color": INK, "opacity": 78}, {"location": 100, "color": INK, "opacity": 0}])
     d.rect(sp, [20, 20, W - 20, H - 20], stroke=CREAM, weight=1.5)
     d.tool("place_image", {"path": os.path.join(WORK, "emblem-round.png"), "x": 72, "y": 76, "width": 96, "spread": sp})
-    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.2", J, "Medium", 10, PINK, tracking=420)
+    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.3", J, "Medium", 10, PINK, tracking=420)
     d.text(sp, [66, 242, 900, 330], "SNOW PATROL", J, "SemiBold", 72, CREAM, tracking=110, leading=80)
     d.text(sp, [72, 334, 800, 360], "KESSEL VALLEY", J, "Medium", 20, PINK, tracking=520)
     d.rect(sp, [72, 386, 118, 387.5], fill=CREAM)
@@ -582,9 +582,9 @@ def p_light(sp):
     head(sp, "LIGHT", "Light through the day", "06:00 to 22:00 in about twenty minutes. One camera on the lodge front, four times of day: these frames are the reference for any lighting change.")
     fw = (W - 2 * M - 3 * 14) / 4
     for i, (s, t, c_) in enumerate([("env-lodge-dawn", "06:40  DAWN", "low sun, long blue shadows, windows still lit"),
-                                     ("env-lodge-day", "12:00  DAY", "hard sun, bright snow, short blue shadows"),
-                                     ("env-lodge-dusk", "18:40  DUSK", "cooling light, windows lit, the evening snow begins"),
-                                     ("env-lodge-night", "21:30  NIGHT", "deep blue, lamp light, the lens closes in")]):
+                                     ("env-lodge-day", "12:00  DAY", "cream snow in the sun, cobalt in the shade"),
+                                     ("env-lodge-dusk", "18:40  DUSK", "the evening snow begins; window light on the snow"),
+                                     ("env-lodge-night", "21:30  NIGHT", "moonlit snow, lamplight, Vince still reads")]):
         x = M + i * (fw + 14)
         d.text(sp, [x, 196, x + fw, 208], t, J, "SemiBold", 8.5, BTN, tracking=240)
         figure(sp, [x, 214, x + fw, 214 + fw * 1.0], s, "capture", f"{s} · {c_}", align=4)
@@ -599,11 +599,12 @@ def p_light(sp):
         d.text(sp, [M + 390, yy + 6, M + 650, yy + 16], f"night {vals[0]} · day {vals[1]} · golden {vals[2]}", P, "Medium", 6.5, BTN)
     d.text(sp, [M + 74, y + 110, M + 600, y + 120], "night  ->  day; golden-hour tint at right (blended in at the ends of the day)", P, "Medium", 6.3, INK)
     bullets(sp, [720, y, W - M, 760], [
-        "A hard, warm sun against a low, cold blue skylight: form reads, shadows are blue, never grey.",
-        "Exposure is held down so snow keeps its shape. Nothing in the world reaches pure white.",
-        "Aerial perspective, not fog: distance glows warm toward the sun and cold away, pools in the valley, thins with altitude.",
-        "Lamps and windows come on at dusk; the hearth's fire is a particle flipbook. The amber column in every frame is the beacon of a call waiting at the lodge.",
-    ], size=9.2, gap=4)
+        "Field Guide Alpine: cold world, warm people. Warmth comes only from what people made: windows, lamps, the headlamp, patrol red.",
+        "Snow is never white: sunlight on it leans cream (peach at golden hour), skylight in its shade cobalt-violet (fieldGuide.ts SNOW_LIGHT).",
+        "The surround is three ridge bands, timbered foothills, a serrated range, separate summits, each a step further into the haze.",
+        "Night is dark but the people read: a cold moon on the snow, a cold fill and sky rim on figures, window light thrown on the snow.",
+        "Aerial perspective, not fog. The amber column is the beacon of a call waiting at the lodge.",
+    ], size=8.6, gap=3)
 
 
 def p_weather(sp):
@@ -767,7 +768,7 @@ def main():
     shots, _ = captures()
     shutil.copy(os.path.join(REPO, "public/og-image.jpg"), os.path.join(CAPS, "share-card.jpg"))
     d = DC(REPO, os.path.join(WORK, "designcraft.log"))
-    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.2"})
+    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.3"})
     d.tool("save_document", {"path": DOC})
     r = d.tool("open_document", {"path": DOC})
     print("document fonts:", r.get("documentFonts"))
@@ -795,7 +796,7 @@ def main():
     elif over:
         raise SystemExit(f"overset text: {json.dumps([(s['id'], s.get('preview')) for s in over])[:1500]}")
     d.tool("save_document", {"path": DOC})
-    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.2", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
+    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.3", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
     print("pdf:", r)
     os.makedirs(os.path.join(WORK, "pages"), exist_ok=True)
     for i in range(PAGES):

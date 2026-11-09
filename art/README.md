@@ -12,12 +12,12 @@ Everything here can be regenerated; nothing in this folder is loaded by the game
 | `MANIFEST.json` | Every shipped asset: path, SHA-256, bytes, the tools that made it |
 | `audio/` | The voice lines, the Kessel theme and the stingers: AudioCraft requests and `build_audio.sh` (see `audio/README.md`) |
 | `fx/` | The particle atlas from FXCraft flipbooks: `build_fx.py` (see `fx/README.md`) |
-| `kessel-art-bible.pdf` | **The art bible, edition 2.2: the canonical visual reference** (20 pages: direction, colour, type, shapes, interface, people, places, light, weather, markers, the checklist for new assets). DesignCraft layout from in-game captures |
+| `kessel-art-bible.pdf` | **The art bible, edition 2.3: the canonical visual reference** (20 pages: direction, colour, type, shapes, interface, people, places, light, weather, markers, the checklist for new assets). DesignCraft layout from in-game captures |
 | `bible/` | How the bible is made: `capture.mjs` (in-game captures), `tokens.ts` (colour values from the code), `build_bible.py` (DesignCraft), the captures, the editable `.designcraft` layout, `QA.md` (the page-by-page review) |
 
 ## Art direction: storybook interface, high-country world
 
-**The canonical reference is the art bible, `kessel-art-bible.pdf` (edition 2.2), built from `bible/`.**
+**The canonical reference is the art bible, `kessel-art-bible.pdf` (edition 2.3), built from `bible/`.**
 It is made from captures of the running game and colour values read from the code; when the game and
 any text here disagree, the game is right and the bible is rebuilt (`bible/build_bible.py`).
 `tests/art-direction.test.ts` fails when the stylesheet's tokens or the kit's rendered colours no
@@ -28,6 +28,11 @@ longer match the bible, and when edition 1's retired dark-slate language comes b
   lavender). The world is a working Colorado mountain in winter (#33): cobalt sky over a pale
   horizon, a hard warm sun and cold blue shadows, aerial perspective, cold granite, weathered timber,
   dark standing-seam roofs, Engelmann spruce, Hollin's barn-red, slate-blue, ochre and sage row.
+- **Field Guide Alpine (Art Direction 2.0, `docs/art-direction-2/`):** cold world, warm people. The
+  surround is three ridge bands (timbered foothills, a serrated range, separate summits), each a step
+  further into the haze; snow is lit cream and shaded cobalt-violet, never white; the night is dark
+  under a cold moon, the people keep a fill and a sky rim, and lit windows and Vince's headlamp throw
+  warm light on the snow. The values are in `src/render/fieldGuide.ts`, quoted in `bible/tokens.json`.
 - **The grade:** every world material passes once through `grade()` in `src/render/kit.ts`:
   lightness kept between 0.10 and 0.96 (no black, no blown white), saturation capped, near-blacks
   toward a cold slate blue, greens toward olive, and the old storybook paints repainted (mint to
@@ -192,7 +197,7 @@ python3 1_build_kit.py          # MeshCraft: build, preview, export three-web-to
 python3 2_forge_library.py      # ForgeCraft: route + library versions + hand-off; MeshCraft lantern template
 python3 3_emblem.py             # VectorCraft emblem (SVG/PNG/PDF)
 python3 4_share_card.py         # DesignCraft share card
-python3 ../bible/build_bible.py  # DesignCraft art bible, edition 2.2 (see bible/build_bible.py for the capture step)
+python3 ../bible/build_bible.py  # DesignCraft art bible, edition 2.3 (see bible/build_bible.py for the capture step)
 python3 6_verify_shipped.py     # MeshCraft: inspect + engine-check the GLBs that ship, compare with the rebuild
 python3 7_polish_sheets.py      # PhotoCraft: before/after sheets (docs/polish/) from captures of two builds
 ```
