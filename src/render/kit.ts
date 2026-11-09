@@ -115,13 +115,19 @@ function dusted(m: THREE.MeshLambertMaterial): THREE.MeshLambertMaterial {
   m.customProgramCacheKey = () => 'facet-dusted-v2';
   return m;
 }
+/**
+ * The figures' material (the people and Koda). Until Art Direction 2.0 Phase B this was flat shaded, so
+ * the cast read as cut gems beside a smooth-shaded world. It now shades with the models' own normals
+ * (smooth, with hard edges kept on gear), so the figures take the same sun, sky and snow light as the
+ * terrain and the buildings. The name stays: every figure part is built through it.
+ */
 const facetCache = new Map<number, THREE.MeshLambertMaterial>();
 export function facet(color: number): THREE.MeshLambertMaterial {
   let m = facetCache.get(color);
-  if (!m) facetCache.set(color, (m = dusted(new THREE.MeshLambertMaterial({ color: grade(color), flatShading: true }))));
+  if (!m) facetCache.set(color, (m = dusted(new THREE.MeshLambertMaterial({ color: grade(color) }))));
   return m;
 }
-export const facetPaint = (color: number) => dusted(new THREE.MeshLambertMaterial({ color: grade(color), flatShading: true }));
+export const facetPaint = (color: number) => dusted(new THREE.MeshLambertMaterial({ color: grade(color) }));
 
 /** A cut gem: an icosahedron (detail 0 or 1), the faceted building block of the people and Koda. */
 export function gem(r: number, m: THREE.Material | number, x = 0, y = 0, z = 0, detail = 1): THREE.Mesh {

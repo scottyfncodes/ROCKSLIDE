@@ -1,3 +1,17 @@
+# Art bible edition 2.4: Field Guide Alpine, Phase B (2026-11-09)
+
+Art Direction 2.0, Phase B (`docs/art-direction-2/phase-b/REPORT.md`): one modelling language for the cast, a
+working garage, and a lighter HUD. Palette roles, type, `grade()` and the `:root` tokens are unchanged.
+
+| Page | What changed in the game | In the bible |
+| --- | --- | --- |
+| Every page with a world capture | Vince, the villagers and Koda are soft carved figures, smooth shaded (no flat facets); Vince carries his skis diagonally across the pack; the garage is barn-red board and batten on a concrete stem wall with a timber-framed bay | All captures re-taken from the new build (`capture.mjs`) |
+| 3 Direction, 7 Shapes, 19 Rules | Figures: rounded masses, smooth shading, hard edges only on gear | Shape rules rewritten; "never a smooth figure" retired, "never skis carried upright" added |
+| 7 Shapes, 9 Interface | HUD cards are burgundy glass (74 % over a blur); on a phone the chips are pills down the right edge above a 78 px act button | Shape and HUD captions |
+| 5 Colour | The garage is repainted from mint to barn red | The repaint rule |
+| 11, 12 People; 13 Places | Build, carry, the villagers; the yard | Captions |
+| Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.4 |
+
 # Art bible edition 2.3: Field Guide Alpine, Phase A (2026-11-09)
 
 Art Direction 2.0 (`docs/art-direction-2/PLAN.md`), Phase A: the world's light, air and horizon. The interface,

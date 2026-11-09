@@ -1,0 +1,87 @@
+{
+ "url": "http://localhost:4173/",
+ "taken": "2026-11-09T00:58:19.452Z",
+ "shots": [
+  {
+   "name": "p-title",
+   "kind": "ui",
+   "note": "Title on a phone held upright",
+   "viewport": "390x844",
+   "calls": 256,
+   "tris": 241499
+  },
+  {
+   "name": "p-yard-hud",
+   "kind": "ui",
+   "note": "Phone HUD in the yard, 09:30 (the gameplay view)",
+   "viewport": "390x844",
+   "calls": 290,
+   "tris": 282204
+  },
+  {
+   "name": "p-back-hud",
+   "kind": "ui",
+   "note": "Phone HUD, default camera behind Vince with Koda, 10:30",
+   "viewport": "390x844",
+   "calls": 265,
+   "tris": 282418
+  },
+  {
+   "name": "p-garage",
+   "kind": "env",
+   "note": "Phone, the garage from the yard, 11:00",
+   "viewport": "390x844",
+   "calls": 269,
+   "tris": 272238
+  },
+  {
+   "name": "p-garage-dusk",
+   "kind": "ui",
+   "note": "Phone HUD, the garage at dusk, 18:50",
+   "viewport": "390x844",
+   "calls": 280,
+   "tris": 279458
+  },
+  {
+   "name": "p-cast",
+   "kind": "env",
+   "note": "Phone, Vince and Koda, front three-quarter, 11:00",
+   "viewport": "390x844",
+   "calls": 259,
+   "tris": 224217
+  },
+  {
+   "name": "p-cast-night",
+   "kind": "env",
+   "note": "Phone, Vince and Koda at night, 21:30",
+   "viewport": "390x844",
+   "calls": 263,
+   "tris": 227933
+  },
+  {
+   "name": "d-garage",
+   "kind": "env",
+   "note": "The garage from the yard, 11:00",
+   "viewport": "1440x900",
+   "calls": 320,
+   "tris": 495134
+  },
+  {
+   "name": "d-cast",
+   "kind": "env",
+   "note": "Vince and Koda, front three-quarter, 11:00",
+   "viewport": "1440x900",
+   "calls": 290,
+   "tris": 404437
+  },
+  {
+   "name": "d-yard-hud",
+   "kind": "ui",
+   "note": "Desktop HUD in the yard, 09:30",
+   "viewport": "1440x900",
+   "calls": 336,
+   "tris": 477400
+  }
+ ],
+ "problems": []
+}

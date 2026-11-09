@@ -69,12 +69,23 @@ def B(n, w, h, d, pos, rot=(0, 0, 0), scale=(1, 1, 1), bevel=0.0):
 
 
 def C(n, rt, rb, h, seg, pos, rot=(0, 0, 0), scale=(1, 1, 1)):
+    seg = seg if seg <= 4 else round(seg * SOFT_SIDES)
     return place(K.cylinder(n, rt, h, (0, 0, 0), axis="Y", verts=seg, r2=rb), pos, rot, scale)
 
 
+# Art Direction 2.0 Phase B, "soft carved figures": the people and Koda were cut gems (20 and 80 facet
+# icosahedra, flat shaded) beside a smooth-shaded world. They are now rounded wood-toy forms: gems are
+# subdivided once more, drums and limbs get more sides, and the mesh is smooth shaded with hard edges
+# kept only where two faces meet sharply (gear, straps, the goggles), so they take the world's light.
+SOFT_SIDES = 1.35
+
+
 def G(n, r, pos, detail=1, scale=(1, 1, 1), rot=(0, 0, 0)):
-    """three's IcosahedronGeometry(r, detail): a cut gem."""
-    return place(K.ico(n, r, (0, 0, 0), None, sub=detail + 1), pos, rot, scale)
+    """A rounded form: an 80-face icosphere, smooth shaded; the big masses (the head, the barrel) get
+    one more subdivision so their silhouette stays round at close range; the smallest (eyes, glints,
+    buttons) stay at 20 faces, which smooth shading already rounds at their size."""
+    size = r * max(scale)
+    return place(K.ico(n, r, (0, 0, 0), None, sub=3 if size >= 0.26 else 2 if size >= 0.05 else 1), pos, rot, scale)
 
 
 def P(n, outline, depth, pos, rot=(0, 0, 0)):
@@ -99,10 +110,10 @@ def cone(n, r, h, seg, pos, rot=(0, 0, 0), scale=(1, 1, 1)):
     return place(K.link(bpy.data.objects.new(n, me)), pos, rot, scale)
 
 
-def limb(n, r0, r1, length, pos, sides=7):
-    """A faceted, tapered capsule hanging down from its joint (the code's limb()): rounded at both
-    ends, `sides` facets round."""
-    rings = [(0.0, 0.5 * r0), (-0.45 * r0, r0), (-length + 0.45 * r1, r1), (-length, 0.5 * r1)]
+def limb(n, r0, r1, length, pos, sides=10):
+    """A soft, tapered capsule hanging down from its joint (the code's limb()): rounded at both ends."""
+    rings = [(0.0, 0.42 * r0), (-0.2 * r0, 0.86 * r0), (-0.5 * r0, r0), (-length * 0.5, (r0 + r1) * 0.53),
+             (-length + 0.5 * r1, r1), (-length + 0.2 * r1, 0.86 * r1), (-length, 0.42 * r1)]
     bm = bmesh.new(); loops = []
     for y, r in rings:
         loops.append([bm.verts.new((math.cos(a) * r, y, math.sin(a) * r)) for a in (math.tau * i / sides for i in range(sides))])
@@ -139,11 +150,10 @@ def build(rig, name):
         o = K.join(parts, obj)
         o.data.transform(o.matrix_world); o.matrix_world = Matrix()
         o.data.transform(TO_BLENDER)
-        # Shared vertices: the game shades these with its facet() materials (flatShading: the facets
-        # come from screen-space derivatives, not vertex normals), so the file can share each vertex
-        # between its faces instead of splitting it per face. Smooth normals and one colour per role
-        # (no per-face jitter) let the exporter weld them: a third of the vertices to skin.
-        K.shade(o, smooth_angle=180)
+        # Smooth shading, hard only where faces meet at more than 55 degrees (box gear, caps, the
+        # goggles): the game's figure materials shade with these normals (no flatShading), so a figure
+        # takes the sun, the sky and the snow light the way the terrain does. One colour per role.
+        K.shade(o, smooth_angle=55)
         K.bake_vertex_colors(o, rig.mats, jitter=0.0)
         K.skin_rigid(o, arm, {})
         o["gitcraft_asset"] = asset
@@ -336,9 +346,13 @@ def patroller(civilian=False):
         r.add(gear, "pack", B("crossH", 0.15, 0.055, 0.014, J("pack", (0, 0.13, 0.356))), "jacket")
         for sx in (-1, 1):
             r.add(gear, "pack", G(f"side{sx}", 0.07, J("pack", (sx * 0.19, 0.06, 0.25)), 0, (0.6, 1.1, 1)), "packDark")
-        # skis on the pack, A-framed (shown when they are not on the feet)
-        for sx in (-1, 1):
-            r.add("pat_skis_back", "pack", B(f"bski{sx}", 0.065, 1.3, 0.03, J("pack", (sx * 0.1, 0.26, 0.37)), (0, 0, sx * 0.065)), "ski")
+        # skis on the pack, carried diagonally (shown when they are not on the feet): tails low at his
+        # left hip, tips up past his right shoulder, below the hat, so from behind the hair and the
+        # cross read and the pair is one clean diagonal, not two antennae
+        for k, dz in enumerate((0.0, 0.035)):
+            r.add("pat_skis_back", "pack", B(f"bski{k}", 0.075, 1.32, 0.026, J("pack", (0.02 + k * 0.03, 0.12 - k * 0.012, 0.37 + dz)), (0, 0, -0.98)), "ski")
+            r.add("pat_skis_back", "pack", B(f"btip{k}", 0.075, 0.12, 0.026, J("pack", (0.02 + k * 0.03 + 0.55, 0.12 - k * 0.012 + 0.39, 0.37 + dz + 0.02)), (-0.35, 0, -0.98)), "ski")
+        r.add("pat_skis_back", "pack", B("bstrap", 0.05, 0.03, 0.12, J("pack", (0.02, 0.13, 0.4))), "strap")
     # skis on the boots, poles in the mittens
     for s in ("L", "R"):
         an, el = f"ankle_{s}", f"elbow_{s}"
@@ -385,15 +399,17 @@ def koda():
     r.add(body, "front", G("ruff", 0.27, J("front", (0, 0.15, -0.3)), 1, (1.06, 0.88, 0.82)), "grey")
     r.add(body, "rear", G("haunch", 0.25, J("rear", (0, 0.06, 0.34)), 1, (1, 0.95, 1.05)), "grey")
     r.add(body, "rear", G("rump", 0.2, J("rear", (0, -0.05, 0.4)), 0), "white")
+    # the white bib under the jaw: one soft mass, so the head sits into the body instead of on it
+    r.add(body, "chest", G("bib", 0.19, J("chest", (0, 0.1, -0.12)), 1, (1.05, 1.0, 0.8)), "white")
     # legs: a six-sided segment from each joint (as the code's), a snowshoe paw
     # (budget: the code-built Koda draws ~1,320 triangles; this one stays under it)
     for n, x, z, front in legs:
         up, lo = f"leg_{n}_upper", f"leg_{n}_lower"
         ul = 0.23 if front else 0.24
-        r.add(body, up, C(f"u{n}", 0.08 if front else 0.1, 0.06, ul + 0.04, 6, J(up, (0, -(ul + 0.04) / 2, 0))), "white" if front else "grey")
+        r.add(body, up, C(f"u{n}", 0.08 if front else 0.1, 0.06, ul + 0.04, 7, J(up, (0, -(ul + 0.04) / 2, 0))), "white" if front else "grey")
         if not front:
             r.add(body, up, G(f"thigh{n}", 0.11, J(up, (0, -0.06, 0.01)), 0, (0.8, 1.2, 1.1)), "grey")
-        r.add(body, lo, C(f"l{n}", 0.058, 0.05, 0.22, 6, J(lo, (0, -0.11, 0))), "white")
+        r.add(body, lo, C(f"l{n}", 0.058, 0.05, 0.22, 7, J(lo, (0, -0.11, 0))), "white")
         r.add(body, lo, G(f"paw{n}", 0.07, J(lo, (0, -0.225, -0.03)), 0, (1, 0.58, 1.35)), "white")
     # head: grey cap and mask, white face, the muzzle, a dark nose
     hd = lambda p: J("head", p)  # noqa: E731
@@ -405,19 +421,19 @@ def koda():
     # the husky's white brow spots above each eye, and tufts of white ruff at the cheeks
     for sx in (-1, 1):
         r.add(body, "head", G(f"browspot{sx}", 0.03, hd((sx * 0.075, 0.115, -0.168)), 0, (1.15, 0.65, 0.6), (0.3, 0, sx * -0.3)), "white")
-        r.add(body, "head", cone(f"cheek{sx}", 0.045, 0.11, 3, hd((sx * 0.16, -0.055, -0.04)), (0, 0, sx * -(math.pi / 2 + 0.45))), "white")
+        r.add(body, "head", G(f"cheek{sx}", 0.06, hd((sx * 0.15, -0.06, -0.05)), 1, (1.25, 0.8, 1.0), (0, 0, sx * -0.5)), "white")
     r.add(body, "head", G("mask", 0.07, hd((0, 0.06, -0.19)), 0, (0.75, 0.5, 2), (0.3, 0, 0)), "grey")
     r.add(body, "jaw", G("jawG", 0.08, J("jaw", (0, -0.01, -0.08)), 0, (0.95, 0.4, 1.4)), "white")
     # ears (the left flops: the code tips it over on its joint), with pink insides
     for s in ("L", "R"):
         e = f"ear_{s}"
-        r.add(body, e, cone(f"ear{s}", 0.08, 0.19, 4, J(e, (0, 0.09, 0))), "grey")
-        r.add(body, e, cone(f"inner{s}", 0.048, 0.13, 4, J(e, (0, 0.075, -0.027))), "earInner")
+        r.add(body, e, cone(f"ear{s}", 0.08, 0.19, 10, J(e, (0, 0.09, 0)), scale=(1, 1, 0.62)), "grey")
+        r.add(body, e, cone(f"inner{s}", 0.05, 0.13, 10, J(e, (0, 0.078, -0.024)), scale=(1, 1, 0.45)), "earInner")
     # the tail: a plume of four links, grey to a white tip
     for i in range(4):
         t = f"tail_{i}"
-        rr = 0.075 - i * 0.004
-        r.add(body, t, G(f"tuft_{i}", rr, J(t, (0, 0.055, 0)), 0, (1, 1.35, 1)), "white" if i == 3 else "grey")
+        rr = 0.085 - i * 0.003
+        r.add(body, t, G(f"tuft_{i}", rr, J(t, (0, 0.055, 0)), 0, (1, 1.4, 1)), "white" if i == 3 else "grey")
     # collar and tag (always on; the code paints the collar)
     r.add(body, "front", place(K.torus("collarT", 0.15, 0.03, (0, 0, 0), axis="Z", major=10, minor=4), J("front", (0, 0.18, -0.43)), (math.pi / 2 - 0.5, 0, 0)), "collar")
     r.add(body, "front", G("tag", 0.03, J("front", (0, 0.08, -0.55)), 0), "tag")

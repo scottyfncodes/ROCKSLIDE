@@ -38,7 +38,8 @@ ROLES = {
     "roofSnow": "Kessel Snow", "door": "#6B4428", "log": "Log", "logShade": "Log Dark", "grain": "End Grain",
     "dome": "Mustard", "spire": "Caution Amber", "belfry": "#262A30", "boat": "#6B4428", "boatDark": "#3D2A1C",
     # the patrol station's yard
-    "boards": "#8FBFA8", "batten": "#729988", "header": "#64857A", "floor": "#9C9A94", "rolled": "#E9E2D0",
+    "boards": "#A4483C", "batten": "#8A3B32", "header": "#5A3A26", "concrete": "#A39E96", "timber": "#5A3A26",
+    "opsDoor": "#3F5F55", "ice": "#D6E6F0", "floor": "#9C9A94", "rolled": "#E9E2D0",
     "roofDark": "#4A4F55", "steel": "#6E7A85", "rib": "#58626A", "arch": "#4F5A64", "red": "Patrol Red",
     "white": "Paper", "metal": "Steel", "hut": "#5E6266", "dark": "#1A1512",
     # mission props and the chairlift
@@ -384,47 +385,153 @@ def barrier_hut():
 # ------------------------------------------------------------------ the patrol station's yard
 # (src/world/station.ts: GARAGE 12 x 10, walls 3.6; HANGAR 14 x 16, walls 6; EQUIP 9 x 6, walls 3)
 def garage():
-    """The patrol garage: painted boards with battens, an open west front with a header beam and the
-    rolled-up door, a dark roof under snow with board gables. Walls, front and roof are their own nodes:
-    the game cuts them away (its dollhouse view) when you are inside."""
+    """The patrol garage, a working mountain operations building (Art Direction 2.0 Phase B): a poured
+    concrete stem wall that keeps the boards out of the snow, barn-red board and batten with cream
+    corner boards and frieze, three-light windows with sills, a crew door under a little shed roof with a
+    lamp and the fire cabinet beside it, and an open west bay framed by heavy timber posts, a header and
+    knee braces, the sectional door rolled up under it. The roof is steep for the snow load, overhangs on
+    exposed rafter tails, carries a stovepipe (the workshop is heated) and drips icicles; the woodpile for
+    that stove stands under its own lean-to on the east wall.
+
+    Same footprint and nodes as before (src/world/station.ts GARAGE 12 x 10, walls 3.6; the bay 5.5 m wide):
+    floor, wall_n, wall_s, wall_e, front and roof, which the game cuts away when you are inside."""
     w, d, h = 12.0, 10.0, 3.6
     hw, hd = w / 2, d / 2
+    foot = 0.55  # the concrete stem wall
+    pitch = 2.4
+    t = 0.3
     floor = [B("floor", w, 0.15, d, (0, 0.07, 0))]
 
-    def wall(name, ww, dd, x, z):
-        p = [B("boards", ww, h, dd, (x, h / 2, z))]
-        n = round(max(ww, dd) / 0.6)
+    def run(ww, dd, x, z):
+        """A board-and-batten wall run (along x when ww > dd) on its stem wall, with the water table and frieze."""
+        along_x = ww > dd
+        hb = h - foot
+        p = [B("concrete", ww + (0.12 if along_x else 0.12), foot, dd + 0.12, (x, foot / 2, z)),
+             B("boards", ww, hb, dd, (x, foot + hb / 2, z))]
+        L = ww if along_x else dd
+        n = round(L / 0.55)
         for i in range(n):
             u = -0.5 + (i + 0.5) / n
-            if ww > dd:
-                p.append(B("batten", 0.08, h, dd + 0.04, (x + u * ww, h / 2, z)))
-            else:
-                p.append(B("batten", dd + 0.04 if False else ww + 0.04, h, 0.08, (x, h / 2, z + u * dd)))
-        # a small window high in each long wall
-        if ww > dd:
-            for wx in (-3, 3):
-                p += [B("logDark", 1.1, 0.7, dd + 0.06, (wx, 2.6, z)), B("window", 0.9, 0.5, dd + 0.08, (wx, 2.6, z))]
-        return finish(p, name)
+            p.append(B("batten", 0.07, hb, dd + 0.05, (x + u * ww, foot + hb / 2, z)) if along_x
+                     else B("batten", ww + 0.05, hb, 0.07, (x, foot + hb / 2, z + u * dd)))
+        if along_x:
+            p += [B("trim", ww, 0.24, dd + 0.1, (x, h - 0.12, z)), B("trim", ww + 0.02, 0.08, dd + 0.12, (x, foot + 0.04, z))]
+        else:
+            p += [B("trim", ww + 0.1, 0.24, dd, (x, h - 0.12, z)), B("trim", ww + 0.12, 0.08, dd + 0.02, (x, foot + 0.04, z))]
+        return p
 
-    walls = [wall("wall_n", w, 0.3, 0, -hd), wall("wall_s", w, 0.3, 0, hd), wall("wall_e", 0.3, d, hw, 0)]
+    def lites(x, y, z, s, ww=1.4, hh=0.85):
+        """A three-light window in a wall along x facing +z (s 1) or -z (s -1): cream frame, mullions, a
+        sill with snow on it. The glass runs through the wall, so it glows inside and out."""
+        f = z + s * (t / 2 + 0.035)
+        p = [B("window", ww, hh, t + 0.04, (x, y, z))]
+        for yy in (y + hh / 2 + 0.05, y - hh / 2 - 0.05):
+            p.append(B("trim", ww + 0.2, 0.1, 0.07, (x, yy, f)))
+        for xx in (x - ww / 2 - 0.05, x + ww / 2 + 0.05):
+            p.append(B("trim", 0.1, hh, 0.07, (xx, y, f)))
+        for k in (-1, 1):
+            p.append(B("trim", 0.05, hh, 0.06, (x + k * ww / 6, y, f)))
+        p += [B("trim", ww + 0.36, 0.07, 0.22, (x, y - hh / 2 - 0.12, z + s * (t / 2 + 0.1))),
+              B("roofSnow", ww + 0.28, 0.07, 0.16, (x, y - hh / 2 - 0.06, z + s * (t / 2 + 0.11)))]
+        return p
+
+    wy = 2.35  # window centres, high enough to clear the benches inside
+    # north wall: two windows
+    wall_n = run(w, t, 0, -hd) + lites(-3.0, wy, -hd, -1) + lites(1.6, wy, -hd, -1)
+    # south wall (the yard side): two windows, the crew door, its lamp, its awning, the fire cabinet
+    wall_s = run(w, t, 0, hd) + lites(-3.0, wy, hd, 1) + lites(0.4, wy, hd, 1)
+    dx, dz = 3.7, hd + t / 2
+    wall_s += [B("opsDoor", 1.0, 2.15, 0.08, (dx, 1.2, dz + 0.02)),
+               B("window", 0.42, 0.42, 0.09, (dx, 1.78, dz + 0.03)),
+               B("metal", 0.06, 0.16, 0.06, (dx - 0.36, 1.12, dz + 0.08)),
+               B("trim", 1.24, 0.1, 0.07, (dx, 2.33, dz + 0.04)),
+               B("trim", 0.1, 2.2, 0.07, (dx - 0.57, 1.2, dz + 0.04)), B("trim", 0.1, 2.2, 0.07, (dx + 0.57, 1.2, dz + 0.04)),
+               B("concrete", 1.5, 0.2, 0.75, (dx, 0.1, hd + 0.5))]
+    # the awning: a little shed roof on two brackets, with its snow
+    wall_s += [B("roofDark", 1.8, 0.08, 1.0, (dx, 2.72, hd + 0.62), (0.28, 0, 0)),
+               B("roofSnow", 1.7, 0.14, 0.92, (dx, 2.83, hd + 0.6), (0.28, 0, 0)),
+               B("trim", 1.8, 0.1, 0.05, (dx, 2.56, hd + 1.1))]
+    for k in (-1, 1):
+        wall_s.append(B("header", 0.08, 0.7, 0.08, (dx + k * 0.75, 2.4, hd + 0.4), (-0.8, 0, 0)))
+    # the lamp by the door (it lights with the windows) and the fire cabinet
+    wall_s += [B("metal", 0.06, 0.06, 0.3, (dx + 0.85, 2.45, hd + 0.3)), C("roofDark", 0.06, 0.13, 0.12, 8, (dx + 0.85, 2.42, hd + 0.43)),
+               B("window", 0.14, 0.05, 0.14, (dx + 0.85, 2.34, hd + 0.43)),
+               B("red", 0.42, 0.62, 0.14, (dx - 1.3, 1.45, hd + 0.2)), B("white", 0.26, 0.07, 0.15, (dx - 1.3, 1.6, hd + 0.21)),
+               B("white", 0.07, 0.26, 0.15, (dx - 1.3, 1.6, hd + 0.21))]
+    # east wall: a small window, and the woodpile under its lean-to
+    wall_e = run(t, d, hw, 0)
+    wall_e += [B("window", t + 0.04, 0.6, 0.9, (hw, 2.6, -2.6)), B("trim", 0.07, 0.1, 1.1, (hw + t / 2 + 0.03, 2.95, -2.6)),
+               B("trim", 0.07, 0.1, 1.1, (hw + t / 2 + 0.03, 2.25, -2.6)), B("trim", 0.22, 0.07, 1.25, (hw + t / 2 + 0.1, 2.18, -2.6))]
+    pile_x = hw + t / 2 + 0.32
+    wall_e.append(B("log", 0.55, 1.15, 3.6, (pile_x, 0.6, 1.8)))
+    for row in range(4):
+        for k in range(9):
+            z = 0.2 + k * 0.4 + (0.2 if row % 2 else 0)
+            if z > 3.55: continue
+            wall_e.append(C("log", 0.11, 0.11, 0.58, 7, (pile_x + 0.02, 0.17 + row * 0.27, z), (0, 0, math.pi / 2)))
+    wall_e += [B("roofDark", 1.0, 0.07, 4.0, (pile_x + 0.12, 1.75, 1.8), (0, 0, -0.32)),
+               B("roofSnow", 0.95, 0.14, 3.9, (pile_x + 0.14, 1.85, 1.8), (0, 0, -0.32))]
+    for z in (0.1, 3.5):
+        wall_e.append(B("header", 0.1, 1.6, 0.1, (pile_x + 0.5, 0.8, z)))
+
+    # the west front: side panels, heavy timber posts, a header on knee braces, the rolled-up door
     side = (d - 5.5) / 2
-    front = [B("boards", 0.3, h, side, (-hw, h / 2, -hd + side / 2)), B("boards", 0.3, h, side, (-hw, h / 2, hd - side / 2)),
-             B("header", 0.4, 0.7, d, (-hw, h - 0.35, 0)), B("rolled", 0.3, 0.5, 5.6, (-hw + 0.2, h - 0.95, 0))]
-    for z in (-hd + side / 2, hd - side / 2):
+    front = []
+    for sz in (-1, 1):
+        zc = sz * (hd - side / 2)
+        front += run(t, side, -hw, zc)
+        front.append(B("header", 0.36, h, 0.36, (-hw - 0.03, h / 2, sz * 2.92)))
+        # knee brace from post to header
+        front.append(B("header", 0.16, 0.95, 0.16, (-hw - 0.08, h - 0.95, sz * 2.5), (sz * 0.78, 0, 0)))
+        # corner boards at the west corners
+        front.append(B("trim", 0.38, h - foot, 0.38, (-hw, foot + (h - foot) / 2, sz * (hd - 0.04))))
+        # bump stops either side of the bay, patrol red and white
         for k in range(3):
-            front.append(B("batten", 0.34, h, 0.08, (-hw, h / 2, z - side / 2 + (k + 0.5) * side / 3)))
-    # bump stops either side of the door, painted patrol red and white
-    for z in (-2.85, 2.85):
-        for k in range(3):
-            front.append(B("red" if k % 2 == 0 else "white", 0.34, 0.3, 0.34, (-hw - 0.05, 0.15 + k * 0.3, z)))
-    roof = snow_roof(d + 1.2, w + 1.2, 1.8, roof="roofDark")
+            front.append(B("red" if k % 2 == 0 else "white", 0.34, 0.3, 0.34, (-hw - 0.3, 0.15 + k * 0.3, sz * 3.25)))
+        # floodlights over the bay, lit with the windows
+        front += [B("metal", 0.34, 0.1, 0.3, (-hw - 0.32, h - 0.02, sz * 1.9)), B("window", 0.26, 0.04, 0.24, (-hw - 0.34, h - 0.08, sz * 1.9))]
+    front.append(B("header", 0.44, 0.62, d + 0.2, (-hw - 0.04, h - 0.31, 0)))
+    # the sectional door, rolled up into the head of the bay: three panels, a row of lites
+    for k in range(3):
+        front.append(B("rolled", 0.12, 0.26, 5.5, (-hw + 0.18 + k * 0.03, h - 0.78 - k * 0.27, 0)))
+    for k in range(6):
+        front.append(B("window", 0.1, 0.13, 0.62, (-hw + 0.14, h - 0.78, -2.3 + k * 0.92)))
+    for sz in (-1, 1):
+        front.append(B("metal", 0.08, 2.9, 0.08, (-hw + 0.2, 1.45, sz * 2.72)))
+    # a corner board at each east corner
+    for sz in (-1, 1):
+        wall_e.append(B("trim", 0.38, h - foot, 0.38, (hw, foot + (h - foot) / 2, sz * (hd - 0.04))))
+
+    # the roof: steep, overhanging the walls on rafter tails
+    span = d + 1.6
+    roof = snow_roof(span, w + 1.0, pitch, roof="roofDark", snow=0.3)
     for sd in (-1, 1):
-        roof.append(gable_end("boards", d, 1.8, sd * (hw - 0.1), t=0.3))
+        roof.append(gable_end("boards", d, pitch, sd * (hw - 0.1), t=0.3))
+        roof.append(B("trim", 0.07, 0.3, w + 1.0, (sd * (span / 2 - 0.02), -0.08, 0)))  # fascia
+        for k in range(13):
+            roof.append(B("header", 0.55, 0.12, 0.1, (sd * (d / 2 + 0.42), -0.12, -w / 2 + 0.1 + k * (w - 0.2) / 12), (0, 0, sd * -math.atan2(pitch, span / 2))))
     turn(roof, math.pi / 2)  # ridge along x, as the code's roof
+    # after the turn: x along the ridge, z across it
+    # a louvred vent in the east gable
+    roof += [B("trim", 0.08, 0.95, 1.05, (hw + 0.08, 1.0, 0))]
+    for k in range(4):
+        roof.append(B("header", 0.1, 0.06, 0.85, (hw + 0.1, 0.68 + k * 0.2, 0), (0, 0, -0.5)))
+    # the stovepipe (on the north slope) and the ridge vent
+    zz = -1.9
+    ry = pitch * (1 - abs(zz) / (span / 2))
+    roof += [C("metal", 0.11, 0.11, 1.6, 10, (2.6, ry + 0.6, zz)), C("roofDark", 0.24, 0.17, 0.14, 10, (2.6, ry + 1.45, zz)),
+             C("metal", 0.2, 0.2, 0.06, 10, (2.6, ry + 0.02, zz))]
+    roof += [B("roofDark", 1.8, 0.24, 0.5, (-1.2, pitch + 0.42, 0)), B("roofSnow", 1.8, 0.1, 0.56, (-1.2, pitch + 0.58, 0))]
+    # icicles along both eaves, uneven
+    for sz in (-1, 1):
+        for k in range(14):
+            x = -w / 2 + 0.2 + k * (w - 0.4) / 13 + 0.17 * math.sin(k * 2.3)
+            ln = 0.18 + 0.22 * abs(math.sin(k * 1.7 + sz))
+            roof.append(C("roofSnow", 0.035, 0.002, ln, 5, (x, -0.05 - ln / 2, sz * (span / 2 - 0.05))))
     for o in roof:
         o.location.y += h
-    objs = [finish(floor, "floor")] + walls + [finish(front, "front"), finish(roof, "roof")]
-    return objs
+    return [finish(floor, "floor"), finish(wall_n, "wall_n"), finish(wall_s, "wall_s"), finish(wall_e, "wall_e"),
+            finish(front, "front"), finish(roof, "roof")]
 
 
 def hangar():

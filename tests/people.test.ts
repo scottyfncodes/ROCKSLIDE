@@ -163,8 +163,9 @@ describe('the patroller model (MeshCraft, skinned)', () => {
     const a = drawnBounds(code.group);
     const b = drawnBounds(model.group);
     expect(Math.abs(a.min.y - b.min.y)).toBeLessThan(0.02);
-    // about the same triangles drawn, far fewer meshes
-    expect(visibleTris(model.group)).toBeLessThan(visibleTris(code.group) * 1.05);
+    // Art Direction 2.0 Phase B: the model is the soft, smooth-shaded figure (rounder forms, more sides),
+    // so it draws about twice the code-built figure's triangles; a fixed phone budget holds it
+    expect(visibleTris(model.group)).toBeLessThan(5200);
     const drawn = (root: THREE.Object3D) => {
       let n = 0;
       root.traverse((o) => {
@@ -299,7 +300,8 @@ describe('the villagers model (MeshCraft, skinned: their own outfit on the patro
     }
     // the cardigan's yoke, buttons, elbow patches and fur cuffs: about 200 triangles more than the
     // code-built villager, for three villagers
-    expect(visibleTris(model.group)).toBeLessThan(visibleTris(code.group) * 1.12);
+    // (Phase B: the soft figure; a fixed phone budget, as the patroller's)
+    expect(visibleTris(model.group)).toBeLessThan(4400);
     expect(model.group.getObjectByName('pat_gear')).toBeUndefined();
     expect(model.group.getObjectByName('pat_skis_back')).toBeUndefined();
   });
@@ -420,7 +422,8 @@ describe('Koda model (MeshCraft, skinned)', () => {
       }
     }
     // the face pass (eyes with catchlights, brow spots, cheek ruff) is allowed what the patroller's is
-    expect(visibleTris(model.group)).toBeLessThan(visibleTris(code.group) * 1.05);
+    // (Phase B: Koda in the people's soft language; a fixed phone budget)
+    expect(visibleTris(model.group)).toBeLessThan(4000);
   });
 
   it('keeps the gear toggles, and the code-built Koda when the model is unusable', async () => {
