@@ -33,6 +33,12 @@ export const BUZZ = {
   blast: [45, 50, 90],
   landing: [22],
   done: [16, 70, 16],
+  /** a trick lands clean: a crisp double tap */
+  trick: [12, 40, 12],
+  /** a wipeout or a crash: one heavy pulse */
+  crash: [70],
+  /** a trick starts in the air */
+  air: [8],
 } as const;
 
 export function canVibrate(): boolean {

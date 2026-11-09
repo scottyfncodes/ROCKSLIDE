@@ -1,5 +1,5 @@
-import { CHARGE_SPOTS, pad } from '../world/places';
-import { SPOTS } from '../world/station';
+import { CHARGE_SPOTS, pad, VILLAGE } from '../world/places';
+import { HQ, SPOTS } from '../world/station';
 import type { Contact } from './recon';
 
 /**
@@ -72,11 +72,16 @@ const P = (id: string, label?: string): Target => {
   return { x: p.x, z: p.z, label: label ?? p.name };
 };
 
-export const HQ_T: Target = { x: 0, z: 250, label: 'Patrol Station' };
+export const HQ_T: Target = { x: HQ.x, z: HQ.z, label: 'Patrol HQ' };
 const PAD_T: Target = { x: SPOTS.heli.x, z: SPOTS.heli.z, label: 'Helipad' };
 const GATE: Target = { x: -150, z: -40, label: 'Pass barrier' };
-const LODGE_T: Target = { x: 330, z: 461, label: 'The Kettle, Hollin' };
-const CLINIC_T: Target = { x: 380, z: 506, label: 'Hollin clinic' };
+const KETTLE = VILLAGE.find((v) => v.kind === 'lodge')!;
+const CLINIC = VILLAGE.find((v) => v.kind === 'clinic')!;
+/** Greta on the Kettle's porch, on Main Street; the van stuck on the Tannberg road into town */
+export const GRETA = { x: KETTLE.x - 6.5, z: KETTLE.z + 2 };
+export const VAN = { x: 262, z: 411 };
+const LODGE_T: Target = { x: KETTLE.x - 5, z: KETTLE.z, label: 'The Kettle, Hollin' };
+const CLINIC_T: Target = { x: CLINIC.x - 5, z: CLINIC.z, label: 'Hollin clinic' };
 
 /** The slopes of Kessel Bowl as SKYTRACE recon contacts, loaded on the slopes given. */
 export function bowlContacts(loaded: readonly string[]): Contact[] {
@@ -231,7 +236,7 @@ export const MISSIONS: MissionDef[] = [
       { kind: 'interact', id: 'crate', at: { x: SPOTS.crate.x, z: SPOTS.crate.z, label: 'Supply crate' }, text: 'Load the supply crate onto the sled rack', action: 'Load crate', hold: 1, onFoot: true },
       { kind: 'mount', vehicle: 'sled', text: 'Get on the sled' },
       { kind: 'goto', at: LODGE_T, radius: 22, text: 'Ride down to the Kettle in Hollin', by: ['sled'] },
-      { kind: 'interact', id: 'unload', at: { x: 336, z: 466, label: 'Greta' }, text: 'Unload the crate for Greta', action: 'Unload', hold: 1, onFoot: true },
+      { kind: 'interact', id: 'unload', at: { x: GRETA.x, z: GRETA.z, label: 'Greta' }, text: 'Unload the crate for Greta', action: 'Unload', hold: 1, onFoot: true },
     ],
     done: "That's the stove sorted for a week. Come in for a hot chocolate any time.",
   },
@@ -251,7 +256,7 @@ export const MISSIONS: MissionDef[] = [
       { kind: 'track', start: { x: -296, z: 456, label: 'Paw prints' }, trail: PEPPER_TRAIL, at: { x: PEPPER.x, z: PEPPER.z, label: 'Pepper' }, text: 'Show Koda the paw prints, then follow' },
       { kind: 'interact', id: 'pepper', at: { x: PEPPER.x, z: PEPPER.z, label: 'Pepper' }, text: 'Coax Pepper down and pick her up', action: 'Pick up', hold: 1.6, onFoot: true },
       { kind: 'goto', at: LODGE_T, radius: 22, text: 'Bring Pepper home to the Kettle' },
-      { kind: 'interact', id: 'pepper-home', at: { x: 336, z: 466, label: 'Greta' }, text: 'Give Pepper back to Greta', action: 'Hand over', hold: 0.6, onFoot: true },
+      { kind: 'interact', id: 'pepper-home', at: { x: GRETA.x, z: GRETA.z, label: 'Greta' }, text: 'Give Pepper back to Greta', action: 'Hand over', hold: 0.6, onFoot: true },
     ],
     done: 'Pepper is on the windowsill pretending none of this happened.',
   },
@@ -327,11 +332,11 @@ export const MISSIONS: MissionDef[] = [
     reward: { funds: 90, rep: 70 },
     requires: ['rounds'],
     dynamic: true,
-    where: { x: 262, z: 232, label: 'Tannberg road' },
+    where: { x: VAN.x, z: VAN.z, label: 'Tannberg road' },
     subject: { kind: 'driver', x: 266, z: 238, name: 'Driver' },
     steps: [
-      { kind: 'goto', at: { x: 262, z: 232, label: 'Stuck van' }, radius: 18, text: 'Find the van on the Tannberg road' },
-      { kind: 'interact', id: 'dig', at: { x: 262, z: 232, label: 'Stuck van' }, radius: 6, text: 'Dig out the wheels', action: 'Dig out', hold: 3, onFoot: true, prop: 'van' },
+      { kind: 'goto', at: { x: VAN.x, z: VAN.z, label: 'Stuck van' }, radius: 18, text: 'Find the van on the Tannberg road' },
+      { kind: 'interact', id: 'dig', at: { x: VAN.x, z: VAN.z, label: 'Stuck van' }, radius: 6, text: 'Dig out the wheels', action: 'Dig out', hold: 3, onFoot: true, prop: 'van' },
     ],
     done: 'Van is back on the road. The driver waved. Mostly.',
   },

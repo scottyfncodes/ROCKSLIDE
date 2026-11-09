@@ -1,0 +1,12 @@
+{
+  "desktop": {
+    "town": "ok",
+    "medianFrameMs": 730,
+    "console": []
+  },
+  "phone": {
+    "town": "ok",
+    "medianFrameMs": 203.7,
+    "console": []
+  }
+}

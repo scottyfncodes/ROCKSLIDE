@@ -1,6 +1,6 @@
 import { fbm2, mulberry32 } from '../sim/noise';
 import { pathDistance, type PathHit } from '../sim/geom';
-import { BOWL, GROVES, LAKE, LIFT, PADS, VILLAGE, WORLD_HALF } from './places';
+import { BOWL, DISTRICTS, GROVES, JUMPS, LAKE, LIFT, PADS, ROPE_TOW, VILLAGE, WORLD_HALF } from './places';
 import { bowlMask, type Terrain } from './terrain';
 
 export interface Tree {
@@ -24,6 +24,15 @@ export function treeFree(t: Terrain, x: number, z: number): boolean {
   for (const p of PADS) if (Math.hypot(x - p.x, z - p.z) < p.r + 12) return false;
   if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r + 8) return false;
   for (const v of VILLAGE) if (Math.hypot(x - v.x, z - v.z) < 22) return false;
+  // the town's districts are open ground, and so is every jump and its landing
+  for (const d of DISTRICTS) if (Math.hypot(x - d.x, z - d.z) < d.r + 8) return false;
+  for (const j of JUMPS) if (Math.hypot(x - j.x, z - j.z) < j.len + j.w) return false;
+  {
+    const a = ROPE_TOW.from, b = ROPE_TOW.to;
+    const dx = b.x - a.x, dz = b.z - a.z;
+    const u = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+    if (Math.hypot(x - (a.x + dx * u), z - (a.z + dz * u)) < 8) return false;
+  }
   for (const g of t.routes) {
     const l = g.line;
     const w = g.route.width + (g.route.kind === 'piste' ? 8 : 6);

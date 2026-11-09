@@ -7,6 +7,7 @@ export const ICON = {
   off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4M6 12h9"/></svg>',
   skis: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 3l12 17M10 3l9 13"/><path d="M15 20h4"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  trick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M17 2.5v4h4"/></svg>',
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
   down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
 };
@@ -62,6 +63,12 @@ export class Hud {
   private scanEl: HTMLElement;
   private altEl: HTMLElement;
   private hintEl: HTMLElement;
+  readonly trickBtn: HTMLButtonElement;
+  private speedLines: HTMLElement;
+  private popEl: HTMLElement;
+  private popT = 0;
+  private miniCanvas: HTMLCanvasElement;
+  private miniLabel: HTMLElement;
   private lastTask = '';
   private cond: HTMLElement;
   private compassW = 0;
@@ -107,6 +114,16 @@ export class Hud {
       return b;
     };
     this.chips = { koda: chip(ICON.paw, 'Koda'), skis: chip(ICON.skis, 'Skis on'), off: chip(ICON.off, 'Get off'), map: chip(ICON.map, 'Map') };
+    // the Map chip is a minimap: the ground round you, north up, and the district you are in
+    this.miniCanvas = document.createElement('canvas');
+    this.miniCanvas.width = this.miniCanvas.height = 112;
+    this.miniCanvas.className = 'mini';
+    this.miniCanvas.setAttribute('aria-hidden', 'true');
+    this.miniLabel = el('span', 'mini-label', 'Map');
+    this.chips.map.className = 'chip minimap';
+    this.chips.map.innerHTML = '';
+    this.chips.map.append(this.miniCanvas, this.miniLabel);
+    this.chips.map.setAttribute('aria-label', 'Map');
     side.append(this.chips.map, this.chips.koda, this.chips.skis, this.chips.off);
     this.lever = el('div', 'lever hidden');
     const up = el('button', 'chip', `${ICON.up}<span>Climb</span>`);
@@ -114,6 +131,10 @@ export class Hud {
     this.lever.append(up, down);
     input.bind(up, 'up');
     input.bind(down, 'down');
+    // TRICK: only on skis, only does anything in the air
+    this.trickBtn = el('button', 'act trick hidden', `${ICON.trick}<span>Trick</span>`) as HTMLButtonElement;
+    this.trickBtn.setAttribute('aria-label', 'Trick: tap to grab, hold to spin, with forward or back to flip');
+    input.bind(this.trickBtn, 'trick');
     this.act = el('button', 'act') as HTMLButtonElement;
     this.actLabel = el('span');
     const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -128,9 +149,14 @@ export class Hud {
     ring.appendChild(this.ringCircle);
     this.act.append(ring, this.actLabel);
     input.bind(this.act, 'action');
-    actions.append(side, this.lever, this.act);
+    actions.append(side, this.lever, this.trickBtn, this.act);
 
     this.speedo = el('div', 'speedo housing hidden');
+    this.speedLines = el('div', 'speedlines');
+    this.speedLines.setAttribute('aria-hidden', 'true');
+    this.popEl = el('div', 'trickpop');
+    this.popEl.setAttribute('role', 'status');
+    this.popEl.setAttribute('aria-live', 'polite');
     this.radioEl = el('div', 'radio housing');
     this.toastEl = el('div', 'toast housing');
     this.alertEl = el('div', 'alert housing');
@@ -153,7 +179,7 @@ export class Hud {
     const stack = el('div', 'stack');
     stack.append(this.task, this.compass, this.wpDist, this.toastEl, this.radioEl);
     this.cond = cond;
-    this.root.append(stack, cond, actions, this.speedo, this.alertEl, this.scanEl, this.altEl, this.hintEl);
+    this.root.append(this.speedLines, stack, cond, actions, this.speedo, this.alertEl, this.scanEl, this.altEl, this.hintEl, this.popEl);
     window.addEventListener('resize', () => this.layout());
     window.visualViewport?.addEventListener('resize', () => this.layout());
     // compass ticks
@@ -349,17 +375,116 @@ export class Hud {
     this.lever.classList.toggle('hidden', !on);
   }
 
-  setSpeedo(kmh: number | null, sub: string) {
+  /** The speedo; on skis it carries the style meter (0..1) under it, lit gold while the meter pays out. */
+  setSpeedo(kmh: number | null, sub: string, style: number | null = null, hot = false) {
     this.speedo.classList.toggle('hidden', kmh === null);
     if (kmh === null) return;
-    this.put('speedo', this.speedo, `<span class="v">${Math.round(kmh)}</span><span class="u">km/h</span><span class="u">${sub}</span>`, true);
+    const meter = style === null ? '' : `<span class="style${hot ? ' hot' : ''}" aria-label="Style"><i style="width:${hot ? 100 : Math.round(style * 100)}%"></i><b>${hot ? 'Style x2' : 'Style'}</b></span>`;
+    this.put('speedo', this.speedo, `<span class="v">${Math.round(kmh)}</span><span class="u">km/h</span><span class="u">${sub}</span>${meter}`, true);
   }
 
-  setAlt(agl: number | null, elev = 0, speed = 0) {
+  /** The TRICK button: shown on skis, lit while you are in the air. */
+  setTrick(show: boolean, air: boolean) {
+    this.trickBtn.classList.toggle('hidden', !show);
+    this.trickBtn.classList.toggle('air', air);
+    // the trick takes the action button's slot while it is up (the two never show together)
+    this.trickBtn.parentElement?.classList.toggle('tricking', show);
+  }
+
+  /** Speed lines at the edges of the screen, 0..1. */
+  setSpeedLines(k: number) {
+    const v = k < 0.02 ? '0' : k.toFixed(2);
+    if (this.cache.get('lines') === v) return;
+    this.cache.set('lines', v);
+    this.speedLines.style.opacity = v;
+  }
+
+  /** A trick callout in the middle of the screen: the trick, then the landing and its points. */
+  trickPop(title: string, sub = '', kind: 'trick' | 'clean' | 'bad' | 'hot' = 'trick', secs = 1.2) {
+    this.popEl.innerHTML = `<div class="t">${title}</div>${sub ? `<div class="s">${sub}</div>` : ''}`;
+    this.popEl.className = `trickpop on ${kind}`;
+    this.popT = secs;
+  }
+
+  /**
+   * The minimap: a north-up window on the map round you (`img` the valley map, `size` metres it spans),
+   * you as an arrow, a gold dot for where you are going, and the district you are in under it.
+   */
+  drawMini(img: CanvasImageSource | null, imgSize: number, x: number, z: number, yaw: number, target: { x: number; z: number } | null, label: string) {
+    const c = this.miniCanvas;
+    const g = c.getContext('2d');
+    if (!g) return;
+    const span = 260;
+    const W = c.width;
+    g.clearRect(0, 0, W, W);
+    g.save();
+    g.beginPath();
+    g.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2);
+    g.clip();
+    g.fillStyle = '#efe6d6';
+    g.fillRect(0, 0, W, W);
+    if (img) {
+      const k = imgSize / 2000;
+      const sx = (x + 1000) * k - (span * k) / 2;
+      const sz = (z + 1000) * k - (span * k) / 2;
+      g.drawImage(img, sx, sz, span * k, span * k, 0, 0, W, W);
+    }
+    const m = W / span;
+    if (target) {
+      const tx = W / 2 + (target.x - x) * m;
+      const tz = W / 2 + (target.z - z) * m;
+      const d = Math.hypot(tx - W / 2, tz - W / 2);
+      const r = W / 2 - 8;
+      const px = d > r ? W / 2 + ((tx - W / 2) / d) * r : tx;
+      const pz = d > r ? W / 2 + ((tz - W / 2) / d) * r : tz;
+      g.fillStyle = '#f2c230';
+      g.strokeStyle = '#3a2632';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(px, pz, 6, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+    }
+    g.translate(W / 2, W / 2);
+    g.rotate(-yaw);
+    g.fillStyle = '#d8382a';
+    g.strokeStyle = '#f6ecdc';
+    g.lineWidth = 2.5;
+    g.beginPath();
+    g.moveTo(0, -11);
+    g.lineTo(8, 9);
+    g.lineTo(0, 4);
+    g.lineTo(-8, 9);
+    g.closePath();
+    g.stroke();
+    g.fill();
+    g.restore();
+    g.strokeStyle = 'rgba(58,38,50,0.55)';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2);
+    g.stroke();
+    this.put('mini', this.miniLabel, label || 'Map');
+  }
+
+  /**
+   * The pilot's readout: height above the snow (what you fly by), then altitude and ground speed, and
+   * under 30 m the landing light: what is below (a marked LZ, flat ground, too steep) and whether you are
+   * coming down gently enough (`vs`: vertical speed, m/s, + up).
+   */
+  setAlt(agl: number | null, elev = 0, speed = 0, vs = 0, below: 'lz' | 'flat' | 'steep' | null = null) {
     this.altEl.classList.toggle('hidden', agl === null);
     if (agl === null) return;
-    // two short lines: height above the snow (what you fly by), then altitude and ground speed
-    this.put('alt', this.altEl, `<div class="big">${Math.round(agl)} m<span class="u"> above ground</span></div><div class="small">${elev} m · ${Math.round(speed * 3.6)} km/h</div>`, true);
+    let land = '';
+    if (below && agl < 30) {
+      const gentle = vs > -3.2 && speed < 4.5;
+      const ok = below !== 'steep';
+      const cls = !ok ? 'bad' : gentle ? 'good' : 'warn';
+      const what = below === 'lz' ? 'Marked LZ' : below === 'flat' ? 'Flat ground' : 'Too steep to land';
+      const how = !ok ? 'Find flatter snow' : speed >= 4.5 ? 'Slow down' : !gentle ? 'Ease the descent' : 'Settle down';
+      land = `<div class="land ${cls}"><i></i>${what} · ${how}</div>`;
+    }
+    this.put('alt', this.altEl, `<div class="big">${Math.round(agl)} m<span class="u"> above ground</span></div><div class="small">${elev} m · ${Math.round(speed * 3.6)} km/h · ${vs >= 0 ? '+' : ''}${vs.toFixed(1)} m/s</div>${land}`, true);
   }
 
   setScan(label: string | null, progress: number) {
@@ -473,6 +598,10 @@ export class Hud {
     if (this.radioT > 0) {
       this.radioT -= dt;
       if (this.radioT <= 0) this.nextRadio();
+    }
+    if (this.popT > 0) {
+      this.popT -= dt;
+      if (this.popT <= 0) this.popEl.classList.remove('on');
     }
     if (this.toastT > 0) {
       this.toastT -= dt;

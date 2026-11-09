@@ -178,6 +178,8 @@ function longHair(mat: THREE.Material): THREE.Mesh {
 }
 
 export class PatrollerMesh {
+  /** a grab in the air on skis, 0..1: a deep tuck with a hand down to the skis */
+  grab = 0;
   readonly group = new THREE.Group();
   /** leans with turns, inside the group the game places */
   private body: THREE.Object3D = new THREE.Group();
@@ -920,6 +922,13 @@ export class PatrollerMesh {
         const flick = Math.max(0, Math.sin(t * 2.4)) * 0.25;
         if (lean > 0.2) arm.R.arm += flick;
         else if (lean < -0.2) arm.L.arm += flick;
+      }
+      if (this.grab > 0) {
+        const g = this.grab;
+        y -= 0.3 * g;
+        spine -= 0.4 * g;
+        arm.R = { arm: 0.6 + 1.0 * g, roll: 0.3, elbow: 0.55 - 0.45 * g };
+        arm.L.arm += 0.6 * g;
       }
     } else if (pose === 'ride' || pose === 'pilot') {
       y = pose === 'ride' ? 0.62 : 0.5;

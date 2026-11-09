@@ -155,8 +155,30 @@ export class SledMesh {
   }
 
   /** Place on the ground following its normal; `lean` banks into turns. */
-  sync(x: number, y: number, z: number, yaw: number, nx: number, ny: number, nz: number, lean: number, speed: number, steer: number, dt: number) {
+  /** the suspension: how far the body is pressed down (m) and how fast it is moving */
+  private squash = 0;
+  private squashV = 0;
+  private bodyY = NaN;
+  private airPitch = 0;
+
+  /** A landing (or a hard bump) presses the body down onto the springs: `hard` m/s into the snow. */
+  land(hard: number) {
+    this.squashV = Math.max(this.squashV, Math.min(3.2, hard * 0.32));
+  }
+
+  sync(x: number, y: number, z: number, yaw: number, nx: number, ny: number, nz: number, lean: number, speed: number, steer: number, dt: number, air = 0) {
     this.group.position.set(x, y, z);
+    // in the air the nose follows the arc (air: the vertical speed, m/s); on the snow, the ground
+    const want = air ? Math.max(-0.5, Math.min(0.35, air * 0.045)) : 0;
+    this.airPitch += (want - this.airPitch) * Math.min(1, dt * 4);
+    if (air) {
+      const c = Math.cos(this.airPitch);
+      const s = Math.sin(this.airPitch);
+      // tilt the up vector back along the heading by the pitch
+      nx = Math.sin(yaw) * s;
+      nz = Math.cos(yaw) * s;
+      ny = c;
+    }
     // align up with the ground normal, keep the heading
     const up = new THREE.Vector3(nx, ny, nz);
     const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
@@ -164,7 +186,13 @@ export class SledMesh {
     const right = new THREE.Vector3().crossVectors(fwd, up).normalize();
     const m = new THREE.Matrix4().makeBasis(right, up, fwd.clone().negate());
     this.group.quaternion.setFromRotationMatrix(m);
-    this.body.rotation.set(0, 0, -lean * 0.22);
+    // the body rolls into the turn on its springs
+    this.body.rotation.set(0, 0, -lean * 0.32);
+    // the springs: pressed by a landing, they settle back with a little overshoot
+    if (Number.isNaN(this.bodyY)) this.bodyY = this.body.position.y;
+    this.squashV += (-this.squash * 90 - this.squashV * 11) * Math.min(dt, 0.05);
+    this.squash = Math.max(-0.08, Math.min(0.32, this.squash + this.squashV * Math.min(dt, 0.05)));
+    this.body.position.y = this.bodyY - this.squash;
     for (const s of this.skis) s.rotation.y = -steer * 0.35;
     this.trackTex += speed * dt;
   }

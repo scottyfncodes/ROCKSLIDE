@@ -2504,3 +2504,200 @@ body.titled #loading .loading-bar {
 .hud .scan .bar .p i {
   background: var(--nav-ink);
 }
+
+/* ---------------------------------------------------------------- the expansion: tricks, speed, minimap */
+
+/* TRICK: the action button's size and card, in the patrol's nav blue; lit while you are in the air */
+.act.trick {
+  color: var(--nav-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.act.trick svg {
+  width: 26px;
+  height: 26px;
+}
+.act.trick.air {
+  background: var(--amber);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 3px var(--amber), inset 0 0 0 4px rgba(58, 38, 50, 0.5), 0 4px 0 #a9822c, 0 8px 18px rgba(40, 20, 30, 0.3);
+}
+.act.trick.hidden {
+  display: none;
+}
+
+/* speed lines: streaks at the edge of the screen at speed, never over the middle */
+.speedlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: repeating-conic-gradient(from 0deg at 50% 46%, rgba(246, 236, 220, 0) 0deg 3.2deg, rgba(246, 236, 220, 0.55) 3.4deg 3.7deg, rgba(246, 236, 220, 0) 3.9deg 7.1deg);
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 46%, transparent 58%, #000 100%);
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 46%, transparent 58%, #000 100%);
+  transition: opacity 0.25s linear;
+}
+
+/* the style meter under the speedo */
+.speedo .style {
+  position: relative;
+  display: inline-block;
+  width: 84px;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(58, 38, 50, 0.16);
+  overflow: hidden;
+  align-self: center;
+}
+.speedo .style i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--nav-ink);
+  transition: width 0.2s linear;
+}
+.speedo .style b {
+  position: relative;
+  display: block;
+  text-align: center;
+  font: 600 9.5px/14px var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  mix-blend-mode: normal;
+}
+.speedo .style.hot i {
+  background: var(--amber);
+}
+
+/* a trick called out mid-air, then the landing and its points */
+.trickpop {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  color: var(--paper);
+  text-shadow: 0 2px 0 rgba(58, 38, 50, 0.65), 0 0 14px rgba(58, 38, 50, 0.45);
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  white-space: nowrap;
+}
+.trickpop.on {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.trickpop .t {
+  font: 700 30px/1.05 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.trickpop .s {
+  font: 600 15px/1.3 var(--mono);
+  margin-top: 4px;
+}
+.trickpop.clean .t {
+  color: var(--paper);
+}
+.trickpop.clean .s,
+.trickpop.hot .t {
+  color: var(--amber);
+}
+.trickpop.bad .t {
+  color: var(--pink);
+}
+@media (max-width: 520px) {
+  .trickpop .t {
+    font-size: 24px;
+  }
+  .trickpop .s {
+    font-size: 13px;
+  }
+}
+
+/* the Map chip as a minimap */
+.side .chip.minimap {
+  flex-direction: column;
+  height: auto;
+  padding: 5px 5px 4px;
+  gap: 2px;
+  border-radius: 14px;
+}
+.chip.minimap .mini {
+  width: 56px;
+  height: 56px;
+  display: block;
+}
+.chip.minimap .mini-label {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  max-width: 76px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 520px) {
+  .side .chip.minimap {
+    flex-direction: column;
+    height: auto;
+    padding: 5px 5px 4px;
+    border-radius: 14px;
+    gap: 2px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .chip.minimap .mini {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* the pilot's landing light */
+.alt .land {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px/1.3 var(--sans);
+  letter-spacing: 0.04em;
+}
+.alt .land i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex: none;
+}
+.alt .land.good i {
+  background: #3f9a62;
+}
+.alt .land.bad i {
+  background: var(--red);
+}
+@media (prefers-reduced-motion: reduce) {
+  .speedlines {
+    display: none;
+  }
+}
+/* a short landscape phone: the speedo keeps clear of the button column (the surface name goes, the meter narrows) */
+@media (orientation: landscape) and (max-height: 520px) {
+  .speedo .u + .u {
+    display: none;
+  }
+  .speedo .style {
+    width: 58px;
+  }
+  .speedo .style b {
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+  }
+}
+/* while TRICK is up, the (hidden) action button gives up its slot */
+.actions.tricking .act.hidden:not(.trick) {
+  display: none;
+}

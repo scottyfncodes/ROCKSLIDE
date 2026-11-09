@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getTerrain } from '../src/world/terrain';
-import { buildColliders, SPOTS } from '../src/world/station';
+import { buildColliders, HQ, HQ_SHIFT, SPOTS } from '../src/world/station';
 import { Colliders } from '../src/world/colliders';
 import type { Terrain } from '../src/world/terrain';
 import { newWalker, stepWalker, RUN } from '../src/actors/walker';
@@ -16,7 +16,7 @@ const dt = 1 / 60;
 
 describe('on foot', () => {
   it('runs at about running pace on packed snow and turns to face the way', () => {
-    const w = newWalker(0, 250, 0, t);
+    const w = newWalker(HQ.x, HQ.z, 0, t);
     for (let i = 0; i < 120; i++) stepWalker(w, 1, 0, dt, t, solid, null);
     expect(w.speed).toBeGreaterThan(RUN * 0.8);
     expect(Math.abs(w.yaw - -Math.PI / 2)).toBeLessThan(0.1);
@@ -24,21 +24,21 @@ describe('on foot', () => {
   });
 
   it('cannot walk through the lodge wall', () => {
-    const w = newWalker(-18, 241, 0, t);
+    const w = newWalker(-18 + HQ_SHIFT.x, 241 + HQ_SHIFT.z, 0, t);
     for (let i = 0; i < 240; i++) stepWalker(w, -1, 0, dt, t, solid, null);
-    expect(w.x).toBeGreaterThan(-22);
+    expect(w.x).toBeGreaterThan(-22 + HQ_SHIFT.x);
   });
 });
 
 describe('the snowmobile', () => {
   it('gets up to speed on the road and holds a line', () => {
-    const g = newGlider(-20, 190, Math.atan2(60, 90), t); // pointed up the pass road
+    const g = newGlider(453, 400, 0, t); // pointed up Main Street, north to the lift base
     for (let i = 0; i < 60 * 6; i++) stepGlider(g, SLED, 0, 1, dt, t, solid, null);
     expect(glideSpeed(g)).toBeGreaterThan(14);
   });
 
   it('turns right when steered right', () => {
-    const g = newGlider(0, 250, 0, t);
+    const g = newGlider(HQ.x, HQ.z, 0, t);
     for (let i = 0; i < 60; i++) stepGlider(g, SLED, 0, 1, dt, t, solid, null);
     const yaw0 = g.yaw;
     for (let i = 0; i < 60; i++) stepGlider(g, SLED, 1, 1, dt, t, solid, null);
@@ -46,7 +46,7 @@ describe('the snowmobile', () => {
   });
 
   it('brakes and reverses', () => {
-    const g = newGlider(0, 250, 0, t);
+    const g = newGlider(HQ.x, HQ.z, 0, t);
     for (let i = 0; i < 90; i++) stepGlider(g, SLED, 0, 1, dt, t, solid, null);
     for (let i = 0; i < 400; i++) stepGlider(g, SLED, 0, -1, dt, t, solid, null);
     expect(forwardSpeed(g)).toBeLessThan(-1);
@@ -191,7 +191,7 @@ describe('the helicopter', () => {
 describe('Koda', () => {
   it('follows you, sits when you stop and lies down when you wait', () => {
     const d = newHusky(0, 260, t);
-    const o = { x: 0, z: 250, yaw: 0, speed: 0 };
+    const o = { x: HQ.x, z: HQ.z, yaw: 0, speed: 0 };
     for (let i = 0; i < 60 * 4; i++) stepHusky(d, o, dt, t, solid, []);
     expect(Math.hypot(d.x - o.x, d.z - o.z)).toBeLessThan(4);
     expect(d.anim).toBe('sit');
@@ -200,17 +200,17 @@ describe('Koda', () => {
   });
 
   it('notices something hidden nearby and barks at it', () => {
-    const d = newHusky(0, 250, t);
-    const o = { x: 0, z: 250, yaw: 0, speed: 0 };
+    const d = newHusky(HQ.x, HQ.z, t);
+    const o = { x: HQ.x, z: HQ.z, yaw: 0, speed: 0 };
     const ev = [];
-    for (let i = 0; i < 60 * 6; i++) ev.push(...stepHusky(d, o, dt, t, solid, [{ id: 'x', x: 15, z: 250 }]));
+    for (let i = 0; i < 60 * 6; i++) ev.push(...stepHusky(d, o, dt, t, solid, [{ id: 'x', x: HQ.x + 15, z: HQ.z }]));
     expect(ev.some((e) => e.type === 'noticed')).toBe(true);
     expect(ev.some((e) => e.type === 'bark')).toBe(true);
-    expect(Math.hypot(d.x - 15, d.z - 250)).toBeLessThan(2);
+    expect(Math.hypot(d.x - HQ.x - 15, d.z - HQ.z)).toBeLessThan(2);
   });
 
   it('leads along a scent trail and waits for you', () => {
-    const d = newHusky(0, 250, t);
+    const d = newHusky(HQ.x, HQ.z, t);
     const trail = [{ x: 0, z: 240 }, { x: 0, z: 220 }, { x: 0, z: 200 }];
     startTrack(d, trail);
     const o = { x: 0, z: 252, yaw: 0, speed: 0 };
@@ -227,7 +227,7 @@ describe('Koda', () => {
   });
 
   it('is happy when petted', () => {
-    const d = newHusky(0, 250, t);
+    const d = newHusky(HQ.x, HQ.z, t);
     pet(d);
     stepHusky(d, { x: 0, z: 248, yaw: 0, speed: 0 }, dt, t, solid, []);
     expect(d.anim).toBe('happy');

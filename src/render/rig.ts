@@ -172,7 +172,19 @@ export class Rig {
     this.camera.aspect = w / h;
     // a phone held upright keeps at least a 40° view across, so you still see around you
     const aspect = w / h;
-    this.camera.fov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(20)) / aspect) * 180) / Math.PI, 55, 76);
+    this.baseFov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(20)) / aspect) * 180) / Math.PI, 55, 76);
+    this.camera.fov = this.baseFov + this.fovPush;
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** the view's own field of view, before the speed push */
+  baseFov = 55;
+  private fovPush = 0;
+  /** Widen the view at speed (degrees over the base); only touches the projection when it changes. */
+  pushFov(deg: number) {
+    if (Math.abs(deg - this.fovPush) < 0.02) return;
+    this.fovPush = deg;
+    this.camera.fov = this.baseFov + deg;
     this.camera.updateProjectionMatrix();
   }
 

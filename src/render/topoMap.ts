@@ -1,5 +1,8 @@
 import type { Terrain } from '../world/terrain';
-import { LAKE, PADS, PEAKS, ROUTES, LIFT, BOWL, WORLD_HALF, elevation } from '../world/places';
+import { LAKE, PADS, PEAKS, ROUTES, LIFT, BOWL, WORLD_HALF, elevation, DISTRICTS } from '../world/places';
+
+/** pads inside the town: the districts label them */
+const TOWN_PADS = ['hq', 'village', 'resort', 'parking'];
 
 /**
  * The valley as a patrol map: shaded relief, 20 m contours with every fifth one heavy, roads,
@@ -160,9 +163,22 @@ export function topoJob(t: Terrain, size: number): { canvas: HTMLCanvasElement; 
     g.fillText(`${h} m`, S(p.x), S(p.z) + 26 * k);
     g.font = `600 ${11 * k}px "Jost", sans-serif`;
   }
+  // the town: each district a tinted patch with its name (small: read it zoomed in), the town's name over all
+  const TINT: Record<string, string> = { hq: 'rgba(216,56,42,0.22)', yard: 'rgba(216,56,42,0.14)', village: 'rgba(233,180,76,0.26)', plaza: 'rgba(40,110,190,0.22)', parking: 'rgba(60,60,60,0.14)', park: 'rgba(40,110,190,0.14)' };
+  for (const d of DISTRICTS) {
+    g.fillStyle = TINT[d.id];
+    g.beginPath();
+    g.arc(S(d.x), S(d.z), (d.r * size) / 2000, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.fillStyle = '#2a2520';
+  g.font = `600 ${5.2 * k}px "Jost", sans-serif`;
+  for (const d of DISTRICTS) g.fillText(d.name, S(d.x), S(d.z) + 2 * k);
+  g.font = `700 ${13 * k}px "Jost", sans-serif`;
+  g.fillText('Tannberg Village', S(470), S(470));
   // places
   for (const p of PADS) {
-    if (p.id === 'ridge') continue;
+    if (p.id === 'ridge' || TOWN_PADS.includes(p.id)) continue;
     g.fillStyle = p.id === 'hq' ? '#d8382a' : '#2a2520';
     g.beginPath();
     g.arc(S(p.x), S(p.z), (p.id === 'hq' ? 5 : 3.5) * k, 0, Math.PI * 2);

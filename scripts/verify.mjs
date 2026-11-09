@@ -65,7 +65,7 @@ for (const [name, width, height] of SIZES) {
         if (!b.width || !b.height) return null;
         return { sel, x: b.left, y: b.top, r: b.right, b: b.bottom };
       };
-      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act', '.hud .side', '.hud .lever'].map(pick).filter(Boolean);
+      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act:not(.trick)', '.hud .act.trick', '.hud .side', '.hud .lever'].map(pick).filter(Boolean);
     });
     const overlaps = [];
     for (let i = 0; i < boxes.length; i++)
@@ -96,10 +96,19 @@ for (const [name, width, height] of SIZES) {
   r.hudSled = await hud('on the sled');
   await page.keyboard.press('KeyX');
   check(await until(() => window.patrol.state().mode === 'foot'), `${name}: could not get off the sled`);
+  // on skis in the terrain park: the TRICK button and the style meter join the HUD
+  await P(() => window.patrol.teleport(410, 140, Math.PI));
+  await page.keyboard.press('KeyQ');
+  check(await until(() => window.patrol.state().mode === 'skis'), `${name}: could not put the skis on`);
+  await page.waitForTimeout(600);
+  r.hudSkis = await hud('on skis');
+  check(await P(() => !document.querySelector('.hud .act.trick').classList.contains('hidden')), `${name}: no TRICK button on skis`);
+  await page.keyboard.press('KeyQ');
+  check(await until(() => window.patrol.state().mode === 'foot'), `${name}: could not take the skis off`);
   await P(() => {
     window.patrol.complete('rounds');
     window.patrol.accept('survey');
-    window.patrol.teleport(-20.5, 292, Math.PI / 2);
+    window.patrol.teleport(364.5, 342, Math.PI / 2);
   });
   await page.waitForTimeout(400);
   await page.keyboard.press('KeyE');
@@ -150,7 +159,7 @@ for (const [name, width, height] of SIZES) {
   });
   check(r.restart.mode === 'foot' && !r.restart.active && r.restart.watching === 0 && r.restart.holdT === 0 && !r.restart.talking, `${name}: start over left state behind ${JSON.stringify(r.restart)}`);
   // continue restores where you were
-  await P(() => window.patrol.teleport(10, 236, 0.3));
+  await P(() => window.patrol.teleport(395, 286, 0.3));
   await P(() => window.patrol.save());
   await page.reload();
   await page.waitForFunction(() => window.patrol, null, { timeout: 180000 });
@@ -161,7 +170,7 @@ for (const [name, width, height] of SIZES) {
     await page.tap('[data-a=cont]');
     await page.waitForTimeout(600);
     const pos = await P(() => window.patrol.state().pos);
-    check(Math.hypot(pos.x - 10, pos.z - 236) < 3, `${name}: Continue put you at ${JSON.stringify(pos)}`);
+    check(Math.hypot(pos.x - 395, pos.z - 286) < 3, `${name}: Continue put you at ${JSON.stringify(pos)}`);
   }
   r.logs = logs;
   check(!logs.length, `${name}: console: ${logs.join(' | ')}`);

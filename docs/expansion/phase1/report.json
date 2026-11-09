@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "town": "ok",
+    "street": "ok",
+    "plaza": "ok",
+    "trick": "ok",
+    "heli": "ok",
+    "medianFrameMs": 280.8,
+    "console": []
+  },
+  "phone": {
+    "town": "ok",
+    "street": "ok",
+    "plaza": "ok",
+    "trick": "ok",
+    "heli": "ok",
+    "medianFrameMs": 129.4,
+    "console": []
+  }
+}

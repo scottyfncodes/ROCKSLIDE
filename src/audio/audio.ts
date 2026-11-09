@@ -22,6 +22,7 @@ export class AudioEngine {
   private rotorLfo!: OscillatorNode;
   private rotorFilter!: BiquadFilterNode;
   private hissGain!: GainNode;
+  private hissFilter!: BiquadFilterNode;
   private rumbleGain!: GainNode;
   private fireGain!: GainNode;
   private soundOn = true;
@@ -141,6 +142,7 @@ export class AudioEngine {
     hf.type = 'bandpass';
     hf.frequency.value = 3200;
     hf.Q.value = 0.6;
+    this.hissFilter = hf;
     this.hissGain = ctx.createGain();
     this.hissGain.gain.value = 0;
     this.loopNoise().connect(hf).connect(this.hissGain).connect(this.sfx);
@@ -458,6 +460,27 @@ export class AudioEngine {
     if (hard > 3) this.files?.hit('thud', Math.min(0.5, hard * 0.04), { rate: 0.9, lowpass: 900 });
   }
 
+  /** Air under you on a trick: a short whoosh. */
+  whoosh() {
+    if (!this.on) return;
+    this.burst({ dur: 0.35, gain: 0.16, type: 'bandpass', freq: 700, freqEnd: 2200, q: 1.2 });
+  }
+
+  /** A trick lands clean: two quick notes, higher for a bigger combo. */
+  stomp(combo: number) {
+    if (!this.on) return;
+    const f = 520 * Math.pow(1.122, Math.min(6, combo));
+    this.tone(f, 0.07, 0.12, 'triangle');
+    this.tone(f * 1.5, 0.07, 0.18, 'triangle', 0.09);
+  }
+
+  /** A wipeout: a thump into the snow and a spray of it. */
+  crash() {
+    if (!this.on) return;
+    this.tone(70, 0.4, 0.35, 'sine', 0, 0.5);
+    this.burst({ dur: 0.6, gain: 0.3, type: 'lowpass', freq: 1400, freqEnd: 300 });
+  }
+
   bump(hard: number) {
     if (!this.on) return;
     this.tone(90, Math.min(0.6, hard * 0.05), 0.25, 'sine', 0, 0.5);
@@ -468,7 +491,7 @@ export class AudioEngine {
    * Continuous sound for this frame. `engine`: sled 0..1 throttle, `speed` m/s; `rotor` 0..1;
    * `hiss` 0..1 (snow under you); `rumble` 0..1 (avalanche); `fire` 0..1 (by the hearth).
    */
-  update(dt: number, o: { engine: number; speed: number; rotor: number; hiss: number; wind: number; rumble: number; fire: number; outdoors: number; day?: number; talking?: boolean; intensity?: Intensity }) {
+  update(dt: number, o: { engine: number; speed: number; rotor: number; hiss: number; carve?: number; wind: number; rumble: number; fire: number; outdoors: number; day?: number; talking?: boolean; intensity?: Intensity }) {
     if (!this.ctx) return;
     if (o.intensity !== undefined) this.files?.setIntensity(o.intensity);
     const t = this.ctx.currentTime;
@@ -485,7 +508,11 @@ export class AudioEngine {
     this.engFilter.frequency.setTargetAtTime(400 + o.engine * 900 + o.speed * 20, t, 0.1);
     this.rotorGain.gain.setTargetAtTime(o.rotor * 0.5, t, 0.2);
     this.rotorLfo.frequency.setTargetAtTime(o.rotor * 11, t, 0.3);
-    this.hissGain.gain.setTargetAtTime(o.hiss * 0.08, t, 0.1);
+    // a carve: louder, lower and grittier as the edges bite into a turn at speed
+    const carve = o.carve ?? 0;
+    this.hissGain.gain.setTargetAtTime(o.hiss * (0.08 + carve * 0.09), t, 0.08);
+    this.hissFilter.frequency.setTargetAtTime(3200 - carve * 1700, t, 0.08);
+    this.hissFilter.Q.value = 0.6 + carve * 1.4;
     this.windGain.gain.setTargetAtTime((0.03 + o.wind * 0.14 + Math.min(0.12, o.speed * 0.004)) * o.outdoors, t, 0.4);
     this.windFilter.frequency.setTargetAtTime(280 + o.wind * 500 + o.speed * 12, t, 0.4);
     // the wind bed: always a breath of it outdoors at altitude, a roar in a storm

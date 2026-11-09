@@ -20,7 +20,7 @@ await page.waitForFunction(() => window.patrol, null, { timeout: 180000 });
 const bootMs = Date.now() - t0;
 await page.click('[data-a=new]');
 await page.waitForTimeout(1000);
-const views = { yard: [30, 254, 0.35], topstation: [586, -320, 0.1], passroad: [-420, -186, 0.05], ridge: [-215, -440, 0.4] };
+const views = { yard: [415, 304, 0.35], topstation: [586, -320, 0.1], passroad: [-420, -186, 0.05], ridge: [-215, -440, 0.4] };
 const out = { tier, bootMs, views: {} };
 for (const [name, [x, z, yaw]] of Object.entries(views)) {
   await page.evaluate(([x, z, y]) => { window.patrol.setTime(660); window.patrol.teleport(x, z, y); window.patrol.camYaw(y); window.patrol.camPitch(0.18); }, [x, z, yaw]);
