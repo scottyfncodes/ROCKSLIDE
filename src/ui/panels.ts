@@ -348,6 +348,13 @@ export class Panels {
   }
 
   /** The morning: a new day's forecast after sleeping. */
+  /** A plain panel for a screen the game lays out itself (the control route board, a rescue debrief). */
+  sheet(title: string, width = 'min(620px, 100%)'): HTMLElement {
+    const { body, panel } = this.shell(title);
+    panel.style.width = width;
+    return body;
+  }
+
   morning(day: number, c: Conditions, danger: number, bonus: number, note = '') {
     const { body, panel } = this.shell(`Day ${day}`);
     panel.style.width = 'min(560px, 100%)';

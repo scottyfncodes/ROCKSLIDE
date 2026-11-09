@@ -2880,3 +2880,160 @@ body.titled #loading .loading-bar {
   display: block;
   border-radius: 50%;
 }
+
+/* ---------------------------------------------------------------- phase 2: the gun sight and the transceiver */
+.aimpanel,
+.beaconpanel {
+  position: absolute;
+  left: calc(12px + var(--safe-l));
+  bottom: calc(16px + var(--safe-b));
+  width: 214px;
+  padding: 8px 12px 9px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.aimpanel.hidden,
+.beaconpanel.hidden {
+  display: none;
+}
+.aimpanel .big,
+.beaconpanel .big {
+  font: 600 22px/1.1 var(--mono);
+}
+.aimpanel .tgt {
+  font: 600 12px/1.3 var(--sans);
+  color: var(--red);
+}
+.aimpanel .tgt.on {
+  color: #2f7a4c;
+}
+.aimpanel .safe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px/1.3 var(--sans);
+}
+.aimpanel .safe i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.aimpanel .safe.good i {
+  background: #3f9a62;
+}
+.beaconpanel .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.beaconpanel .arrow {
+  width: 34px;
+  height: 34px;
+  fill: var(--red);
+  transition: transform 0.15s linear;
+}
+.beaconpanel .meter {
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(58, 38, 50, 0.16);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.beaconpanel .meter i {
+  display: block;
+  height: 100%;
+  background: #3f9a62;
+}
+.beaconpanel .meter.warn i {
+  background: var(--amber);
+}
+.beaconpanel .meter.bad i,
+.beaconpanel .meter.air i {
+  background: var(--red);
+}
+@media (max-width: 520px) {
+  .aimpanel,
+  .beaconpanel {
+    width: 180px;
+    left: calc(10px + var(--safe-l));
+    bottom: calc(14px + var(--safe-b));
+  }
+  .hud .side .chip[data-slot='3'] {
+    right: 158px;
+    bottom: 11px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .aimpanel,
+  .beaconpanel {
+    width: 190px;
+    gap: 1px;
+    padding: 5px 10px 6px;
+  }
+  .aimpanel .big,
+  .beaconpanel .big {
+    font-size: 17px;
+  }
+}
+/* the control route board and the rescue score */
+.panel .routewrap {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+.panel .routemap {
+  width: min(100%, 460px);
+  height: auto;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(58, 38, 50, 0.25);
+}
+.panel table.route,
+.panel table.score {
+  width: 100%;
+  border-collapse: collapse;
+  font: 500 13px/1.35 var(--sans);
+}
+.panel table.route td,
+.panel table.route th,
+.panel table.score td,
+.panel table.score th {
+  padding: 5px 6px;
+  border-bottom: 1px solid rgba(58, 38, 50, 0.15);
+  text-align: left;
+}
+.panel table.route tr.hot td:nth-child(2) {
+  color: var(--red);
+  font-weight: 600;
+}
+.panel table.route tr.done td:nth-child(2) {
+  color: #2f7a4c;
+}
+.panel .stars {
+  font-size: 40px;
+  color: var(--amber);
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+.panel .row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.aimpanel .label,
+.beaconpanel .label {
+  color: var(--ink);
+}
+/* a short landscape phone: the transceiver and the gun sight drop their hint lines to stay compact */
+@media (orientation: landscape) and (max-height: 520px) {
+  .beaconpanel > .small:not(:last-child),
+  .aimpanel > .small {
+    display: none;
+  }
+  .beaconpanel .arrow {
+    width: 26px;
+    height: 26px;
+  }
+}

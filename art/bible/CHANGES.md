@@ -1,3 +1,10 @@
+# Captures re-taken for the gameplay expansion, phase 2 (2026-11-09)
+
+Avalanche control and rescue on the Tannberg side: the howitzer by the Patrol HQ bunker and the
+Avalauncher on the top station (kit solids in the existing olive, yellow and slate roles), slide debris
+in the snow's own colour, and the Tannberg avalanche paths left open (treeless, as Kessel Bowl's is). No
+palette, type, token, model or shader changed; `tokens.json` is unchanged. Every capture re-taken.
+
 # Captures re-taken for the gameplay expansion, phase 1 (2026-11-09)
 
 The base area became one planned town (Tannberg Village: Main Street, Patrol HQ and the vehicle yard,

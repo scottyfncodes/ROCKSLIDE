@@ -65,7 +65,7 @@ for (const [name, width, height] of SIZES) {
         if (!b.width || !b.height) return null;
         return { sel, x: b.left, y: b.top, r: b.right, b: b.bottom };
       };
-      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act:not(.trick)', '.hud .act.trick', '.hud .side', '.hud .lever'].map(pick).filter(Boolean);
+      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act:not(.trick)', '.hud .act.trick', '.hud .side', '.hud .lever', '.hud .aimpanel', '.hud .beaconpanel'].map(pick).filter(Boolean);
     });
     const overlaps = [];
     for (let i = 0; i < boxes.length; i++)
@@ -96,6 +96,14 @@ for (const [name, width, height] of SIZES) {
   r.hudSled = await hud('on the sled');
   await page.keyboard.press('KeyX');
   check(await until(() => window.patrol.state().mode === 'foot'), `${name}: could not get off the sled`);
+  // avalanche control: at the howitzer, the gun sight; then a rescue drill, the transceiver panel
+  await P(() => { window.patrol.closePanel(); window.patrol.stage('cannon'); });
+  check(await until(() => !document.querySelector('.hud .aimpanel').classList.contains('hidden'), 8000), `${name}: no gun sight at the howitzer`);
+  r.hudGun = await hud('at the howitzer');
+  await P(() => window.patrol.stage('beacon'));
+  check(await until(() => !document.querySelector('.hud .beaconpanel').classList.contains('hidden'), 8000), `${name}: no transceiver on the debris`);
+  r.hudBeacon = await hud('on a rescue');
+  await P(() => { window.patrol.game.ops.reset(); window.patrol.teleport(395, 286, 0); });
   // on skis in the terrain park: the TRICK button and the style meter join the HUD
   await P(() => window.patrol.teleport(410, 140, Math.PI));
   await page.keyboard.press('KeyQ');

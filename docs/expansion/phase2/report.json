@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "route": "ok",
+    "cannon": "ok",
+    "chase": "ok",
+    "beacon": "ok",
+    "koda": "ok",
+    "medianFrameMs": 640,
+    "console": []
+  },
+  "phone": {
+    "route": "ok",
+    "cannon": "ok",
+    "chase": "ok",
+    "beacon": "ok",
+    "koda": "ok",
+    "medianFrameMs": 231.1,
+    "console": []
+  }
+}

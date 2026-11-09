@@ -9,6 +9,10 @@ import { RoadNet, trimWay, wayTo, type Way } from '../world/routing';
 import { cleanLanding, forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlider, type Glider } from '../actors/glide';
 import { HELI, heliAgl, newHeli, stepHeli, type Heli } from '../actors/heli';
 import { newTricks, stepTricks, TRICK, type TrickState } from '../actors/tricks';
+import { addBond, BOND, SKILLS, TREAT_COST } from '../actors/bond';
+import { hareMesh } from '../render/missionProps';
+import { GUNS, LOAD_LABEL, loaded as zoneLoaded, METHOD_LABEL, openRuns, ZONES } from '../missions/control';
+import { Ops, type OpsHost } from './ops';
 import { newHusky, pet, startTrack, stepHusky, type Husky, type Scent } from '../actors/husky';
 import { newWalker, stepWalker, type Walker } from '../actors/walker';
 import { Snowpack, simulateRelease, STORY_LOADED } from '../missions/avalanche';
@@ -34,9 +38,15 @@ import { findPanes, Lamplight } from '../render/lamplight';
 import { buildTerrain, snowUniforms } from '../render/terrainView';
 import { drawTopo, topoJob } from '../render/topoMap';
 import { buildOps, opsObstacles } from '../render/opsView';
-import { districtAt, LIFT, LZS, PEAKS, ROPE_TOW, VILLAGE } from '../world/places';
+import { BUNKER, districtAt, LIFT, LZS, PEAKS, ROPE_TOW, VILLAGE } from '../world/places';
+import { GRETA } from '../missions/catalog';
 
 /** Pepper's windowsill at the Kettle, once she is home */
+/** the bunker's door (west face), the rescue drill field south of it, and Greta on the Kettle's porch */
+const BUNKER_DOOR = { x: BUNKER.x - 5, z: BUNKER.z };
+const DRILL = { x: 412, z: 384 };
+const GRETA_AT = GRETA;
+
 const KETTLE_SILL = (() => {
   const k = VILLAGE.find((v) => v.kind === 'lodge')!;
   return { x: k.x - 3.7, z: k.z - 2.5 };
@@ -169,6 +179,16 @@ export class Game {
   private fov = 0;
   private miniT = 0;
   private lastDistrict = '';
+  /** avalanche control, slides, rescue (phase 2) */
+  private ops!: Ops;
+  /** slow motion left (real seconds): a near miss */
+  private slowT = 0;
+  /** Koda leaping out of the sled or the helicopter: from, to, time */
+  private dogLeap: { fx: number; fy: number; fz: number; t: number } | null = null;
+  /** Koda running over to check on you after a wipeout (seconds left) */
+  private kodaCheckT = 0;
+  /** when you were last at Patrol HQ (seconds of play), for Koda's greeting */
+  private awayFromHq = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -260,6 +280,17 @@ export class Game {
     this.skis = newGlider(pl.x, pl.z, pl.yaw, this.terrain);
     this.heli = newHeli(this.p.heli.x, this.p.heli.z, this.p.heli.yaw, this.terrain);
     this.dog = newHusky(pl.x + 1.5, pl.z + 1, this.terrain);
+    this.ops = new Ops(this.opsHost(), this.rig.quality.tier === 'low');
+    this.restoreControl();
+    this.ops.onRescued = (sc) => {
+      this.p.rescues++;
+      this.p.bestRescue = Math.max(this.p.bestRescue, sc.total);
+      this.save();
+      this.input.release();
+      const body = this.panels.sheet('Rescue complete', 'min(460px, 100%)');
+      body.innerHTML = `<div class="stars" aria-label="${sc.stars} of 3 stars">${'★'.repeat(sc.stars)}${'☆'.repeat(3 - sc.stars)}</div><table class="score"><tr><td>Time</td><td>${sc.time}</td></tr><tr><td>Survival</td><td>${sc.survival}</td></tr><tr><td>Technique</td><td>${sc.technique}</td></tr><tr><th>Total</th><th>${sc.total}</th></tr></table><p class="aside">Koda's bond: ${this.p.bond}/100. Best rescue: ${this.p.bestRescue}.</p><button class="btn red" data-a="ok">Back to work</button>`;
+      (body.querySelector('[data-a=ok]') as HTMLElement).onclick = () => this.panels.close();
+    };
     this.cam = new FollowCamera(this.rig.camera, this.terrain);
     this.input = new Input(canvas);
     this.hud = new Hud(ui, this.input);
@@ -290,6 +321,7 @@ export class Game {
   private bindHud() {
     this.hud.chips.map.onclick = () => this.openMap();
     this.hud.chips.koda.onclick = () => this.kodaCommand();
+    this.hud.chips.bark.onclick = () => this.bark();
     this.hud.chips.skis.onclick = () => this.toggleSkis();
     this.hud.chips.off.onclick = () => this.dismount();
     this.hud.pause.onclick = () => this.openPause();
@@ -492,6 +524,17 @@ export class Game {
   }
 
   private dismount() {
+    if (this.ops.aim) {
+      this.ops.leaveGun();
+      this.cam.hold = null;
+      this.cam.setMode('foot');
+      return;
+    }
+    // Koda jumps out of the sled or the helicopter after you
+    if ((this.mode === 'sled' || (this.mode === 'heli' && this.heli.landed)) && this.dog.mode === 'ride') {
+      const v = this.mode === 'sled' ? this.sled : this.heli;
+      this.dogLeap = { fx: v.x, fy: v.y + 1.2, fz: v.z, t: 0 };
+    }
     if (this.mode === 'sled') {
       const s = this.sled;
       const rx = Math.cos(s.yaw);
@@ -524,6 +567,288 @@ export class Game {
   }
 
   private sledLeanIn = 0;
+
+  // ------------------------------------------------------------------ phase 2: control, rescue, Koda
+
+  private opsHost(): OpsHost {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const g = this;
+    return {
+      get terrain() {
+        return g.terrain;
+      },
+      get scene() {
+        return g.rig.scene;
+      },
+      pos: () => g.pos2(),
+      mode: () => g.mode,
+      speed: () => g.speedNow(),
+      get dog() {
+        return g.dog;
+      },
+      bond: () => g.p.bond,
+      setBond: (b: number) => g.bondUp(b - g.p.bond),
+      toast: (t, k = '', secs = 2.4) => g.hud.toast(t, k, secs),
+      radio: (w, t, secs) => g.hud.radio(w, t, secs),
+      pop: (t, sub, kind, secs) => g.hud.trickPop(t, sub, kind, secs),
+      kick: (a) => g.cam.kick(a),
+      slowMo: (secs) => (g.slowT = Math.max(g.slowT, secs)),
+      buzz: (pat) => buzz(g.p.settings.vibrate, pat),
+      sfx: {
+        boom: (d) => g.audio.boom(d),
+        crack: () => g.audio.crack(),
+        thud: (w, d) => g.audio.thud(w, d),
+        bark: () => g.audio.bark(),
+        whine: () => g.audio.whine(),
+        chime: () => g.audio.chime(),
+        click: () => g.audio.click(),
+        warning: () => g.audio.warning(),
+        reward: () => g.audio.reward(),
+        work: (k) => g.audio.work(k),
+      },
+      fx: {
+        blast: (x, y, z) => g.particles.blast(x, y, z),
+        cloud: (x, y, z, vx, vz, k) => g.particles.cloud(x, y, z, vx, vz, k),
+        puff: (x, y, z, vx, vy, vz) => g.particles.emit(x, y, z, vx, vy, vz, { life: 1.4, size: 0.5, grow: 1.6, alpha: 0.5, drag: 0.8, rise: 0.4, kind: FX_KIND.powder }),
+      },
+      carry: (x, z) => {
+        if (g.mode === 'skis') {
+          g.skis.x = x;
+          g.skis.z = z;
+          g.skis.vx = g.skis.vz = 0;
+        } else if (g.mode === 'sled') {
+          g.dismount();
+          g.placeWalker(x, z, g.walker.yaw);
+        } else g.placeWalker(x, z, g.walker.yaw);
+      },
+      setBuried: (on) => {
+        if (on && g.mode === 'skis') g.toggleSkis(true);
+        g.player.group.visible = !on;
+      },
+      addFunds: (n, rep) => {
+        g.p.funds += n;
+        g.p.rep += rep;
+      },
+      day: () => g.p.weather.day,
+      danger: () => avalancheDanger(g.p.weather, g.cond ?? conditions(g.p.weather)),
+      minute: () => g.p.weather.minute,
+      save: () => g.save(),
+    };
+  }
+
+  /** Today's control state from the save, if it belongs to today. */
+  private restoreControl() {
+    const c = this.p.control;
+    if (c && c.day === this.p.weather.day) {
+      const { day: _d, ...rest } = c;
+      void _d;
+      this.ops.day = rest;
+    } else this.ops.newDay();
+  }
+
+  private bondUp(n: number) {
+    const r = addBond(this.p.bond, n);
+    this.p.bond = r.bond;
+    for (const sk of r.opened) {
+      this.hud.trickPop(`Koda: ${sk.name}`, sk.blurb, 'hot', 3);
+      this.audio.promote();
+    }
+  }
+
+  private buyTreat() {
+    if (this.p.funds < TREAT_COST) return this.audio.deny();
+    this.p.funds -= TREAT_COST;
+    this.p.treats++;
+    this.audio.chime();
+    this.hud.radio('Greta', 'One of the good ones. He will know it is from me, mind.', 3);
+  }
+
+  private giveTreat() {
+    if (this.p.treats <= 0) return;
+    this.p.treats--;
+    this.bondUp(BOND.treat);
+    pet(this.dog);
+    this.dog.happy = 2.5;
+    this.audio.whine();
+    this.hud.toast(`Koda loves that. Bond ${this.p.bond}/100`, 'good', 2);
+    this.save();
+  }
+
+  private barkT = 0;
+  private bark() {
+    this.barkT = 1.2;
+    this.audio.bark();
+    // a bark carries: anyone buried within earshot... and a slope that is about to go, if he knows
+    const loadedNear = ZONES.some((z) => zoneLoaded(this.ops.day.zones.find((q) => q.id === z.id)!) && Math.hypot(z.x - this.pos2().x, z.z - this.pos2().z) < 150);
+    if (loadedNear && SKILLS[3].at <= this.p.bond) this.hud.toast('Koda growls at the loaded slope above you', 'warn', 2.2);
+  }
+
+  /** The camera at a gun (behind it, along the aim) or on the shot landing. */
+  private gunCam(): { at: THREE.Vector3; yaw: number; pitch: number; dist: number } | null {
+    const o = this.ops;
+    if (o.watch && (o.shell || o.watch.t > 0)) {
+      const w = o.watch;
+      return { at: new THREE.Vector3(w.x, this.terrain.height(w.x, w.z) + 4, w.z), yaw: (o.aim?.yaw ?? 0) + Math.PI, pitch: 0.42, dist: 120 };
+    }
+    if (!o.aim) return null;
+    const g = GUNS[o.aim.gun];
+    // three-quarters behind the gun, looking out along the line of fire: the gun, and the arc climbing
+    // toward the mountain (the watch camera lifts its target 4 m)
+    return { at: new THREE.Vector3(g.x + Math.sin(o.aim.yaw) * 14, this.terrain.height(g.x, g.z) + 1, g.z + Math.cos(o.aim.yaw) * 14), yaw: o.aim.yaw + Math.PI - 0.55, pitch: 0.1, dist: 24 };
+  }
+
+  /** The HUD for control and rescue: the gun sight, the transceiver, the route on the task card. */
+  private updateOpsHud() {
+    const o = this.ops;
+    if (o.aim) {
+      const a = o.aim;
+      const pts = o.trajectory(a.gun, a.yaw, a.elev, a.charge);
+      const end = pts[pts.length - 1];
+      const g = GUNS[a.gun];
+      const zs = a.zoneId ? o.day.zones.find((q) => q.id === a.zoneId)! : null;
+      const zz = a.zoneId ? ZONES.find((q) => q.id === a.zoneId)! : null;
+      const safe = zz ? o.inPath(zz) === 0 && o.day.runsClosed : o.day.runsClosed;
+      this.hud.setAim({ gun: g.label, charge: a.charge, elev: a.elev, range: Math.hypot(end.x - g.x, end.z - g.z), target: zz ? zz.name : null, status: zs ? (zs.done ? 'Already controlled' : LOAD_LABEL(zs.load)) : 'Stick: turn and raise · Q or Charge: change charge', safe });
+    } else this.hud.setAim(null);
+    if (o.struggle) this.hud.setBeacon({ stage: 'signal', distance: 0, turn: null, odds: 1, minutes: 0, left: 0, air: o.struggle.air });
+    else {
+      const b = this.mode === 'foot' && o.onDebris() ? o.beacon() : null;
+      if (b) {
+        const heading = this.cam.yaw;
+        // the arrow on screen: the bearing relative to where the camera looks (north-up bearing, + clockwise)
+        const turn = b.bearing === null ? null : b.bearing + heading;
+        this.hud.setBeacon({ stage: b.stage, distance: b.distance, turn, odds: b.odds, minutes: b.minutes, left: b.left });
+      } else this.hud.setBeacon(null);
+    }
+    // at a gun the chips are the charge and the way out
+    if (o.aim) this.hud.setChips({ off: 'Leave', skis: `Charge ${o.aim.charge}`, koda: null, bark: false });
+  }
+
+  /** The control route board: the start zones on the map, today's loading, the tool for each, the runs. */
+  private openRoute() {
+    this.input.release();
+    if (!this.panels.open) this.audio.paper();
+    const o = this.ops;
+    const body = this.panels.sheet(`Control route · danger ${o.day.danger}`);
+    // the Tannberg side of the map with the zones on it
+    const cv = document.createElement('canvas');
+    cv.width = 460;
+    cv.height = 520;
+    cv.className = 'routemap';
+    cv.setAttribute('role', 'img');
+    cv.setAttribute('aria-label', 'Map of the start zones above the Tannberg run and the town');
+    const g = cv.getContext('2d');
+    const X0 = 340;
+    const Z0 = -440;
+    const S = 460 / 460;
+    if (g) {
+      const k = this.topo.width / 2000;
+      g.drawImage(this.topo, (X0 + 1000) * k, (Z0 + 1000) * k, 460 * k, 520 * k, 0, 0, 460, 520);
+      for (const z of ZONES) {
+        const st = o.day.zones.find((q) => q.id === z.id)!;
+        g.fillStyle = st.done ? 'rgba(63,154,98,0.55)' : zoneLoaded(st) ? 'rgba(212,66,47,0.55)' : 'rgba(224,176,66,0.5)';
+        g.beginPath();
+        g.arc((z.x - X0) * S, (z.z - Z0) * S, z.r * 1.3, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = '#2a2520';
+        g.font = '600 13px Jost, sans-serif';
+        g.fillText(`${z.id} ${z.name}`, (z.x - X0) * S + z.r + 4, (z.z - Z0) * S + 4);
+      }
+      for (const [gid, gg] of Object.entries(GUNS)) {
+        g.fillStyle = '#3a2632';
+        g.fillRect((gg.x - X0) * S - 5, (gg.z - Z0) * S - 5, 10, 10);
+        g.fillText(gid === 'howitzer' ? 'Howitzer' : 'Avalauncher', (gg.x - X0) * S + 8, (gg.z - Z0) * S - 6);
+      }
+    }
+    const rows = ZONES.map((z) => {
+      const st = o.day.zones.find((q) => q.id === z.id)!;
+      const state = st.done ? (st.natural ? 'Ran naturally' : `Done: ${st.result === 'full' ? 'full release' : st.result === 'sluff' ? 'sluff' : 'no result, stable'}`) : LOAD_LABEL(st.load);
+      return `<tr class="${st.done ? 'done' : zoneLoaded(st) ? 'hot' : ''}"><td><b>${z.id}</b> ${z.name}</td><td>${state}</td><td>${z.methods.map((m) => METHOD_LABEL[m]).join(' or ')}</td><td>${z.below}</td></tr>`;
+    }).join('');
+    const left = o.day.zones.filter(zoneLoaded).length;
+    body.innerHTML = `<p class="aside">Close the runs, clear the paths, then work the loaded zones. Open the runs when it is safe: anything loaded you leave can run on its own later.</p><div class="routewrap"></div><table class="route"><tr><th>Zone</th><th>Today</th><th>Tool</th><th>Below</th></tr>${rows}</table><p>${o.day.opened ? 'The runs are open.' : `The runs are closed. ${left} loaded zone${left === 1 ? '' : 's'} left.`} Score today: ${o.day.score}.</p><div class="row"><button class="btn red" data-a="go">${o.routeOn ? 'Back to the route' : 'Start the route'}</button><button class="btn ghost" data-a="open" ${o.day.opened ? 'disabled' : ''}>Open the runs</button></div>`;
+    body.querySelector('.routewrap')!.appendChild(cv);
+    (body.querySelector('[data-a=go]') as HTMLElement).onclick = () => {
+      if (!o.routeOn) o.startRoute();
+      this.panels.close();
+    };
+    (body.querySelector('[data-a=open]') as HTMLElement).onclick = () => {
+      const r = openRuns(o.day);
+      this.hud.radio('Snow safety', r.left.length ? `Runs open. You left ${r.left.join(', ')} loaded: keep an eye on it.` : `Runs open, and every loaded zone is down. +${r.points}.`, 5);
+      o.routeOn = false;
+      this.save();
+      this.panels.close();
+    };
+  }
+
+  /** Koda's personality: leaping out, cheering a big trick, checking on you after a wipeout, greeting you at HQ, the odd hare. */
+  private hare: { m: THREE.Group; x: number; z: number; vx: number; vz: number; t: number } | null = null;
+  private updateKodaLife(dt: number) {
+    const d = this.dog;
+    const pos = this.pos2();
+    this.barkT = Math.max(0, this.barkT - dt);
+    // checking on you after a wipeout
+    if (this.kodaCheckT > 0) {
+      this.kodaCheckT -= dt;
+      if (d.mode === 'follow' || d.mode === 'work') {
+        d.mode = 'work';
+        const dist = Math.hypot(pos.x - d.x, pos.z - d.z);
+        if (dist > 1.4) {
+          const k = Math.min(1, (12 * dt) / dist);
+          d.x += (pos.x - d.x) * k;
+          d.z += (pos.z - d.z) * k;
+          d.stride += 12 * dt;
+          d.yaw = Math.atan2(-(pos.x - d.x), -(pos.z - d.z));
+          d.anim = 'run';
+        } else d.anim = 'sniff';
+      }
+      if (this.kodaCheckT <= 0 && d.mode === 'work' && !this.ops.search) {
+        d.mode = 'follow';
+        d.happy = 1.5;
+      }
+    }
+    // home to Patrol HQ after a while away: a happy greeting
+    const atHq = this.lastDistrict === 'hq';
+    if (!atHq) this.awayFromHq += dt;
+    else {
+      if (this.awayFromHq > 60 && d.mode === 'follow' && this.mode === 'foot') {
+        d.happy = 2.5;
+        this.audio.bark();
+        this.hud.toast('Koda is glad to be home', 'good', 2);
+      }
+      this.awayFromHq = 0;
+    }
+    // a hare across the snow while you stand about: off he goes, and back again
+    if (!this.hare && d.mode === 'follow' && this.mode === 'foot' && d.still > 8 && this.indoors < 0.2 && Math.random() < dt * 0.02) {
+      const a = Math.random() * Math.PI * 2;
+      const m = hareMesh();
+      this.hare = { m, x: d.x + Math.cos(a) * 12, z: d.z + Math.sin(a) * 12, vx: Math.cos(a) * 7, vz: Math.sin(a) * 7, t: 4 };
+      this.rig.scene.add(m);
+      d.mode = 'work';
+      this.audio.bark();
+    }
+    if (this.hare) {
+      const h = this.hare;
+      h.t -= dt;
+      h.x += h.vx * dt;
+      h.z += h.vz * dt;
+      h.m.position.set(h.x, this.terrain.height(h.x, h.z) + Math.abs(Math.sin(h.t * 9)) * 0.35, h.z);
+      h.m.rotation.y = Math.atan2(h.vx, h.vz);
+      const dx = h.x - d.x;
+      const dz = h.z - d.z;
+      const l = Math.hypot(dx, dz) || 1;
+      d.x += (dx / l) * 9 * dt;
+      d.z += (dz / l) * 9 * dt;
+      d.stride += 9 * dt;
+      d.yaw = Math.atan2(-dx, -dz);
+      d.anim = 'run';
+      if (h.t <= 0) {
+        this.rig.scene.remove(h.m);
+        this.hare = null;
+        d.mode = 'follow';
+      }
+    }
+  }
   private readonly qa = new THREE.Quaternion();
   private readonly qb = new THREE.Quaternion();
   private readonly tmpAxis = new THREE.Vector3();
@@ -555,6 +880,11 @@ export class Game {
           this.audio.stomp(ev.combo ?? 1);
           buzz(v, BUZZ.trick);
           this.p.trickBest = Math.max(this.p.trickBest, ev.points);
+          // a big one: Koda cheers it
+          if (ev.points >= 600 && Math.hypot(this.dog.x - s.x, this.dog.z - s.z) < 60) {
+            this.audio.bark();
+            this.dog.happy = 1.5;
+          }
           this.p.trickPoints += ev.points;
         } else if (s.flew >= 0.8) this.cleanLanding(s);
       } else if (ev.landing === 'stumble') {
@@ -565,6 +895,8 @@ export class Game {
         buzz(v, BUZZ.landing);
       } else {
         this.hud.trickPop('Wipeout', 'Up you get', 'bad', 1.2);
+        // Koda runs over to check on you
+        if (this.dog.mode === 'follow') this.kodaCheckT = 3;
         this.audio.crash();
         this.cam.kick(0.9);
         buzz(v, BUZZ.crash);
@@ -664,6 +996,15 @@ export class Game {
 
   private kodaCommand() {
     const d = this.dog;
+    if (this.ops.onDebris() && d.mode !== 'work') {
+      this.ops.sendKoda();
+      this.audio.click();
+      return;
+    }
+    if (d.mode === 'work') {
+      this.hud.toast('Koda is working');
+      return;
+    }
     if (d.mode === 'track') {
       this.hud.toast('Koda is on the scent');
       return;
@@ -689,6 +1030,11 @@ export class Game {
     this.last = now;
     this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.05;
     // hit-stop: the world's clock slows for a beat on the biggest moments (sound and HUD stay real-time)
+    if (this.slowT > 0) {
+      // a near miss: the world runs at a third for a beat
+      this.slowT -= this.realDt;
+      dt *= 0.33;
+    }
     if (this.hitStopT < HIT_TOTAL) {
       this.hitStopT += dt;
       dt *= hitStopScale(this.hitStopT);
@@ -765,6 +1111,9 @@ export class Game {
     }
     if (this.input.pressed('KeyX')) this.dismount();
     if (this.input.pressed('KeyG')) this.kodaCommand();
+    if (this.input.pressed('KeyB')) this.bark();
+    // at a gun: Q cycles the charge, X steps away
+    if (this.ops.aim && this.input.pressed('KeyQ')) this.ops.cycleCharge();
 
     // weather and the clock
     tickWeather(p.weather, dt);
@@ -779,6 +1128,12 @@ export class Game {
     this.updateInteractions(dt);
     this.updateBadges();
     this.updateEvents(dt);
+    {
+      const mv = this.input.move;
+      const mash = this.input.pressed('btn:action') || this.input.pressed('KeyE') || this.input.pressed('Space');
+      this.ops.update(dt, this.realDt, { x: this.ops.aim ? mv.x : 0, y: this.ops.aim ? mv.y : 0, mash });
+      this.updateKodaLife(dt);
+    }
 
     // indoors?
     const fp = this.pos2();
@@ -792,7 +1147,14 @@ export class Game {
     // camera
     this.cam.portrait = THREE.MathUtils.clamp((1 - this.rig.camera.aspect) / 0.5, 0, 1);
     const pos = this.focusPos();
-    if (this.qaView) {
+    const gunView = this.ops.aim && !this.qaView ? this.gunCam() : null;
+    if (gunView) {
+      this.cam.setMode('watch');
+      this.cam.yaw = gunView.yaw;
+      this.cam.pitch = gunView.pitch;
+      this.cam.hold = gunView.dist;
+      this.cam.update(dt, this.tmp2.copy(gunView.at), gunView.yaw, 0);
+    } else if (this.qaView) {
       // a fixed overview for the evidence shots (QA only)
       this.cam.setMode('watch');
       this.cam.yaw = this.qaView.yaw;
@@ -890,7 +1252,7 @@ export class Game {
     // stick to world: up is camera-forward
     const wx = -f.z * mv.x + f.x * mv.y;
     const wz = f.x * mv.x + f.z * mv.y;
-    const free = this.watching <= 0 || this.watchSkip;
+    const free = (this.watching <= 0 || this.watchSkip) && !this.ops.aim && !this.ops.buried && !this.ops.struggle;
     const e = this.p.equip;
     if (this.mode === 'foot') {
       const indoors = inLodge(this.walker.x, this.walker.z) || inGarage(this.walker.x, this.walker.z);
@@ -1358,6 +1720,34 @@ export class Game {
       out.push({ id: 'look-away', label: 'Back to you', hold: 0, run: () => (this.watchSkip = true) });
       return out;
     }
+    // avalanche control, the struggle, the rescue
+    {
+      const o = this.ops;
+      if (o.struggle) {
+        out.push({ id: 'swim', label: 'Swim!', hold: 0, red: true, run: () => {} });
+        return out;
+      }
+      if (o.buried) return out;
+      if (o.aim) {
+        out.push({ id: 'fire', label: o.shell ? 'Round away' : 'Fire', hold: o.shell ? 0 : 0.4, red: true, enabled: !o.shell, run: () => o.fire() });
+        return out;
+      }
+      const gun = o.gunNear();
+      if (gun) out.push({ id: 'gun', label: gun === 'howitzer' ? 'Man the howitzer' : 'Man the Avalauncher', hold: 0, run: () => o.manGun(gun) });
+      const hz = o.handZone();
+      if (hz) out.push({ id: 'hand', label: 'Throw hand charge', hold: 0.8, red: true, run: () => o.throwCharge(hz) });
+      if (this.mode === 'foot' && o.onDebris()) {
+        const v = o.digTarget();
+        if (v) out.push({ id: 'dig', label: 'Dig', hold: 0, run: () => o.dig(this.time) });
+        else out.push({ id: 'probe', label: 'Probe', hold: 0.35, run: () => void o.probeHere() });
+      }
+      if (this.mode === 'foot' && near(BUNKER_DOOR.x, BUNKER_DOOR.z, 5)) {
+        out.push({ id: 'route', label: 'Control route', hold: 0, run: () => this.openRoute() });
+        if (!o.burial) out.push({ id: 'drill', label: 'Rescue drill', hold: 0.5, run: () => o.drill(DRILL.x, DRILL.z) });
+      }
+      if (this.mode === 'foot' && near(GRETA_AT.x, GRETA_AT.z, 3.5)) out.push({ id: 'treat', label: `Buy a dog treat (${TREAT_COST})`, hold: 0, enabled: p.funds >= TREAT_COST, run: () => this.buyTreat() });
+      if (this.mode === 'foot' && p.treats > 0 && near(this.dog.x, this.dog.z, 2.4) && this.dog.mode !== 'work') out.push({ id: 'give', label: `Give Koda a treat (${p.treats})`, hold: 0, run: () => this.giveTreat() });
+    }
     // firing the charges
     if (r) {
       const fs = fireState(r, pos.x, pos.z);
@@ -1415,6 +1805,13 @@ export class Game {
   private petDog() {
     pet(this.dog);
     this.p.affection++;
+    // the bond grows with play, a few pets a day
+    const day = this.p.weather.day;
+    if (this.p.pets.day !== day) this.p.pets = { day, n: 0 };
+    if (this.p.pets.n < BOND.petPerDay) {
+      this.p.pets.n++;
+      this.bondUp(BOND.pet);
+    }
     this.audio.whine();
     this.player.animate('pet', 0, 0, 0, 0.016);
     this.holdId = 'pet-pose';
@@ -1718,7 +2115,21 @@ export class Game {
       dm.group.visible = true;
       dm.group.position.set(d.x, d.y + (inLodge(d.x, d.z) ? 0.32 : 0), d.z);
       dm.group.quaternion.setFromAxisAngle(UP, d.yaw);
-      dm.animate(d.anim, d.stride, dt);
+      // jumping down out of the sled or the helicopter
+      if (this.dogLeap) {
+        const L = this.dogLeap;
+        L.t += dt / 0.55;
+        const k = Math.min(1, L.t);
+        const gy = this.terrain.height(d.x, d.z);
+        dm.group.position.set(L.fx + (d.x - L.fx) * k, L.fy + (gy - L.fy) * k + Math.sin(Math.PI * k) * 1.1, L.fz + (d.z - L.fz) * k);
+        if (L.t >= 1) {
+          this.dogLeap = null;
+          this.particles.powder(d.x, gy + 0.1, d.z, 4, 0.8, 0.8, 0, 0, 0.5);
+        }
+      }
+      // a bark on command (unless he is busy running)
+      const anim = this.barkT > 0 && d.speed < 4 ? 'bark' : this.dogLeap ? 'run' : d.anim;
+      dm.animate(anim, d.stride, dt);
       if ((d.anim === 'run' || d.anim === 'trot') && Math.random() < dt * 6 && this.terrain.surface(d.x, d.z) === 'powder') this.particles.powder(d.x, d.y + 0.1, d.z, 1, 0.6, 0.6, 0, 0, 0.4);
     }
     this.placeContactShadows();
@@ -1845,9 +2256,11 @@ export class Game {
       off: this.mode === 'sled' ? 'Get off' : this.mode === 'heli' ? (this.heli.landed ? 'Shut down' : null) : null,
       skis: (this.mode === 'foot' && !this.indoorsNow()) || this.mode === 'skis' ? 'Skis' : null,
       skisOn: this.mode === 'skis',
-      koda: this.mode === 'foot' || this.mode === 'skis' ? (busyDog ? 'Tracking' : this.dog.mode === 'stay' ? 'Heel' : 'Stay') : null,
-      kodaOn: busyDog || this.dog.mode === 'stay',
+      koda: this.mode === 'foot' || this.mode === 'skis' ? (this.ops.onDebris() && this.dog.mode !== 'work' ? 'Search' : this.dog.mode === 'work' ? 'Working' : busyDog ? 'Tracking' : this.dog.mode === 'stay' ? 'Heel' : 'Stay') : null,
+      kodaOn: busyDog || this.dog.mode === 'stay' || this.dog.mode === 'work',
+      bark: (this.mode === 'foot' || this.mode === 'skis') && !this.ops.aim,
     });
+    this.updateOpsHud();
     this.hud.setLever(this.mode === 'heli');
     if (this.mode === 'sled') this.hud.setSpeedo(Math.abs(forwardSpeed(this.sled)) * 3.6, SURFACE_LABEL[this.sled.surface]);
     else if (this.mode === 'skis') this.hud.setSpeedo(glideSpeed(this.skis) * 3.6, SURFACE_LABEL[this.skis.surface], this.tricks.style, this.tricks.hotT > 0);
@@ -1924,7 +2337,7 @@ export class Game {
       hiss: s && !s.airborne ? Math.min(1, sp / 15) : 0,
       carve: s && !s.airborne ? Math.min(1, Math.abs(s.lean) * Math.min(1, sp / 12) + s.slip * 0.08) : 0,
       wind: this.cond.wind,
-      rumble: this.pack.fired && !this.pack.done ? Math.min(1, this.pack.moving / 120) : 0,
+      rumble: Math.max(this.ops.rumble, this.pack.fired && !this.pack.done ? Math.min(1, this.pack.moving / 120) : 0),
       fire: this.indoors * (inLodge(this.walker.x, this.walker.z) ? 1 : 0),
       outdoors: 1 - this.indoors * 0.7,
       day: 1 - this.rig.night,
@@ -2069,6 +2482,7 @@ export class Game {
   private sleep() {
     const p = this.p;
     nextDay(p.weather);
+    this.ops.newDay();
     const reloaded = checkBowl(p);
     if (done(p, 'release')) this.pack.reset(this.bowlLoaded());
     const bonus = hasUpgrade(p, 'wing') ? 60 : 0;
@@ -2091,6 +2505,7 @@ export class Game {
     if (this.mode === 'skis') p.player = { x: this.skis.x, z: this.skis.z, yaw: this.skis.yaw, mode: 'skis' };
     p.sled = { x: this.sled.x, z: this.sled.z, yaw: this.sled.yaw };
     p.heli = { x: this.heli.x, z: this.heli.z, yaw: this.heli.yaw };
+    if (this.ops) p.control = { ...this.ops.day, day: p.weather.day };
     saveProfile(this.store, p);
   }
 
@@ -2102,6 +2517,8 @@ export class Game {
   /** QA staging for scripts/shots.mjs: put Vince, the camera and the clock where a named view needs them. */
   private stage(name: string): boolean {
     const D = this.debug();
+    this.ops.reset();
+    this.cam.hold = null;
     this.qaView = null;
     this.cam.hold = null;
     this.qaFreeze = false;
@@ -2162,6 +2579,72 @@ export class Game {
         // the lift base plaza from Main Street's head: the base lodge, the chairlift, the run and the park
         D.teleport(462, 262, 0.15);
         this.qaView = { at: new THREE.Vector3(466, this.terrain.height(466, 250) + 2, 250), yaw: 0.25, pitch: 0.22, dist: 26 };
+        return true;
+      }
+      case 'route': {
+        // the control route board in the bunker: the start zones, today's loading, the tools
+        D.teleport(BUNKER_DOOR.x - 2, BUNKER_DOOR.z, Math.PI / 2);
+        this.openRoute();
+        return true;
+      }
+      case 'cannon': {
+        // at the howitzer by the bunker, laid on the Lift Line Gully
+        D.teleport(GUNS.howitzer.x - 1.5, GUNS.howitzer.z - 1.5, 0);
+        this.ops.manGun('howitzer');
+        this.ops.aimAt('Z3');
+        return true;
+      }
+      case 'chase': {
+        // the Tannberg Headwall lets go above you on skis: cut hard to the side
+        const z = ZONES[0];
+        const n = this.terrain.normal(z.x, z.z);
+        const l = Math.hypot(n.x, n.z);
+        const dx = n.x / l;
+        const dz = n.z / l;
+        const sx = z.x + dx * 50 + -dz * 24;
+        const sz = z.z + dz * 50 + dx * 24;
+        D.teleport(sx, sz, 0);
+        this.toggleSkis(true);
+        this.skis.yaw = Math.atan2(dz, -dx);
+        this.ops.day.zones[0].load = 0.95;
+        this.ops.natural(z);
+        const ls = this.ops.slides[this.ops.slides.length - 1];
+        ls.warn = 0;
+        for (let i = 0; i < 50; i++) ls.slide.step(1 / 30);
+        // from below and to the side: you, cutting out, and the slide coming down beside you
+        // high and across the slope, between you and the slide: both in frame
+        const mx = sx * 0.68 + z.x * 0.32;
+        const mz = sz * 0.68 + z.z * 0.32;
+        this.qaView = { at: new THREE.Vector3(mx, this.terrain.height(mx, mz) - 4, mz), yaw: Math.atan2(-dz, dx) + 0.35, pitch: 0.55, dist: 70 };
+        this.qaFreeze = true;
+        return true;
+      }
+      case 'beacon': {
+        // a burial on the drill field; you are 20 m out, coarse search
+        this.ops.reset();
+        this.ops.drill(DRILL.x, DRILL.z, 2, 5);
+        const v = this.ops.burial!.victims.find((q) => q.beacon)!;
+        this.ops.burial!.minutes = 6;
+        D.teleport(v.x + 14, v.z + 14, Math.atan2(14, 14));
+        this.cam.yaw = Math.atan2(14, 14);
+        this.cam.pitch = 0.32;
+        return true;
+      }
+      case 'koda': {
+        // Koda has the scent of the one with no beacon: pawing and digging, the wisps rising
+        this.ops.reset();
+        this.ops.drill(DRILL.x, DRILL.z, 2, 5);
+        const b = this.ops.burial!;
+        const v = b.victims.find((q) => !q.beacon) ?? b.victims[1];
+        v.beacon = false;
+        D.teleport(v.x + 5, v.z + 3, Math.atan2(5, 3));
+        this.ops.sendKoda();
+        this.dog.x = v.x + 0.6;
+        this.dog.z = v.z;
+        this.ops.search!.target = v;
+        this.ops.search!.work = 2.2;
+        // (the watch camera lifts its target 4 m: aim under the snow to frame Koda)
+        this.qaView = { at: new THREE.Vector3(v.x, this.terrain.height(v.x, v.z) - 3.4, v.z), yaw: 0.9, pitch: 0.42, dist: 7 };
         return true;
       }
       case 'street': {

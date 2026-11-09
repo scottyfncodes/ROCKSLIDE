@@ -9,9 +9,10 @@ import type { Terrain } from '../world/terrain';
  * leads, never too far ahead, looking back to check you are coming.
  */
 
-export type DogAnim = 'idle' | 'trot' | 'run' | 'sit' | 'lie' | 'sleep' | 'sniff' | 'happy' | 'bark' | 'ride';
+export type DogAnim = 'idle' | 'trot' | 'run' | 'sit' | 'lie' | 'sleep' | 'sniff' | 'happy' | 'bark' | 'ride' | 'dig' | 'paw' | 'roll' | 'shake' | 'snap';
 
-export type DogMode = 'follow' | 'stay' | 'track' | 'ride' | 'bed' | 'point';
+/** `work`: the game drives Koda directly (searching a debris field, chasing a hare, checking on you) */
+export type DogMode = 'follow' | 'stay' | 'track' | 'ride' | 'bed' | 'point' | 'work';
 
 export interface Husky {
   x: number;
@@ -39,10 +40,13 @@ export interface Husky {
   /** ids Koda already pointed out */
   noticed: Set<string>;
   seed: number;
+  /** a bit of personality while you stand about: which, and for how long */
+  quirk: DogAnim | null;
+  quirkT: number;
 }
 
 export const newHusky = (x: number, z: number, t: Terrain): Husky => ({
-  x, y: t.height(x, z), z, yaw: 0, speed: 0, anim: 'idle', mode: 'follow', still: 0, sniffAt: null, sniffT: 0, happy: 0, bark: 0, stride: 0, trail: [], trailI: 0, point: null, noticed: new Set(), seed: 1,
+  x, y: t.height(x, z), z, yaw: 0, speed: 0, anim: 'idle', mode: 'follow', still: 0, sniffAt: null, sniffT: 0, happy: 0, bark: 0, stride: 0, trail: [], trailI: 0, point: null, noticed: new Set(), seed: 1, quirk: null, quirkT: 0,
 });
 
 export interface DogEvent {
@@ -103,6 +107,12 @@ export function stepHusky(d: Husky, o: Owner, dt: number, t: Terrain, solid: Col
   if (d.mode === 'ride') {
     d.anim = 'ride';
     d.speed = 0;
+    return ev;
+  }
+  if (d.mode === 'work') {
+    // the game moves Koda itself; keep him on the snow
+    const gy = t.height(d.x, d.z);
+    d.y += (gy - d.y) * Math.min(1, dt * 18);
     return ev;
   }
 
@@ -212,20 +222,35 @@ export function stepHusky(d: Husky, o: Owner, dt: number, t: Terrain, solid: Col
         d.yaw += a * Math.min(1, dt * 6);
         break;
       }
-      // follow: settle at your side, a little behind
-      const side = 1.4;
-      const tx = o.x + Math.sin(o.yaw) * 2.0 + Math.cos(o.yaw) * side;
-      const tz = o.z + Math.cos(o.yaw) * 2.0 - Math.sin(o.yaw) * side;
+      // follow: settle at your side, a little behind; at ski speed, run alongside a few metres out
+      const fast = o.speed > 6;
+      const side = fast ? 3.2 : 1.4;
+      const back = fast ? -0.5 : 2.0;
+      const tx = o.x + Math.sin(o.yaw) * back + Math.cos(o.yaw) * side;
+      const tz = o.z + Math.cos(o.yaw) * back - Math.sin(o.yaw) * side;
       const dt2 = Math.hypot(tx - d.x, tz - d.z);
       if (dt2 > 1.2 || ownerMoving) {
         d.sniffAt = null;
-        const sp = Math.min(11, Math.max(2.2, o.speed * 1.05 + Math.max(0, dt2 - 2) * 1.6));
+        d.quirk = null;
+        const sp = Math.min(fast ? 17 : 11, Math.max(2.2, o.speed * 1.05 + Math.max(0, dt2 - 2) * 1.6));
         if (dt2 > 0.4) moveToward(d, tx, tz, sp, dt, t, solid);
         else d.speed = 0;
         d.anim = d.speed > 5.5 ? 'run' : d.speed > 0.3 ? 'trot' : 'idle';
       } else if (d.still > 22) {
         d.speed = 0;
         d.anim = night && d.still > 40 ? 'sleep' : 'lie';
+      } else if (d.quirk && d.quirkT > 0) {
+        // a roll in the snow, a shake, snapping at the falling flakes
+        d.speed = 0;
+        d.quirkT -= dt;
+        d.anim = d.quirk;
+        if (d.quirkT <= 0) d.quirk = null;
+      } else if (d.still > 5 && d.still < 9 && rng() < dt * 0.35) {
+        const q: DogAnim[] = night ? ['shake', 'snap'] : ['roll', 'shake', 'snap', 'roll'];
+        d.quirk = q[Math.floor(rng() * q.length)];
+        d.quirkT = d.quirk === 'roll' ? 2.6 : d.quirk === 'shake' ? 1.1 : 2.2;
+        d.speed = 0;
+        d.anim = d.quirk;
       } else if (d.still > 9 && d.still < 16) {
         // a little nose around
         if (!d.sniffAt) d.sniffAt = { x: o.x + (rng() - 0.5) * 7, z: o.z + (rng() - 0.5) * 7 };

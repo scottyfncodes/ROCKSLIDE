@@ -59,3 +59,15 @@ describe('save migration', () => {
     expect(Number.isFinite(p.player.x)).toBe(true);
   });
 });
+
+describe("save migration: Koda's bond", () => {
+  it('an old save starts Koda at a bond its pets earned; a damaged one is repaired', () => {
+    expect(migrate({ version: 1, affection: 30 }).bond).toBe(20);
+    expect(migrate({ version: 1 }).bond).toBe(10);
+    expect(migrate({ version: 2, bond: 250 }).bond).toBe(100);
+    const p = migrate({ version: 2, bond: 44, treats: -3, pets: 'x' });
+    expect(p.bond).toBe(44);
+    expect(p.treats).toBe(0);
+    expect(p.pets).toEqual({ day: 0, n: 0 });
+  });
+});

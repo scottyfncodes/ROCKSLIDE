@@ -56,9 +56,26 @@ Touch: a floating stick wherever your left thumb lands, drag anywhere on the rig
 
 **The map** handles like a map on a phone: pinch with two fingers to zoom (about the point between them, from the whole valley to 6x) and pan as they move, drag with one finger, flick and it coasts, double tap to zoom in, and the +, - and locate buttons for one thumb. Pins and markers keep their size as you zoom, the map never leaves its frame, the page itself never zooms or scrolls, and only a clean tap on the dimmed edge closes it (a thumb landing there mid-pinch does not). The mission table's map does the same. A sharp 1536 px copy of the map is drawn a few milliseconds at a time after the valley loads; the valley behind an open panel is drawn only a few times a second.
 
+## Avalanche control and rescue
+
+The Tannberg side has six avalanche start zones above the run, the chairlift and the Fernhut track (`src/missions/control.ts`). Each morning the snowpack is new: the danger rating and the wind load each zone differently (seeded by the day).
+
+- **The control route** starts at the avalanche control bunker in Patrol HQ: a map of the start zones, today's loading, the tool for each one, and the button that opens the runs. The runs stay closed until you open them.
+- **The howitzer** by the bunker and **the Avalauncher** (a compressed-gas launcher) on the top station: man the gun, turn and raise it with the stick, pick the charge (light, standard, heavy), watch the arc and the impact ring (green on a start zone), fire, and the camera follows the round in.
+- **Hand charges**: from the ridge spot above a zone, throw one in, and get off the slope before the fuse runs out.
+- **Ski cuts**: a fast traverse across a small zone lets a soft slab go below your cut line.
+- **Results** depend on the snowpack: no result, a small sluff, or a full slide that runs to the bottom. Controlled zones score; a loaded zone left alone can let go **naturally** later in the day, and with the runs open that costs points and reputation and can bury people.
+- **Safety**: fire only with the runs closed and nobody (you, Koda) in the slide path, or the shot costs points and reputation.
+
+**Outrunning a slide.** Ski or sled below a loaded zone and it may let go above you: a rumble, a crack line across the slope and the camera shaking give you a beat. Cut hard to the side, out of the path; a near miss slows the world for a moment. Caught, you swim (mash the button) to stay on top; stay up and a guest went with it, go under and Koda digs you out.
+
+**Rescue** (`src/missions/rescue.ts`). A burial starts a survival clock (high for about 15 minutes, then falling steeply; 15 minutes take two and a half real minutes). The transceiver panel takes you through the **signal search** (no signal: sweep), the **coarse search** (arrow and distance) and the **fine search** (distance only; the lowest reading is right over them). Then **probe** to confirm the depth and **dig** (tap; a steady rhythm digs faster). Some victims have no transceiver: only **Koda** finds them. Rescues score on time, survival and technique, out of three stars. A **rescue drill** is always available at the bunker.
+
 ## Koda
 
 Follows at your heel and settles at your side, sits when you stop, lies down when you take your time, noses around, sleeps on the bed by the fire at night. Pet Koda any time. Koda rides the sled rack and comes along in the helicopter.
+
+**Koda's job and personality.** On a debris field, tap **Search**: Koda sweeps the snow, scent wisps drift up to him from anyone buried within range, and he alerts by pawing and barking, then digs. He finds people with no transceiver, and finds them faster than you can. He runs alongside you on skis, leaps out of the sled and the helicopter when you arrive, rolls in fresh snow, shakes off, snaps at snowflakes, chases the odd hare, runs over to check on you after a wipeout, barks at a big trick, and is happy to see you back at Patrol HQ. **Bark** is a button of its own (B). His **bond** (0 to 100) grows with rescues, play (petting, a few times a day) and treats (buy them from Greta at the Kettle) and opens his skills: Quick nose (20), Long range (40), Finder (60), Warning bark before a slope lets go on its own (80).
 
 Koda is useful without being a tool: on a search, give Koda the scent and Koda leads, never more than about 18 m ahead, waiting and looking back for you, with paw prints showing the trail. Out on patrol, Koda smells **old patrol badges** (ten enamel pins hidden around the valley) and runs over and barks at the spot. Found badges go on the board in the lodge.
 

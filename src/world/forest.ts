@@ -2,6 +2,7 @@ import { fbm2, mulberry32 } from '../sim/noise';
 import { pathDistance, type PathHit } from '../sim/geom';
 import { BOWL, DISTRICTS, GROVES, JUMPS, LAKE, LIFT, PADS, ROPE_TOW, VILLAGE, WORLD_HALF } from './places';
 import { bowlMask, type Terrain } from './terrain';
+import { ZONES } from '../missions/control';
 
 export interface Tree {
   x: number;
@@ -17,6 +18,27 @@ export interface Tree {
 }
 
 const _hit: PathHit = { d: 0, t: 0, s: 0, px: 0, pz: 0, tx: 1, tz: 0 };
+
+/** each control zone's start and its fall line (worked out once from the ground) */
+let PATHS: { x: number; z: number; r: number; dx: number; dz: number }[] | null = null;
+/** In one of the Tannberg avalanche paths: the start zone, and a widening track 200 m down the fall line. */
+export function inAvalanchePath(t: Terrain, x: number, z: number): boolean {
+  if (!PATHS) {
+    PATHS = ZONES.map((q) => {
+      const n = t.normal(q.x, q.z);
+      const l = Math.hypot(n.x, n.z) || 1;
+      return { x: q.x, z: q.z, r: q.r, dx: n.x / l, dz: n.z / l };
+    });
+  }
+  for (const p of PATHS) {
+    const ox = x - p.x;
+    const oz = z - p.z;
+    const along = ox * p.dx + oz * p.dz;
+    if (along < -p.r - 6 || along > 200) continue;
+    if (Math.abs(-ox * p.dz + oz * p.dx) < p.r + 4 + Math.max(0, along) * 0.12) return true;
+  }
+  return false;
+}
 
 /** Is a point clear of anything a tree must not stand on? */
 export function treeFree(t: Terrain, x: number, z: number): boolean {
@@ -90,7 +112,9 @@ export function plantForest(t: Terrain, density = 1): Tree[] {
         out.push({ x: px, z: pz, y: t.height(px, pz), h, r: 0.35 + h * 0.025, rot: rng() * Math.PI * 2, snow: 0.7 + rng() * 0.3 });
       }
   }
-  return out;
+  // the Tannberg side's avalanche paths are open ground (taken out after planting, so the rest of the
+  // forest stands exactly where it did)
+  return out.filter((tr) => !inAvalanchePath(t, tr.x, tr.z));
 }
 
 /** A spatial hash of tree trunks, for collisions. */
