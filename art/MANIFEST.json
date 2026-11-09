@@ -186,19 +186,19 @@
   },
   {
    "path": "../public/models/rs_doghouse.glb",
-   "bytes": 27948,
+   "bytes": 51516,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_doghouse: Koda's house (the kennel upgrade scales and repaints it); art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "658b6121fe77c990ac2c5894e290031a70f33a5d0abc4a3e8a4ee20f278085a8"
+   "sha256": "b6d8254bfbe78fe9c2c2343320465df299f1048c904a51e6bf533fdfd51947db"
   },
   {
    "path": "../public/models/rs_equipment.glb",
-   "bytes": 46172,
+   "bytes": 139972,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_equipment: equipment room: board-and-batten, door, windows, roof with gables; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "d05d23da93db395ba53dc08bacde0e2c27c16888416a480a6f0d2c98ebac8731"
+   "sha256": "b09b911cf15eb66ea34a07348ffe27f18ba355f7b0290ad42a551db33addfea6"
   },
   {
    "path": "../public/models/rs_fallen_tree.glb",
@@ -218,11 +218,11 @@
   },
   {
    "path": "../public/models/rs_hangar.glb",
-   "bytes": 128096,
+   "bytes": 269648,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_hangar: Hangar 1: ribbed steel walls open to the west, low arched roof with snow, vent; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "f4b91f6e9bf5b493dc30b4117e051f74168801c8498dc4f5a9d9f0fd9bf93e1b"
+   "sha256": "36fec2815817d0ccfee0fca25850ef0d605b81688c3b41a248687597aff37e78"
   },
   {
    "path": "../public/models/rs_heli.glb",
@@ -266,11 +266,11 @@
   },
   {
    "path": "../public/models/rs_mast.glb",
-   "bytes": 61208,
+   "bytes": 87596,
    "tools": "MeshCraft",
    "status": "shipped",
    "notes": "rs_mast: radio mast: red and white sections, ladder, platform, dish, equipment hut; art/3d/scripts/valley_buildings.py; Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "668f66768dcd41d7e1722d23975cd0f2cb586cc0c7c106c6dcd58e2a1a460201"
+   "sha256": "394b9232aad14b6f4107319c25ed73edb4e753f0407ea12f32c553ef2339be16"
   },
   {
    "path": "../public/models/rs_patroller.glb",

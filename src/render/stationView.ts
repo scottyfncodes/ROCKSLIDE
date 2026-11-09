@@ -147,8 +147,10 @@ export class StationView {
       if (inside) bakeInPlace(inside, [...this.fire, ...[...this.badgePins.values()].filter((p) => isUnder(p, inside))], vc);
       bakeInPlace(r.group, keep, vc);
     }
-    for (const [id, o] of this.upgrades) bakeInPlace(o, id === 'lights' ? [this.flag] : [], id === 'wing' && this.lodgeModelled);
-    bakeInPlace(this.baseKennel);
+    // the MeshCraft yard buildings carry many paint roles (Phase C): bake their plain colours per vertex too
+    const yardVc = (id: string) => !!this.ym && (id === 'hangar' || id === 'equipment' || id === 'mast' || id === 'kennel');
+    for (const [id, o] of this.upgrades) bakeInPlace(o, id === 'lights' ? [this.flag] : [], (id === 'wing' && this.lodgeModelled) || yardVc(id));
+    bakeInPlace(this.baseKennel, [], !!this.ym);
     for (const c of this.group.children) if (c.userData.pad) bakeInPlace(c);
     this.group.traverse((o) => {
       const m = o as THREE.Mesh;
@@ -657,7 +659,8 @@ export class StationView {
     g.position.set(H.x, y, H.z);
     const steel = 0x6e7a85;
     if (this.ym) {
-      g.add(this.yard('rs_hangar', { steel: mat(steel), rib: mat(shade(steel, 0.8)), arch: mat(0x4f5a64), floor: mat(0x9c9a94), hut: mat(0x5e6266) }));
+      // cream cladding in the station's livery (red flashing, cream trim), lit clerestory: the roles bake to vertex colour
+      g.add(this.yard('rs_hangar', { floor: mat(0x9c9a94), window: this.windows }));
     } else {
     g.add(box(H.w, 0.15, H.d, 0x9c9a94, 0, 0.07, 0));
     g.add(box(H.w - 2, H.wallH, 0.3, steel, 1, H.wallH / 2, -H.d / 2), box(H.w - 2, H.wallH, 0.3, steel, 1, H.wallH / 2, H.d / 2), box(0.3, H.wallH, H.d, steel, H.w / 2, H.wallH / 2, 0));
@@ -677,7 +680,7 @@ export class StationView {
     snow.position.copy(roof.position);
     g.add(roof, snow);
     }
-    const s = sign('HANGAR 1', 4, 0.8, { bg: '#5a4f6e', fg: '#e0b042' });
+    const s = sign('HANGAR 1', 4, 0.8, { bg: '#7b2f3b', fg: '#f6ecdc' });
     s.position.set(-H.w / 2 + 1.2, H.wallH + 1.6, 0);
     s.rotation.y = -Math.PI / 2;
     g.add(s);
@@ -691,7 +694,7 @@ export class StationView {
     const g = new THREE.Group();
     g.position.set(E.x, y, E.z);
     if (this.ym) {
-      g.add(this.yard('rs_equipment', { boat: mat(0x7a4f2e), boatDark: mat(0x5e3a22), roof: mat(PAL.roof), window: this.windows }));
+      g.add(this.yard('rs_equipment', { roof: mat(PAL.roof), window: this.windows }));
     } else {
     g.add(box(E.w, E.wallH, E.d, 0x7a4f2e, 0, E.wallH / 2, 0));
     for (let i = 0; i < 12; i++) g.add(box(0.08, E.wallH, E.d + 0.04, 0x5e3a22, -E.w / 2 + 0.4 + i * 0.75, E.wallH / 2, 0));
@@ -700,7 +703,7 @@ export class StationView {
     g.add(r);
     g.add(box(1.4, 2.2, 0.1, 0x3d2a1c, 0, 1.1, E.d / 2 + 0.05));
     }
-    const s = sign('EQUIPMENT', 3, 0.55, { bg: '#9cc9b3', fg: '#3a2632' });
+    const s = sign('EQUIPMENT', 3, 0.55, { bg: '#7b2f3b', fg: '#f6ecdc' });
     s.position.set(0, E.wallH - 0.4, E.d / 2 + 0.08);
     g.add(s);
     // a ski rack outside
@@ -755,7 +758,7 @@ export class StationView {
     g.position.set(MAST.x, y, MAST.z);
     const H = 20;
     if (this.ym) {
-      g.add(this.yard('rs_mast', { hut: mat(0x5e6266), roofDark: mat(0x4a4f55) }));
+      g.add(this.yard('rs_mast', { hut: mat(0x7a4f2e), roofDark: mat(0x4a4f55), window: this.windows }));
     } else {
     for (let i = 0; i < 8; i++) {
       const c = i % 2 ? PAL.white : PAL.red;
