@@ -5,7 +5,7 @@ import type { UpgradeId } from '../world/station';
  * Colours are what they are on the model; stats are the only numbers that change handling.
  */
 
-export type Slot = 'jacket' | 'hat' | 'goggles' | 'sledPaint' | 'sledEngine' | 'sledTrack' | 'heliPaint' | 'heliScanner' | 'heliLight' | 'skis' | 'skins' | 'collar' | 'harness' | 'bandana';
+export type Slot = 'jacket' | 'hat' | 'goggles' | 'sledPaint' | 'sledEngine' | 'sledTrack' | 'heliPaint' | 'heliScanner' | 'heliLight' | 'skis' | 'skins' | 'collar' | 'harness' | 'bandana' | 'beacon' | 'shovel' | 'pack';
 
 export const SLOT_LABEL: Record<Slot, string> = {
   jacket: 'Jacket',
@@ -22,9 +22,12 @@ export const SLOT_LABEL: Record<Slot, string> = {
   collar: 'Collar',
   harness: 'Harness',
   bandana: 'Bandana',
+  beacon: 'Transceiver',
+  shovel: 'Shovel',
+  pack: 'Pack',
 };
 
-export type Group = 'patroller' | 'sled' | 'heli' | 'skis' | 'koda';
+export type Group = 'patroller' | 'sled' | 'heli' | 'skis' | 'koda' | 'rescue';
 
 export const GROUP_SLOTS: Record<Group, Slot[]> = {
   patroller: ['jacket', 'hat', 'goggles'],
@@ -32,9 +35,10 @@ export const GROUP_SLOTS: Record<Group, Slot[]> = {
   heli: ['heliPaint', 'heliScanner', 'heliLight'],
   skis: ['skis', 'skins'],
   koda: ['collar', 'harness', 'bandana'],
+  rescue: ['beacon', 'shovel', 'pack'],
 };
 
-export const GROUP_LABEL: Record<Group, string> = { patroller: 'Patroller', sled: 'Snowmobile', heli: 'Helicopter', skis: 'Skis', koda: 'Koda' };
+export const GROUP_LABEL: Record<Group, string> = { patroller: 'Patroller', sled: 'Snowmobile', heli: 'Helicopter', skis: 'Skis', koda: 'Koda', rescue: 'Rescue kit' };
 
 export interface Item {
   id: string;
@@ -53,6 +57,13 @@ export interface Item {
 }
 
 export const ITEMS: Item[] = [
+  // the rescue kit (stat: transceiver range multiplier, shovel speed, airbag lift)
+  { id: 'beacon-std', slot: 'beacon', name: 'Patrol transceiver', cost: 0, rank: 0, stat: 1, note: '50 m range' },
+  { id: 'beacon-pro', slot: 'beacon', name: 'Three-antenna transceiver', cost: 180, rank: 1, stat: 1.4, note: '70 m range: finds the signal sooner' },
+  { id: 'shovel-std', slot: 'shovel', name: 'Patrol shovel', cost: 0, rank: 0, stat: 1 },
+  { id: 'shovel-pro', slot: 'shovel', name: 'Aluminium pro shovel', cost: 150, rank: 1, stat: 1.4, note: 'Digs 40% faster' },
+  { id: 'pack-none', slot: 'pack', name: 'Patrol pack', cost: 0, rank: 0, stat: 0 },
+  { id: 'pack-airbag', slot: 'pack', name: 'Avalanche airbag', cost: 320, rank: 2, stat: 1, note: 'Keeps you on top of a slide' },
   // patroller
   { id: 'jacket-red', slot: 'jacket', name: 'Patrol red', cost: 0, rank: 0, color: 0xd8382a, color2: 0x2b2f38 },
   { id: 'jacket-orange', slot: 'jacket', name: 'Signal orange', cost: 120, rank: 0, color: 0xf07a1a, color2: 0x23313d },
@@ -119,14 +130,26 @@ export const DEFAULT_EQUIP: Record<Slot, string> = {
   collar: 'collar-red',
   harness: 'harness-none',
   bandana: 'bandana-none',
+  beacon: 'beacon-std',
+  shovel: 'shovel-std',
+  pack: 'pack-none',
 };
 
 export const RANKS = [
-  { name: 'Recruit', rep: 0 },
+  { name: 'Rookie', rep: 0 },
   { name: 'Patroller', rep: 200 },
-  { name: 'Senior patroller', rep: 520 },
-  { name: 'Lead patroller', rep: 950 },
-  { name: 'Chief of patrol', rep: 1500 },
+  { name: 'Senior Patroller', rep: 520 },
+  { name: 'Avalanche Tech', rep: 950 },
+  { name: 'Snow Safety Director', rep: 1500 },
+];
+
+/** What each rank opens, beyond the gear in the shops. */
+export const RANK_UNLOCKS: { rank: number; text: string }[] = [
+  { rank: 0, text: 'Hand charges, ski cuts and the Avalauncher; the rescue drill' },
+  { rank: 1, text: 'The howitzer; a three-antenna transceiver and a pro shovel; harder calls' },
+  { rank: 2, text: 'The heavy charge; the avalanche airbag; heli hoist rescues' },
+  { rank: 3, text: 'The backcountry gate behind the top station; poacher and night calls' },
+  { rank: 4, text: 'Weisskopf Bowl, a powder bowl only the helicopter reaches' },
 ];
 
 export function rankOf(rep: number): number {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mulberry32 } from '../sim/noise';
-import { BOWL, BUNKER, DISTRICTS, FUEL, LAKE, LIFT, LZS, pad, ROPE_TOW, SIGNPOSTS, streetLights, VILLAGE } from '../world/places';
+import { BC_GATE, BOWL, BUNKER, DISTRICTS, FUEL, LAKE, LIFT, LZS, pad, ROPE_TOW, SIGNPOSTS, streetLights, VILLAGE } from '../world/places';
 import { routeSamples, type Terrain } from '../world/terrain';
 import { bakeInPlace, ball, bake, box, cyl, gable, glow, logWall, mat, PAL, shade, snowRoof, windowPane } from './kit';
 import { BUILDING_IDS, LIFT_IDS, mountAtPivot, paintModel, roleOf, type BuildingId, type PatrolModels } from './patrolModels';
@@ -453,6 +453,18 @@ export class WorldView {
     for (const [p, y] of [[a, ya], [b, yb]] as const) g.add(cyl(0.12, 0.12, 2.4, 6, 0xd8382a, p.x, y + 1.2, p.z), cyl(0.5, 0.5, 0.12, 12, dark, p.x, y + 2.4, p.z));
     const ropeGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x, ya + 2.3, a.z), new THREE.Vector3(b.x, yb + 2.3, b.z)]);
     g.add(new THREE.Line(ropeGeo, new THREE.LineBasicMaterial({ color: 0x1d1f22 })));
+    // the backcountry gate: posts, a rope, the sign
+    {
+      const gx = BC_GATE.x;
+      const gz = BC_GATE.z;
+      for (const o of [-4.5, 4.5]) g.add(cyl(0.07, 0.07, 1.6, 5, 0xf07a1a, gx + o * 0.15, this.ground(gx, gz + o) + 0.8, gz + o));
+      const rope = box(0.05, 0.05, 9, 0xd8382a, gx, this.ground(gx, gz) + 1.2, gz);
+      rope.rotation.y = 0.15;
+      const bs = sign('BACKCOUNTRY GATE', 2.4, 0.5, { bg: '#d8382a', fg: '#ffffff' });
+      bs.position.set(gx - 0.1, this.ground(gx, gz) + 1.8, gz);
+      bs.rotation.y = -Math.PI / 2;
+      g.add(rope, bs);
+    }
     const ps = sign('TERRAIN PARK', 2.6, 0.5, { bg: '#2f5f9e', fg: '#f3efe6', accent: '#f2c230' });
     ps.position.set(a.x + 3, ya + 2.2, a.z + 1);
     g.add(ps, cyl(0.08, 0.08, 2.2, 5, dark, a.x + 3, ya + 1.1, a.z + 0.9));

@@ -194,6 +194,8 @@ export class Hud {
     this.cond = cond;
     this.root.append(this.speedLines, stack, cond, actions, this.speedo, this.aimEl, this.beaconEl, this.alertEl, this.scanEl, this.altEl, this.hintEl, this.popEl);
     window.addEventListener('resize', () => this.layout());
+    // the instruments widen when the funds gain a digit: the compass moves over for them
+    if (typeof ResizeObserver === 'function') new ResizeObserver(() => this.layout()).observe(cond);
     window.visualViewport?.addEventListener('resize', () => this.layout());
     // compass ticks
     for (let d = 0; d < 360; d += 15) {
@@ -220,6 +222,8 @@ export class Hud {
     if (!t) {
       this.task.className = 'task housing free';
       this.task.innerHTML = `<div class="fam label">Free patrol</div><div class="title">The valley is yours</div><div class="obj">${freeHint}</div>`;
+      // the card changed size: the compass finds its place again
+      this.layout();
       return;
     }
     this.task.className = 'task housing';

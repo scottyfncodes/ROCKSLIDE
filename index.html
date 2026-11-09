@@ -34,8 +34,15 @@
     <meta name="twitter:description" content="Your valley, your station, your husky. Keep the mountain safe." />
     <meta name="twitter:image" content="https://rockslide-game.vercel.app/og-image.jpg" />
 
-    <!-- the fonts are served with the game (src/ui/fonts.css); Jost sets the title card, so it starts loading first -->
-    <link rel="preload" href="/fonts/jost-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- the fonts are served with the game (src/ui/fonts.css); Jost sets the title card, so it starts loading
+         first. Loaded through the FontFace API rather than a <link rel=preload>: same early fetch, but a reload
+         from the cache never leaves an "unused preload" behind it (Chrome warns when the cached font face
+         answers before the preload does). -->
+    <script>
+      try {
+        new FontFace('Jost', "url('/fonts/jost-latin-wght-normal.woff2') format('woff2')", { weight: '100 900', display: 'swap', unicodeRange: 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD' }).load().then((f) => document.fonts.add(f), () => {});
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <main aria-label="SNOW PATROL: Kessel Valley">

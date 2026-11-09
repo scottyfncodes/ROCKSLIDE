@@ -102,9 +102,21 @@ Kessel Bowl is the long game: about one morning in three it has reloaded (more i
 
 Kessel Bowl carries a slab of blocks over a weak layer. A charge on a loaded slope sends a crack across it; the blocks inside the crack let go in the order it reaches them, slide and tumble under gravity against Voellmy-style friction, break into smaller blocks as they speed up, throw a powder cloud, and pile up where they stop, so later snow rides over earlier debris. A charge on a sound slope only cracks it locally. The flow can knock loose a neighbouring slope (a secondary release). The berm in the runout is what keeps it off the road; the debrief tells you how much of the loaded snow came down and whether any reached the road. The blocks are cut with the Voronoi fracture carried over from the original ROCKSLIDE.
 
+## A patrol day and the Daily Storm
+
+From the mission table, **Start a patrol day**: a morning briefing (the kind of day, the danger rating, the new snow, the loaded zones, how many calls to expect), the **control route** before the runs open, then **radio calls** through the day, one at a time, and an **end-of-day report** with stars, XP, reputation and the resort safety rating. About ten to fifteen minutes. Nothing is timed against you: answer a call or pass it on, skip the control route, or end the day whenever you like (you only miss the points).
+
+**Ten kinds of call** (`src/missions/calls.ts`), built from a seed and scaled with rank and weather: an injured skier you ski down in the **toboggan** (too fast, airborne or skidding and it goes over), a **lost skier at dusk** that Koda tracks into the trees, a **sled resupply** to the Fernhut or top station hut, a **heli hoist** off a cliff band (hold a steady low hover), a **chairlift evacuation** tower by tower, **closing a run** with ropes and signs, **out-of-bounds poachers** who set off the West Face (a rescue), a **night rescue** by headlamp on the Fernhut track, a **lost dog** Koda finds, and **race course setup**.
+
+**Weather days**: **powder** (deep snow, slow sleds, the danger up a level), **wind slab** (two zones heavily loaded), **bluebird** (clear, the danger down a level), **whiteout** (cloud on the snow, under a hundred metres to see, the helicopter grounded: Koda runs ahead and leads you to the job) and **night ops**.
+
+**The Daily Storm** is one seeded patrol day per real calendar day (UTC), the same for every player: the same weather, danger, slides and calls. At the end: the score breakdown, a shareable text result with emoji stars (Copy result), and a streak counter. Free play is always there.
+
 ## Progression
 
-- **Rank** from reputation: Recruit, Patroller, Senior patroller, Lead patroller, Chief of patrol. The mission table and the patrol log show the next rank and how much reputation it needs, with a thin bar.
+- **Rank** from reputation: Rookie, Patroller, Senior Patroller, Avalanche Tech, Snow Safety Director. The mission table and the patrol log show the next rank and how much reputation it needs, with a thin bar. Each rank opens more: the howitzer (Patroller), the heavy charge, the airbag and hoist calls (Senior Patroller), the backcountry gate behind the top station and poacher and night calls (Avalanche Tech), and Weisskopf Bowl, a ledge only the helicopter reaches (Snow Safety Director).
+- **Rescue kit** (wardrobe and equipment room): a three-antenna transceiver (70 m range), a pro shovel (digs 40% faster), an avalanche airbag (keeps you near the top of a slide).
+- **Resort safety rating** (0 to 100): up with clean control work, opening clean and fast rescues; down with unsafe shots, natural slides with the runs open and slow rescues.
 - **The station** grows with funds and rank, and each building is a real building in the yard that opens new gear: kennel run (Koda's gear, Koda smells further), garage workshop (sled paint, engines, tracks), equipment room (skis, skins, helmet), helicopter hangar (paint, thermal scanner, searchlight), radio mast (shows the badges on the map), lodge wing (night shift bonus when you sleep), yard lights and the patrol flag.
 - **Gear** with real effects where it says so: engines (faster sled), deep lug track (floats on powder), race skis (quicker turns), mohair skins (climb on skis), thermal scanner, searchlight at night. The rest is how you, your sled, your helicopter and Koda look: jackets, hats, goggles, paint, collars, harnesses, bandanas.
 

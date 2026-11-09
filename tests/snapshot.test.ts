@@ -8,7 +8,7 @@ const live = () => ({
 
 function sample(s: ReturnType<typeof live>): GameSnapshot {
   return {
-    state: 'play', panel: false, day: 1, minute: 480, funds: s.funds, reputation: 0, rank: { index: 0, name: 'Recruit' }, mode: 'foot',
+    state: 'play', panel: false, day: 1, minute: 480, funds: s.funds, reputation: 0, rank: { index: 0, name: 'Rookie' }, mode: 'foot',
     position: { ...s.pos }, speedKmh: 4.04, heading: -90, heli: { altitudeAboveGround: 0, landed: true, rotor: 0 }, koda: { mode: 'follow', distance: 1.26 },
     weather: { sky: 'clear', windKmh: 12.4, tempC: -7.2, snow: 0, grounded: false, avalancheDanger: 3 }, mission: null, action: null,
     progress: { storyDone: 0, storyTotal: 5, calloutsAnswered: 0, badges: 0, badgesTotal: 10, buildings: [] },
@@ -49,6 +49,6 @@ describe('window.game snapshot', () => {
     exposeSnapshot(w, () => sample(live()));
     const walk = (o: unknown): boolean => (typeof o === 'function' ? false : o && typeof o === 'object' ? Object.values(o).every(walk) : true);
     expect(walk(w.game)).toBe(true);
-    expect(JSON.parse(JSON.stringify(w.game)).rank.name).toBe('Recruit');
+    expect(JSON.parse(JSON.stringify(w.game)).rank.name).toBe('Rookie');
   });
 });

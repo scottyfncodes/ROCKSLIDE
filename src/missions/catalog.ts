@@ -35,7 +35,13 @@ export type Step =
   | { kind: 'fire'; text: string }
   | { kind: 'watch'; text: string }
   | { kind: 'track'; trail: { x: number; z: number }[]; at: Target; text: string; start: Target }
-  | { kind: 'carry'; text: string };
+  | { kind: 'carry'; text: string }
+  /** ski a loaded toboggan to a place without dumping it (the game counts the dumps) */
+  | { kind: 'tow'; at: Target; text: string }
+  /** hold the helicopter in a steady hover close over a spot for some seconds (a hoist) */
+  | { kind: 'hover'; at: Target; secs: number; text: string }
+  /** a burial in progress: done when everyone is dug out */
+  | { kind: 'rescue'; text: string };
 
 export interface MissionDef {
   id: string;
@@ -342,7 +348,26 @@ export const MISSIONS: MissionDef[] = [
   },
 ];
 
-export const mission = (id: string): MissionDef => MISSIONS.find((m) => m.id === id)!;
+/** Missions built on demand (the patrol day's radio calls), resolved by id. */
+const resolvers: ((id: string) => MissionDef | undefined)[] = [];
+const built = new Map<string, MissionDef>();
+export function registerMissions(r: (id: string) => MissionDef | undefined) {
+  resolvers.push(r);
+}
+export const mission = (id: string): MissionDef => {
+  const m = MISSIONS.find((k) => k.id === id) ?? built.get(id);
+  if (m) return m;
+  for (const r of resolvers) {
+    const d = r(id);
+    if (d) {
+      built.set(id, d);
+      return d;
+    }
+  }
+  return undefined as unknown as MissionDef;
+};
+/** Is this a mission id the game knows (a story mission, a callout or a generated call)? */
+export const knownMission = (id: string) => !!mission(id);
 
 /** The avalanche control missions: the story's first release and the repeat work on the bowl. */
 export const isControl = (id: string | undefined): boolean => id === 'release' || id === 'bowl-control';

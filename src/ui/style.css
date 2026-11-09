@@ -3037,3 +3037,21 @@ body.titled #loading .loading-bar {
     height: 26px;
   }
 }
+/* the patrol day block on the mission table, and the Daily Storm's share card */
+.panel .dayblock {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: rgba(246, 236, 220, 0.08);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.panel pre.share {
+  white-space: pre-wrap;
+  font: 500 13px/1.45 var(--mono);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 10px 12px;
+  border-radius: 8px;
+  user-select: text;
+  -webkit-user-select: text;
+}

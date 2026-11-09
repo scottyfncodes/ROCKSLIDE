@@ -10,9 +10,20 @@ import { cleanLanding, forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlid
 import { HELI, heliAgl, newHeli, stepHeli, type Heli } from '../actors/heli';
 import { newTricks, stepTricks, TRICK, type TrickState } from '../actors/tricks';
 import { addBond, BOND, SKILLS, TREAT_COST } from '../actors/bond';
-import { hareMesh } from '../render/missionProps';
+import { hareMesh, tobogganMesh } from '../render/missionProps';
 import { GUNS, LOAD_LABEL, loaded as zoneLoaded, METHOD_LABEL, openRuns, ZONES } from '../missions/control';
 import { Ops, type OpsHost } from './ops';
+import { CALL_LABEL, dateLabel, dateSeed, dayDone, finishStorm, KIND_BRIEF, KIND_LABEL, newDayState, planDay, report as dayReport, shareText, stormPlan, tickDay, type DayPlan } from '../missions/patrolDay';
+import { callId, callPoints, callStars, parseCall } from '../missions/calls';
+
+/** a spot on the Tannberg run partway down (the toboggan stage) */
+const buildTowStart = (t: { height(x: number, z: number): number }) => {
+  void t;
+  return { x: 540, z: -40 };
+};
+import { newControlDay, zone as controlZone } from '../missions/control';
+import { adjustSafety } from '../progress/profile';
+import { RANK_UNLOCKS } from '../progress/catalog';
 import { newHusky, pet, startTrack, stepHusky, type Husky, type Scent } from '../actors/husky';
 import { newWalker, stepWalker, type Walker } from '../actors/walker';
 import { Snowpack, simulateRelease, STORY_LOADED } from '../missions/avalanche';
@@ -179,6 +190,15 @@ export class Game {
   private fov = 0;
   private miniT = 0;
   private lastDistrict = '';
+  /** the radio call waiting for an answer (patrol day) and the burials count when a rescue step began */
+  private callWaiting: string | null = null;
+  private rescueBase = -1;
+  /** a toboggan in tow: dumped recently (seconds of recovery) and when the last dump was */
+  private towT = 0;
+  private toboggan: THREE.Group | null = null;
+  /** the guest a call is about (code-built, like Nils), and a lost dog */
+  private caller: PatrollerMesh | null = null;
+  private pup: THREE.Group | null = null;
   /** avalanche control, slides, rescue (phase 2) */
   private ops!: Ops;
   /** slow motion left (real seconds): a near miss */
@@ -284,6 +304,7 @@ export class Game {
     this.restoreControl();
     this.ops.onRescued = (sc) => {
       this.p.rescues++;
+      if (this.p.patrolDay) this.p.patrolDay.rescues++;
       this.p.bestRescue = Math.max(this.p.bestRescue, sc.total);
       this.save();
       this.input.release();
@@ -349,6 +370,7 @@ export class Game {
     this.props.van.visible = p.events.includes('drift') || p.active?.id === 'drift';
     this.props.driver.group.visible = this.props.van.visible;
     if (done(p, 'release')) this.pack.reset(this.bowlLoaded());
+    if (this.ops) this.applyGear();
     this.syncMissionVisuals();
   }
 
@@ -568,6 +590,311 @@ export class Game {
 
   private sledLeanIn = 0;
 
+  // ------------------------------------------------------------------ phase 3: the patrol day
+
+  /** The resort safety rating moves (and says why, once in a while). */
+  private safety(d: number, why: string) {
+    const moved = adjustSafety(this.p, d);
+    if (this.p.patrolDay) this.p.patrolDay.safety += moved;
+    if (moved) this.hud.toast(`Resort safety ${moved > 0 ? '+' : ''}${moved}: ${why}`, moved > 0 ? 'good' : 'warn', 2.2);
+  }
+
+  /** Gear and rank into the operations: the transceiver, the shovel, the airbag, the heaviest charge. */
+  private applyGear() {
+    const e = this.p.equip;
+    this.ops.gear = { range: item(e.beacon).stat ?? 1, shovel: item(e.shovel).stat ?? 1, airbag: e.pack === 'pack-airbag', maxCharge: rank(this.p) >= 2 ? 3 : 2, howitzer: rank(this.p) >= 1 };
+    // the backcountry gate behind the top station opens for an Avalanche Tech
+    this.solid.setEnabled('bcgate', rank(this.p) < 3);
+  }
+
+  /** Start a patrol day (free play's own, or today's Daily Storm): the morning briefing first. */
+  private startDay(plan: DayPlan) {
+    const p = this.p;
+    if (p.active) {
+      this.hud.toast('Finish or drop the job you are on first', 'warn');
+      return;
+    }
+    p.patrolDay = newDayState(JSON.parse(JSON.stringify(plan)), p.trickPoints);
+    // the day's weather: the morning, the new snow, the kind of day
+    p.weather.minute = 7 * 60;
+    p.weather.kind = plan.kind;
+    p.weather.freshSnow = plan.snow;
+    p.weather.controlled = false;
+    this.ops.reset();
+    this.ops.day = newControlDay(plan.seed, plan.danger);
+    // a wind slab day: two zones carry heavy slabs
+    if (plan.kind === 'windslab') for (const z of this.ops.day.zones.slice(0, 2)) z.load = Math.max(z.load, 0.85);
+    this.cond = conditions(p.weather);
+    this.save();
+    this.briefing();
+  }
+
+  private briefing() {
+    const d = this.p.patrolDay;
+    if (!d) return;
+    const plan = d.plan;
+    this.input.release();
+    if (!this.panels.open) this.audio.paper();
+    const body = this.panels.sheet(plan.daily ? `Daily Storm · ${dateLabel(plan.date!)}` : `Patrol day ${this.p.days + 1}`, 'min(520px, 100%)');
+    const loaded = this.ops.day.zones.filter((z) => zoneLoaded(z)).length;
+    body.innerHTML = `<div class="dangerline"><div class="lvl d${plan.danger}">${plan.danger}</div><div><div class="label">Avalanche danger</div>${DANGER_LABEL[plan.danger]}</div></div><p><b>${KIND_LABEL[plan.kind]}.</b> ${KIND_BRIEF[plan.kind]}</p><p>New snow overnight: <b>${plan.snow} cm</b>. Loaded start zones: <b>${loaded} of ${ZONES.length}</b>. Calls expected today: <b>${plan.calls.length}</b>.</p><p class="aside">1. Work the control route from the bunker (runs closed). 2. Open the runs from the route board. 3. Answer the radio. You can answer later or skip a call: nothing is lost but its points, and you can end the day whenever you like.</p><div class="row"><button class="btn red" data-a="go">Morning control route</button><button class="btn ghost" data-a="skip">Skip control, open the runs</button></div>`;
+    (body.querySelector('[data-a=go]') as HTMLElement).onclick = () => {
+      d.phase = 'control';
+      this.ops.startRoute();
+      this.panels.close();
+      this.save();
+    };
+    (body.querySelector('[data-a=skip]') as HTMLElement).onclick = () => {
+      d.phase = 'control';
+      const r = openRuns(this.ops.day);
+      if (r.left.length) this.safety(-3, 'runs opened over loaded slopes');
+      this.panels.close();
+      this.save();
+    };
+  }
+
+  /** The patrol day's clock: the runs open, calls come in on the radio, the day ends with a report. */
+  private updatePatrolDay(dt: number) {
+    const d = this.p.patrolDay;
+    if (!d) return;
+    if (d.phase === 'control' && this.ops.day.opened) {
+      d.phase = 'calls';
+      d.t = 0;
+      if (this.ops.day.zones.every((z) => !zoneLoaded(z))) this.safety(4, 'runs opened clean');
+      this.hud.radio('Dispatch', 'Runs are open. Stay on the radio.', 3.5);
+      if (d.plan.kind === 'night') {
+        this.p.weather.minute = 19 * 60 + 40;
+        this.hud.radio('Dispatch', 'It is dark already. Headlamps on.', 3);
+      }
+      this.save();
+    }
+    if (d.phase !== 'calls') return;
+    const busy = !!this.p.active || !!this.callWaiting || !!this.ops.burial;
+    const c = tickDay(d, dt, busy);
+    if (c) {
+      const id = callId(c.type, c.seed, d.plan.daily ? 2 : rank(this.p));
+      this.callWaiting = id;
+      const m = mission(id);
+      this.audio.radio();
+      this.hud.radio(m.from, m.alert, 5);
+      this.hud.alert(m.title, m.alert, () => {
+        this.callWaiting = null;
+        this.accept(id);
+      }, () => {
+        this.callWaiting = null;
+        d.results.push({ type: c.type, stars: 0, points: 0, skipped: true });
+        this.hud.toast('Passed to the next patrol', '', 2);
+        this.save();
+      });
+    }
+    // whiteout: Koda knows the way to the job
+    if (d.plan.kind === 'whiteout') this.whiteoutGuide();
+    if (dayDone(d) && !this.p.active && !this.callWaiting && !this.ops.burial) this.endDay();
+  }
+
+  /** A call finished: its stars and points go on the day's sheet. */
+  private callDone(type: Parameters<typeof callStars>[0], seconds: number, dumps: number) {
+    const d = this.p.patrolDay;
+    const stars = callStars(type, seconds, dumps);
+    const pts = callPoints(stars, d?.plan.daily ? 2 : rank(this.p));
+    if (d) d.results.push({ type, stars, points: pts });
+    this.hud.trickPop(`${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`, `${CALL_LABEL[type]} · +${pts}`, 'clean', 2.4);
+  }
+
+  /** The end-of-day report: stars, XP, reputation, the safety rating; a Daily Storm adds the share card. */
+  private endDay() {
+    const p = this.p;
+    const d = p.patrolDay;
+    if (!d) return;
+    // calls never sent (the day ended early) count as missed
+    for (let i = d.next; i < d.plan.calls.length; i++) d.results.push({ type: d.plan.calls[i].type, stars: 0, points: 0, skipped: true });
+    d.next = d.plan.calls.length;
+    const rep = dayReport({ control: this.ops.day.score, calls: d.results, rescues: d.rescues, safety: d.safety, style: Math.max(0, p.trickPoints - d.styleAtStart) });
+    const rankBefore = rank(p);
+    p.xp += rep.xp;
+    p.rep += Math.max(0, rep.rep);
+    p.funds += Math.round(rep.total / 10);
+    p.days++;
+    p.bestDay = Math.max(p.bestDay, rep.total);
+    let share = '';
+    if (d.plan.daily && d.plan.date) {
+      finishStorm(p.storm, d.plan.date, rep.total);
+      share = shareText(d.plan, rep, p.storm.streak);
+    }
+    p.patrolDay = null;
+    p.weather.kind = null;
+    this.save();
+    this.input.release();
+    this.audio.reward();
+    if (rank(p) > rankBefore) this.audio.promote();
+    this.showReport(d.plan, rep, share, rank(p) > rankBefore ? RANKS[rank(p)].name : null);
+  }
+
+  private showReport(plan: DayPlan, rep: ReturnType<typeof dayReport>, share: string, rankUp: string | null) {
+    const p = this.p;
+    const body = this.panels.sheet(plan.daily ? `Daily Storm · ${dateLabel(plan.date!)}` : 'End of the day', 'min(520px, 100%)');
+    const unlock = rankUp ? RANK_UNLOCKS.find((u) => u.rank === rank(p)) : null;
+    body.innerHTML = `<div class="stars" aria-label="${rep.stars} of 3 stars">${'★'.repeat(rep.stars)}${'☆'.repeat(3 - rep.stars)}</div><table class="score">${rep.lines.map((l) => `<tr><td>${l.label}</td><td>${l.points}</td></tr>`).join('')}<tr><th>Total</th><th>${rep.total}</th></tr></table><p><b>+${rep.xp} XP</b> · <b>+${Math.max(0, rep.rep)} reputation</b> · resort safety <b>${p.safety}</b>/100</p>${rankUp ? `<p class="note">Promoted: <b>${rankUp}</b>. ${unlock ? unlock.text : ''}</p>` : ''}${share ? `<p>Streak: <b>${p.storm.streak}</b> day${p.storm.streak === 1 ? '' : 's'} (best ${p.storm.best}).</p><pre class="share">${share}</pre>` : ''}<div class="row">${share ? '<button class="btn red" data-a="copy">Copy result</button>' : ''}<button class="btn ${share ? 'ghost' : 'red'}" data-a="ok">Free patrol</button></div>`;
+    (body.querySelector('[data-a=ok]') as HTMLElement).onclick = () => this.panels.close();
+    const copy = body.querySelector('[data-a=copy]') as HTMLElement | null;
+    if (copy)
+      copy.onclick = () => {
+        const done = () => (copy.textContent = 'Copied');
+        try {
+          void navigator.clipboard?.writeText(share).then(done, () => (copy.textContent = 'Select and copy above'));
+        } catch {
+          copy.textContent = 'Select and copy above';
+        }
+      };
+  }
+
+  /** The patrol day block on the mission table: start a day, today's Daily Storm, or the day under way. */
+  private boardDay() {
+    const body = document.querySelector('.panel-wrap .panel .body');
+    if (!body) return;
+    const p = this.p;
+    const today = dateSeed(new Date());
+    const did = p.storm.last === today;
+    const box = document.createElement('div');
+    box.className = 'dayblock';
+    const d = p.patrolDay;
+    box.innerHTML = d
+      ? `<div class="label">Patrol day under way</div><p>${KIND_LABEL[d.plan.kind]} · ${d.phase === 'control' ? 'control route, runs closed' : `${d.results.length} of ${d.plan.calls.length} calls`}</p><div class="row"><button class="btn ghost" data-a="end">End the day and report</button></div>`
+      : `<div class="label">Patrol day</div><p>A full day: the briefing, the control route, the calls, the report. About ten to fifteen minutes.</p><div class="row"><button class="btn red" data-a="day">Start a patrol day</button><button class="btn ghost" data-a="storm">Daily Storm · ${dateLabel(today)}${did ? ' (done)' : ''}</button></div><p class="aside">Streak ${p.storm.streak} · resort safety ${p.safety}/100 · Koda's bond ${p.bond}/100 · ${p.xp} XP</p>`;
+    body.prepend(box);
+    const on = (a: string, f: () => void) => {
+      const b = box.querySelector(`[data-a=${a}]`) as HTMLElement | null;
+      if (b) b.onclick = f;
+    };
+    on('day', () => this.startDay(planDay(this.p.weather.day * 31 + this.p.days * 7 + 1, rank(this.p))));
+    on('storm', () => this.startDay(stormPlan(today)));
+    on('end', () => {
+      this.panels.close();
+      this.endDay();
+    });
+  }
+
+  /** Whiteout: Koda runs ahead toward the job, paw prints in the snow behind him. */
+  private guideT = 0;
+  private whiteoutGuide() {
+    const r = this.p.active;
+    const d = this.dog;
+    if (!r || (this.mode !== 'foot' && this.mode !== 'skis') || (d.mode !== 'follow' && d.mode !== 'work') || this.ops.search || this.hare || this.kodaCheckT > 0) return;
+    const t = navTarget(r, this.pos2());
+    if (!t || typeof t !== 'object') return;
+    const pos = this.pos2();
+    const dx = t.x - pos.x;
+    const dz = t.z - pos.z;
+    const L = Math.hypot(dx, dz);
+    if (L < 15) {
+      if (d.mode === 'work') d.mode = 'follow';
+      return;
+    }
+    d.mode = 'work';
+    const gx = pos.x + (dx / L) * 9;
+    const gz = pos.z + (dz / L) * 9;
+    const k = Math.hypot(gx - d.x, gz - d.z);
+    if (k > 0.5) {
+      const sp = Math.min(k, (this.speedNow() + 3) * 0.016 * 2);
+      d.x += ((gx - d.x) / k) * sp;
+      d.z += ((gz - d.z) / k) * sp;
+      d.stride += sp;
+      d.yaw = Math.atan2(-(gx - d.x), -(gz - d.z));
+      d.anim = this.speedNow() > 5 ? 'run' : 'trot';
+    } else d.anim = 'sniff';
+    this.guideT -= 0.016;
+    if (this.guideT <= 0) {
+      this.guideT = 0.5;
+      const trail = [];
+      for (let i = 1; i <= 8; i++) trail.push({ x: pos.x + (dx / L) * i * 4, z: pos.z + (dz / L) * i * 4 });
+      this.markers.setPaws(trail, 0);
+    }
+  }
+
+  /** The people of a call: the injured guest where they wait (or riding the sled), a lost dog. */
+  private placeCallPeople(dt: number) {
+    const r = this.p.active;
+    const def = r ? mission(r.id) : null;
+    const call = r && parseCall(r.id);
+    const sub = call ? def?.subject : undefined;
+    if (sub && sub.kind === 'skier') {
+      if (!this.caller) {
+        this.caller = new PatrollerMesh(true);
+        this.caller.setLook(0x2f7fb8, 0xf2c230, 'hat-beanie', 0xd8382a, 0xf3efe6, 0x7fd3e8, 0xf2c230);
+        this.rig.scene.add(this.caller.group);
+      }
+      const c = this.caller;
+      const s = currentStep(r!);
+      // on the toboggan, on the sled rack, or waiting where they are
+      if (r!.passenger && this.mode === 'sled') {
+        const seat = this.tmp2.copy(this.sledMesh.rack);
+        seat.z -= 0.35;
+        this.sledMesh.body.localToWorld(seat);
+        c.group.position.copy(seat).y -= 0.62;
+        c.group.quaternion.copy(this.sledMesh.group.quaternion);
+        c.animate('ride', 0, 0, 0, dt);
+        c.group.visible = true;
+      } else if (s?.kind === 'tow' || (s?.kind === 'interact' && s.id === 'c-handover')) {
+        c.group.visible = false;
+      } else if (s && (s.kind === 'goto' || s.kind === 'interact' || s.kind === 'mount' || s.kind === 'hover' || s.kind === 'track' || s.kind === 'carry')) {
+        c.group.visible = true;
+        c.group.position.set(sub.x, this.terrain.height(sub.x, sub.z), sub.z);
+        c.animate(s.kind === 'interact' ? 'work' : 'idle', 0, 0, 0, dt);
+      } else c.group.visible = false;
+    } else if (this.caller) this.caller.group.visible = false;
+    // the lost dog
+    if (sub && sub.kind === 'cat' && call?.type === 'lostdog') {
+      if (!this.pup) {
+        this.pup = hareMesh();
+        this.pup.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) m.material = new THREE.MeshLambertMaterial({ color: 0x8a5a36 });
+        });
+        this.pup.scale.setScalar(1.6);
+        this.rig.scene.add(this.pup);
+      }
+      const s = currentStep(r!);
+      const found = s?.kind === 'goto';
+      const x = found ? this.walker.x + 1.4 : sub.x;
+      const z = found ? this.walker.z + 1 : sub.z;
+      this.pup.position.set(x, this.terrain.height(x, z), z);
+      this.pup.visible = true;
+    } else if (this.pup) this.pup.visible = false;
+    // the toboggan behind your skis
+    const towing = r && currentStep(r)?.kind === 'tow' && this.mode === 'skis';
+    if (towing) {
+      if (!this.toboggan) {
+        this.toboggan = tobogganMesh();
+        this.rig.scene.add(this.toboggan);
+      }
+      const k = this.skis;
+      const bx = k.x + Math.sin(k.yaw) * 2.4;
+      const bz = k.z + Math.cos(k.yaw) * 2.4;
+      this.toboggan.position.set(bx, this.terrain.height(bx, bz) + 0.1, bz);
+      this.toboggan.rotation.set(0, k.yaw, this.towT > 0 ? 1.4 : 0);
+      this.toboggan.visible = true;
+    } else if (this.toboggan) this.toboggan.visible = false;
+  }
+
+  /** Towing the toboggan on skis: too fast, too much air or a skid sideways and it goes over. */
+  private towToboggan(s: Glider, sp: number, dt: number) {
+    const r = this.p.active;
+    if (!r || currentStep(r)?.kind !== 'tow') return;
+    this.towT = Math.max(0, this.towT - dt);
+    if (this.towT > 0) {
+      s.vx *= Math.exp(-dt * 3);
+      s.vz *= Math.exp(-dt * 3);
+      return;
+    }
+    if ((sp > 17 || s.slip > 3.6 || (s.airborne && s.air > 0.35)) && this.towT <= 0) {
+      r.dumps = (r.dumps ?? 0) + 1;
+      this.towT = 1.6;
+      this.hud.trickPop('Dumped the toboggan!', 'Easy: smooth turns, keep it under 60 km/h', 'bad', 2);
+      this.audio.crash();
+      buzz(this.p.settings.vibrate, BUZZ.crash);
+    }
+  }
+
   // ------------------------------------------------------------------ phase 2: control, rescue, Koda
 
   private opsHost(): OpsHost {
@@ -633,6 +960,7 @@ export class Game {
       danger: () => avalancheDanger(g.p.weather, g.cond ?? conditions(g.p.weather)),
       minute: () => g.p.weather.minute,
       save: () => g.save(),
+      safety: (d, why) => g.safety(d, why),
     };
   }
 
@@ -856,7 +1184,7 @@ export class Game {
   /** What is under the helicopter: a marked LZ, flat enough snow, or too steep to set down on. */
   private landingBelow(): 'lz' | 'flat' | 'steep' {
     const h = this.heli;
-    if (LZS.some((l) => Math.hypot(h.x - l.x, h.z - l.z) < l.r)) return 'lz';
+    if (LZS.some((l) => (l.rank ?? 0) <= rank(this.p) && Math.hypot(h.x - l.x, h.z - l.z) < l.r)) return 'lz';
     return this.terrain.slope(h.x, h.z) < 0.21 ? 'flat' : 'steep';
   }
 
@@ -1133,6 +1461,7 @@ export class Game {
       const mash = this.input.pressed('btn:action') || this.input.pressed('KeyE') || this.input.pressed('Space');
       this.ops.update(dt, this.realDt, { x: this.ops.aim ? mv.x : 0, y: this.ops.aim ? mv.y : 0, mash });
       this.updateKodaLife(dt);
+      this.updatePatrolDay(dt);
     }
 
     // indoors?
@@ -1343,6 +1672,7 @@ export class Game {
       // tricks in the air; clean fast lines on the snow feed the style meter
       const fast = !s.airborne && sp > 11 && s.slip < 2.5 && s.bump < 1;
       for (const ev of stepTricks(tr, { held: free && this.input.held('trick'), sx: mv.x, sy: mv.y }, s.airborne, dt, fast)) this.onTrick(ev, s);
+      this.towToboggan(s, sp, dt);
       // full style: a little extra glide
       if (tr.hotT > 0 && !s.airborne && sp > 4) {
         s.vx += fx * TRICK.hotPush * dt;
@@ -1482,6 +1812,8 @@ export class Game {
       heliAgl: heliAgl(this.heli, this.terrain),
       heliYaw: this.heli.yaw,
       avalancheDone: this.pack.done,
+      rescueStarted: this.rescueBase >= 0 && this.ops.burials > this.rescueBase,
+      rescueClear: !this.ops.burial,
     };
   }
 
@@ -1505,7 +1837,7 @@ export class Game {
     const story = MISSIONS.filter((m) => !m.dynamic);
     const n = story.findIndex((m) => m.id === id);
     const WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
-    this.hud.chapter(n >= 0 ? `Chapter ${WORDS[n] ?? n + 1}` : 'An interlude', def.title, `${FAMILY_LABEL[def.family]} · called in by ${def.from}`, def.family);
+    this.hud.chapter(n >= 0 ? `Chapter ${WORDS[n] ?? n + 1}` : id.startsWith('call:') ? 'Radio call' : 'An interlude', def.title, `${FAMILY_LABEL[def.family]} · called in by ${def.from}`, def.family);
     if (id === 'tree') {
       this.props.resetTree();
       this.props.tree.visible = true;
@@ -1528,6 +1860,11 @@ export class Game {
         case 'step': {
           this.audio.chime();
           const s = def.steps[e.index];
+          // the poachers set off the West Face as you arrive
+          if (s.kind === 'rescue') {
+            this.rescueBase = this.ops.burials;
+            this.ops.triggered(controlZone('Z2'), 2);
+          }
           this.hud.toast('Objective done', 'good', 1.6);
           if (s.kind === 'scan') this.hud.radio('Scanner', 'Scanner on. Point the nose at each slope, close and low, and hold it there.', 5);
           if (s.kind === 'fire') {
@@ -1594,7 +1931,9 @@ export class Game {
     const run = this.p.active;
     const res0 = this.pack.result;
     const control = def.graded && run ? { charged: [...run.charges], loaded: [...(run.loaded ?? [])], share: res0.weakTotal ? res0.weakReleased / res0.weakTotal : 0 } : undefined;
+    const call = parseCall(def.id);
     const r = complete(this.p, def.id, control);
+    if (call && run) this.callDone(call.type, run.time, run.dumps ?? 0);
     this.audio.reward();
     buzz(this.p.settings.vibrate, BUZZ.done);
     if (r.rankAfter > r.rankBefore) this.audio.promote();
@@ -1733,7 +2072,10 @@ export class Game {
         return out;
       }
       const gun = o.gunNear();
-      if (gun) out.push({ id: 'gun', label: gun === 'howitzer' ? 'Man the howitzer' : 'Man the Avalauncher', hold: 0, run: () => o.manGun(gun) });
+      if (gun) {
+        const locked = gun === 'howitzer' && rank(p) < 1;
+        out.push({ id: 'gun', label: locked ? 'Howitzer: Patroller rank' : gun === 'howitzer' ? 'Man the howitzer' : 'Man the Avalauncher', hold: 0, enabled: !locked, run: () => !locked && o.manGun(gun) });
+      }
       const hz = o.handZone();
       if (hz) out.push({ id: 'hand', label: 'Throw hand charge', hold: 0.8, red: true, run: () => o.throwCharge(hz) });
       if (this.mode === 'foot' && o.onDebris()) {
@@ -1790,13 +2132,13 @@ export class Game {
     // the station
     if (this.mode === 'foot') {
       if (near(SPOTS.table.x, SPOTS.table.z, 2.6)) out.push({ id: 'table', label: 'Mission table', hold: 0, run: () => this.openBoard() });
-      if (near(SPOTS.wardrobe.x, SPOTS.wardrobe.z, 2.2)) out.push({ id: 'wardrobe', label: 'Wardrobe', hold: 0, run: () => this.openOutfit('Wardrobe', ['patroller']) });
+      if (near(SPOTS.wardrobe.x, SPOTS.wardrobe.z, 2.2)) out.push({ id: 'wardrobe', label: 'Wardrobe', hold: 0, run: () => this.openOutfit('Wardrobe', ['patroller', 'rescue']) });
       if (near(SPOTS.bed.x, SPOTS.bed.z, 2.6)) out.push({ id: 'bed', label: 'Sleep till morning', hold: 1, run: () => this.sleep() });
       if (near(SPOTS.workbench.x, SPOTS.workbench.z, 2.6)) out.push({ id: 'bench', label: 'Workbench', hold: 0, run: () => this.openOutfit('Garage workbench', ['sled', 'skis']) });
       if (near(SPOTS.kennel.x, SPOTS.kennel.z, 3) || near(SPOTS.dogBed.x, SPOTS.dogBed.z, 2)) out.push({ id: 'kennel', label: "Koda's gear", hold: 0, run: () => this.openOutfit("Koda's corner", ['koda']) });
       if (near(SPOTS.heli.x, SPOTS.heli.z, 10) && !near(this.heli.x, this.heli.z, 4.5)) out.push({ id: 'heligear', label: 'Helicopter kit', hold: 0, run: () => this.openOutfit('Helicopter kit', ['heli']) });
       if (hasUpgrade(p, 'hangar') && near(SPOTS.hangarDoor.x, SPOTS.hangarDoor.z, 4)) out.push({ id: 'hangar', label: 'Hangar', hold: 0, run: () => this.openOutfit('Hangar', ['heli']) });
-      if (hasUpgrade(p, 'equipment') && near(SPOTS.equipDoor.x, SPOTS.equipDoor.z, 3)) out.push({ id: 'equip', label: 'Equipment room', hold: 0, run: () => this.openOutfit('Equipment room', ['skis', 'patroller']) });
+      if (hasUpgrade(p, 'equipment') && near(SPOTS.equipDoor.x, SPOTS.equipDoor.z, 3)) out.push({ id: 'equip', label: 'Equipment room', hold: 0, run: () => this.openOutfit('Equipment room', ['skis', 'patroller', 'rescue']) });
       if (near(this.dog.x, this.dog.z, 2.4) && this.dog.mode !== 'track') out.push({ id: 'pet', label: 'Pet Koda', hold: 0, quiet: true, run: () => this.petDog() });
     }
     return out;
@@ -2081,6 +2423,7 @@ export class Game {
     // Nils on the back of the sled
     const r = this.p.active;
     const nilsRiding = r?.id === 'skier' && r.passenger;
+    this.placeCallPeople(dt);
     if (nilsRiding) {
       const seat = this.tmp2.copy(this.sledMesh.rack);
       seat.z -= 0.35;
@@ -2376,6 +2719,7 @@ export class Game {
       },
       tab,
     );
+    if (tab === 'calls') this.boardDay();
   }
 
   private openOutfit(title: string, groups: Group[]) {
@@ -2585,6 +2929,55 @@ export class Game {
         // the control route board in the bunker: the start zones, today's loading, the tools
         D.teleport(BUNKER_DOOR.x - 2, BUNKER_DOOR.z, Math.PI / 2);
         this.openRoute();
+        return true;
+      }
+      case 'briefing': {
+        // today's Daily Storm, the morning briefing
+        D.teleport(SPOTS.table.x + 1.5, SPOTS.table.z, -Math.PI / 2);
+        this.p.patrolDay = null;
+        this.startDay(stormPlan(dateSeed(new Date())));
+        return true;
+      }
+      case 'report': {
+        // a finished Daily Storm: the report and the share card
+        const plan = stormPlan(dateSeed(new Date()));
+        this.p.patrolDay = newDayState(plan, this.p.trickPoints);
+        const d = this.p.patrolDay;
+        d.phase = 'calls';
+        d.next = plan.calls.length;
+        plan.calls.forEach((c, i) => d.results.push({ type: c.type, stars: i % 3 === 2 ? 2 : 3, points: callPoints(i % 3 === 2 ? 2 : 3, 2) }));
+        d.rescues = 1;
+        this.ops.day.score = 820;
+        this.endDay();
+        return true;
+      }
+      case 'toboggan': {
+        // a radio call: the toboggan haul down the Tannberg run
+        const id = callId('toboggan', 4242, 1);
+        this.accept(id);
+        document.querySelector('.chapter')?.remove();
+        const r = this.p.active!;
+        r.step = 2;
+        const p = buildTowStart(this.terrain);
+        D.teleport(p.x, p.z, Math.PI);
+        this.toggleSkis(true);
+        this.skis.yaw = Math.PI;
+        this.cam.yaw = Math.PI + 0.5;
+        this.cam.pitch = 0.3;
+        return true;
+      }
+      case 'whiteout': {
+        // a whiteout patrol day: Koda leads you to the job through the cloud
+        this.p.weather.kind = 'whiteout';
+        this.p.patrolDay = newDayState(planDay(7, 1), this.p.trickPoints);
+        this.p.patrolDay.phase = 'calls';
+        this.accept(callId('race', 77, 1));
+        document.querySelector('.chapter')?.remove();
+        D.teleport(462, 262, 0);
+        this.dog.x = 464;
+        this.dog.z = 255;
+        this.cam.yaw = 0;
+        this.cam.pitch = 0.1;
         return true;
       }
       case 'cannon': {

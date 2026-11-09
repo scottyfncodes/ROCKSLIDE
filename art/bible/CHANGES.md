@@ -1,3 +1,9 @@
+# Captures re-taken for the gameplay expansion, phase 3 (2026-11-09)
+
+The backcountry gate behind the top station (posts, rope and a sign in the existing signal red), a
+small heli ledge in the Weisskopf's bowl, and the ranks' new names on the HUD and boards. No palette,
+type, token, model or shader changed; `tokens.json` is unchanged. Every capture re-taken.
+
 # Captures re-taken for the gameplay expansion, phase 2 (2026-11-09)
 
 Avalanche control and rescue on the Tannberg side: the howitzer by the Patrol HQ bunker and the

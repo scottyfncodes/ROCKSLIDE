@@ -1,5 +1,5 @@
 import { Colliders, roomWalls } from './colliders';
-import { BUNKER, FUEL, VILLAGE } from './places';
+import { BC_GATE, BUNKER, FUEL, VILLAGE } from './places';
 
 /**
  * Kessel Patrol Station: the home base. It starts as a log lodge, a garage, a helipad and a
@@ -90,6 +90,8 @@ export function buildColliders(): Colliders {
   c.add({ x: WING.x, z: WING.z, hw: WING.w / 2, hd: WING.d / 2, rot: 0, tag: 'wing' });
   c.add({ x: KENNEL.x, z: KENNEL.z, hw: 1.1, hd: 1.3, rot: 0 });
   c.add({ x: MAST.x, z: MAST.z, hw: 1.2, hd: 1.2, rot: 0, tag: 'mast' });
+  // the backcountry gate (closed until you are an Avalanche Tech)
+  c.add({ x: BC_GATE.x, z: BC_GATE.z, hw: 0.3, hd: 5, rot: 0.15, tag: 'bcgate' });
   // the avalanche control bunker and the fuel island
   c.add({ x: BUNKER.x, z: BUNKER.z, hw: 4.6, hd: 3.4, rot: BUNKER.rot });
   c.add({ x: FUEL.x + Math.sin(FUEL.rot) * -2.4, z: FUEL.z + Math.cos(FUEL.rot) * -2.4, hw: 2.3, hd: 1.2, rot: FUEL.rot });

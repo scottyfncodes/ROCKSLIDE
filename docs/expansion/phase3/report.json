@@ -1,0 +1,18 @@
+{
+  "desktop": {
+    "briefing": "ok",
+    "toboggan": "ok",
+    "whiteout": "ok",
+    "report": "ok",
+    "medianFrameMs": 16.6,
+    "console": []
+  },
+  "phone": {
+    "briefing": "ok",
+    "toboggan": "ok",
+    "whiteout": "ok",
+    "report": "ok",
+    "medianFrameMs": 16.6,
+    "console": []
+  }
+}

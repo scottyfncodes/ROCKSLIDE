@@ -1,5 +1,8 @@
-import { mission, MISSIONS, WIND_LOADS } from '../missions/catalog';
+import { knownMission, mission, MISSIONS, WIND_LOADS } from '../missions/catalog';
+// the patrol day's radio calls are missions built from their ids: register them before any save loads
+import '../missions/calls';
 import type { ControlDay } from '../missions/control';
+import { newStreak, type DayState, type Streak } from '../missions/patrolDay';
 import { mulberry32 } from '../sim/noise';
 import type { MissionRun } from '../missions/runner';
 import { newWeather, type WeatherState } from '../world/weather';
@@ -81,6 +84,16 @@ export interface Profile {
   bestRescue: number;
   /** today's avalanche control (the snowpack, what has been shot), kept for the day it belongs to */
   control: (ControlDay & { day: number }) | null;
+  /** experience from patrol days, and the resort safety rating (0..100) */
+  xp: number;
+  safety: number;
+  /** the Daily Storm streak and scores */
+  storm: Streak;
+  /** a patrol day under way (or null: free play) */
+  patrolDay: DayState | null;
+  /** patrol days finished, and the best day's score */
+  days: number;
+  bestDay: number;
   played: number;
   /** a new save that has not seen the opening yet */
   fresh: boolean;
@@ -119,6 +132,12 @@ export function newProfile(): Profile {
     rescues: 0,
     bestRescue: 0,
     control: null,
+    xp: 0,
+    safety: 50,
+    storm: newStreak(),
+    patrolDay: null,
+    days: 0,
+    bestDay: 0,
     played: 0,
     fresh: true,
     savedAt: 0,
@@ -157,10 +176,16 @@ export function migrate(raw: unknown): Profile {
   if (!p.pets || !Number.isFinite(p.pets.day) || !Number.isFinite(p.pets.n)) p.pets = { day: 0, n: 0 };
   if (!Number.isFinite(p.rescues)) p.rescues = 0;
   if (!Number.isFinite(p.bestRescue)) p.bestRescue = 0;
+  for (const k of ['xp', 'days', 'bestDay'] as const) if (!Number.isFinite(p[k]) || p[k] < 0) p[k] = 0;
+  if (!Number.isFinite(p.safety)) p.safety = 50;
+  p.safety = Math.max(0, Math.min(100, p.safety));
+  const st = p.storm as Partial<Streak> | undefined;
+  p.storm = st && typeof st === 'object' && Number.isFinite(st.last) && Number.isFinite(st.streak) ? { ...newStreak(), ...st, scores: st.scores && typeof st.scores === 'object' ? st.scores : {} } : newStreak();
+  if (p.patrolDay && (typeof p.patrolDay !== 'object' || !p.patrolDay.plan || !Array.isArray(p.patrolDay.plan.calls))) p.patrolDay = null;
   if (!p.control || typeof p.control !== 'object' || !Array.isArray(p.control.zones) || !Number.isFinite(p.control.day)) p.control = null;
   // bowl calls without a loaded bowl behind them (a damaged save) go
   if (!p.loaded.length) p.events = p.events.filter((e) => !mission(e).bowl);
-  if (p.active && !MISSIONS.some((m) => m.id === p.active!.id)) p.active = null;
+  if (p.active && !knownMission(p.active.id)) p.active = null;
   if (p.active && (p.active.step < 0 || p.active.step >= mission(p.active.id).steps.length)) p.active = null;
   if (p.active && mission(p.active.id).bowl && !(Array.isArray(p.active.loaded) && p.active.loaded.length)) p.active = null;
   if (from < 2) {
@@ -218,6 +243,13 @@ export function saveProfile(store: Store | null, p: Profile): boolean {
 }
 
 export const rank = (p: Profile) => rankOf(p.rep);
+
+/** The resort safety rating: up with good control work and fast rescues, down with what goes wrong. */
+export function adjustSafety(p: Profile, delta: number): number {
+  const before = p.safety;
+  p.safety = Math.max(0, Math.min(100, Math.round(p.safety + delta)));
+  return p.safety - before;
+}
 export const hasUpgrade = (p: Profile, u: UpgradeId) => p.upgrades.includes(u);
 export const done = (p: Profile, id: string) => (p.completed[id] ?? 0) > 0;
 
@@ -234,7 +266,7 @@ export function locked(p: Profile): string[] {
 /** Why an item cannot be bought yet, or null. */
 export function blockReason(p: Profile, it: Item): string | null {
   if (p.owned.includes(it.id)) return null;
-  if (rank(p) < it.rank) return `Needs rank: ${['Recruit', 'Patroller', 'Senior patroller', 'Lead patroller', 'Chief of patrol'][it.rank]}`;
+  if (rank(p) < it.rank) return `Needs rank: ${RANKS[it.rank].name}`;
   if (it.needs && !hasUpgrade(p, it.needs)) return `Needs the ${upgradeDef(it.needs).name.toLowerCase()}`;
   if (p.funds < it.cost) return 'Not enough funds';
   return null;
@@ -259,7 +291,7 @@ export function equip(p: Profile, id: string): boolean {
 export function upgradeBlock(p: Profile, id: UpgradeId): string | null {
   const u = upgradeDef(id);
   if (hasUpgrade(p, id)) return 'Built';
-  if (rank(p) < u.rank) return `Needs rank: ${['Recruit', 'Patroller', 'Senior patroller', 'Lead patroller', 'Chief of patrol'][u.rank]}`;
+  if (rank(p) < u.rank) return `Needs rank: ${RANKS[u.rank].name}`;
   if (p.funds < u.cost) return 'Not enough funds';
   return null;
 }
@@ -313,7 +345,9 @@ export function complete(p: Profile, id: string, control?: ControlResult): { fun
   const before = rank(p);
   const grade = def.graded && control ? gradeControl(control) : undefined;
   const pay = grade ? { funds: grade.funds, rep: grade.rep } : def.reward;
-  p.completed[id] = (p.completed[id] ?? 0) + 1;
+  // a radio call counts by its kind (its id is a one-off)
+  const key = id.startsWith('call:') ? `call:${id.split(':')[1]}` : id;
+  p.completed[key] = (p.completed[key] ?? 0) + 1;
   p.funds += pay.funds;
   p.rep += pay.rep;
   if (def.dynamic) p.events = p.events.filter((e) => e !== id);

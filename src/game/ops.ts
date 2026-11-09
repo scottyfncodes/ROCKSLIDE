@@ -59,6 +59,8 @@ export interface OpsHost {
   danger(): number;
   minute(): number;
   save(): void;
+  /** the resort safety rating moves */
+  safety(delta: number, why: string): void;
 }
 
 export type AimGun = 'howitzer' | 'avalauncher';
@@ -90,6 +92,8 @@ export class Ops {
   handCharge: { zoneId: string; x: number; z: number; fuse: number; safe: boolean } | null = null;
   slides: LiveSlide[] = [];
   burial: Burial | null = null;
+  /** burials started (a rescue step waits for one, then for everyone to be out) */
+  burials = 0;
   /** where the burial's debris lies */
   debris: { x: number; z: number; r: number } | null = null;
   /** caught in a slide: the struggle to stay on top */
@@ -97,6 +101,8 @@ export class Ops {
   buried = false;
   /** Koda on a debris search */
   search: { target: Victim | null; wander: { x: number; z: number } | null; work: number; barkT: number } | null = null;
+  /** gear and rank: transceiver range multiplier, shovel speed, an airbag, the heaviest charge allowed */
+  gear = { range: 1, shovel: 1, airbag: false, maxCharge: 3, howitzer: true };
   /** the last result, for the debrief */
   lastScore: RescueScore | null = null;
   /** the shot that is being watched (the camera goes there) */
@@ -322,7 +328,7 @@ export class Ops {
 
   cycleCharge() {
     if (!this.aim) return;
-    this.aim.charge = (this.aim.charge % 3) + 1;
+    this.aim.charge = (this.aim.charge % this.gear.maxCharge) + 1;
     this.h.sfx.click();
   }
 
@@ -424,7 +430,7 @@ export class Ops {
     this.lastStroke = now;
     this.burial.strokes++;
     if (gap >= 0.15 && gap <= 0.45) this.burial.steadyStrokes++;
-    shovel(v, gap, shovelK);
+    shovel(v, gap, shovelK * this.gear.shovel);
     this.h.sfx.work('dig');
     const y = this.h.terrain.height(v.x, v.z);
     this.h.fx.puff(v.x + (Math.random() - 0.5), y + 0.6, v.z + (Math.random() - 0.5), (Math.random() - 0.5) * 3, 2.5, (Math.random() - 0.5) * 3);
@@ -442,6 +448,7 @@ export class Ops {
   /** Start a burial right here (the rescue drill, and the QA stages). */
   drill(x: number, z: number, count = 2, seed = this.h.day() * 13 + 1) {
     this.burial = bury(x, z, 22, count, seed, 0.5);
+    this.burials++;
     // the drill field is a real debris pile: set blocks of snow, settled
     const pile = new Slide(this.h.terrain, x, z, 20, 46, seed);
     const rng = mulberry32(seed + 3);
@@ -585,6 +592,7 @@ export class Ops {
     const s = this.day.zones.find((q) => q.id === z.id)!;
     const sl = this.release(z, z.x, z.z, 'full', true, near ? 2.2 : 0);
     recordNatural(this.day, z.id);
+    if (this.day.opened) h.safety(-8, 'a natural slide with the runs open');
     // with the runs open, guests are on the slope below it
     sl.buries = this.day.opened ? 1 + (s.load > 0.75 ? 1 : 0) : 0;
     if (near) {
@@ -596,6 +604,17 @@ export class Ops {
       h.radio('Snow safety', `${z.name} is releasing on its own! Cut to the side, out of the path!`, 4);
       h.kick(0.3);
     } else h.radio('Snow safety', `Natural release on ${z.name}.${sl.buries ? ' People were on the slope below.' : ''}`, 4.5);
+  }
+
+  /** A slide set off by someone on the slope (poachers): it runs now and buries them. */
+  triggered(z: Zone, people: number) {
+    const sl = this.release(z, z.x, z.z, 'full', true, 1.2);
+    sl.buries = people;
+    const s = this.day.zones.find((q) => q.id === z.id)!;
+    s.done = true;
+    s.load = 0.05;
+    this.h.sfx.warning();
+    this.h.radio('Top station', `They have set off ${z.name}! Both of them went with it!`, 4.5);
   }
 
   /** Let a zone go: a slide of a size for the result, with or without a warning beat first. */
@@ -628,6 +647,8 @@ export class Ops {
     const out = shotOutcome(this.day, zoneId, method, charge, s.shots);
     const pts = recordShot(this.day, zoneId, method, out, safe);
     if (out !== 'none') this.release(zz, zz.x, zz.z, out, false, 0.4);
+    if (!safe) h.safety(-6, 'fired unsafe');
+    else if (out === 'full') h.safety(1, 'a zone controlled');
     h.pop(out === 'full' ? 'Full release' : out === 'sluff' ? 'Small sluff' : 'No result', `${zz.name} · ${pts > 0 ? '+' : ''}${pts}${safe ? '' : ' · unsafe'}`, out === 'full' ? 'clean' : out === 'sluff' ? 'trick' : 'bad', 2.4);
     h.radio('Snow safety', out === 'full' ? `${zz.name} ran full track. Good shot.` : out === 'sluff' ? `${zz.name}: a small sluff. Some load left.` : `${zz.name}: no result.${s.load >= 0.45 ? ' Still loaded: try a heavier charge.' : ' Looks stable.'}`, 4);
     h.addFunds(Math.max(0, Math.round(pts / 6)), 0);
@@ -680,7 +701,8 @@ export class Ops {
     if (this.struggle) {
       const st = this.struggle;
       st.t += realDt;
-      st.air = Math.max(0, Math.min(1, st.air - realDt * 0.42 + (input.mash ? 0.11 : 0)));
+      // an airbag keeps you near the surface: the snow pulls you down half as fast
+      st.air = Math.max(0, Math.min(1, st.air - realDt * (this.gear.airbag ? 0.21 : 0.42) + (input.mash ? 0.11 : 0)));
       const f = st.slide.slide.front();
       h.carry(p.x + (f.x - p.x) * Math.min(1, dt * 1.5), p.z + (f.z - p.z) * Math.min(1, dt * 1.5));
       if (st.t > 3.2 || st.slide.slide.done) {
@@ -709,6 +731,7 @@ export class Ops {
     const r = ls.slide.result();
     if (ls.buries > 0 && !this.burial) {
       this.burial = bury(r.cx, r.cz, Math.max(10, r.r), ls.buries, this.day.seed + ls.zoneId.charCodeAt(1));
+      this.burials++;
       this.debris = { x: r.cx, z: r.cz, r: Math.max(12, r.r) };
       this.clearPoles();
       this.h.radio('Dispatch', `${ls.buries === 1 ? 'One person is' : `${ls.buries} people are`} missing in the debris of ${zone(ls.zoneId).name}. Transceiver search, and send Koda!`, 5);
@@ -724,6 +747,7 @@ export class Ops {
     const k = this.h.bond();
     this.h.setBond(addBond(k, BOND.rescue).bond);
     this.h.addFunds(Math.round(sc.total / 8), Math.round(sc.total / 20));
+    this.h.safety(sc.stars >= 2 ? sc.stars * 2 : -4, sc.stars >= 2 ? 'a fast rescue' : 'a slow rescue');
     this.h.radio('Dispatch', `Everyone is out. ${'★'.repeat(sc.stars)}${'☆'.repeat(3 - sc.stars)} rescue.`, 4);
     this.burial = null;
     this.debris = null;
@@ -887,7 +911,7 @@ export class Ops {
   beacon(): { stage: string; distance: number; bearing: number | null; odds: number; minutes: number; left: number } | null {
     if (!this.burial) return null;
     const p = this.h.pos();
-    const r = readBeacon(p.x, p.z, this.burial.victims);
+    const r = readBeacon(p.x, p.z, this.burial.victims, this.gear.range);
     return { stage: r.stage, distance: r.distance, bearing: r.bearing, odds: survival(this.burial.minutes), minutes: this.burial.minutes, left: this.burial.victims.filter((v) => !v.out).length };
   }
 

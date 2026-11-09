@@ -24,6 +24,10 @@ export interface MissionRun {
   time: number;
   /** Kessel Bowl's loaded slopes for this run (repeat bowl work; absent on the story missions) */
   loaded?: string[];
+  /** a toboggan haul: how many times it went over */
+  dumps?: number;
+  /** a hoist: seconds of steady hover so far */
+  hoverT?: number;
 }
 
 export interface Snapshot {
@@ -35,6 +39,10 @@ export interface Snapshot {
   heliYaw: number;
   /** has the avalanche settled (watch step) */
   avalancheDone: boolean;
+  /** nobody left buried (rescue step) */
+  rescueClear?: boolean;
+  /** a burial has started since the step began (rescue step) */
+  rescueStarted?: boolean;
 }
 
 export interface Interactable {
@@ -127,6 +135,18 @@ export function tickRun(r: MissionRun, snap: Snapshot, dt: number): RunEvent[] {
       break;
     case 'watch':
       if (snap.avalancheDone) advance(r, out);
+      break;
+    case 'tow':
+      if (snap.vehicle === 'skis' && near(s.at, 12)) advance(r, out);
+      break;
+    case 'hover': {
+      const steady = snap.vehicle === 'heli' && !snap.heliLanded && near(s.at, 16) && snap.heliAgl >= 8 && snap.heliAgl <= 30;
+      r.hoverT = steady ? (r.hoverT ?? 0) + dt : Math.max(0, (r.hoverT ?? 0) - dt * 0.5);
+      if (r.hoverT >= s.secs) advance(r, out);
+      break;
+    }
+    case 'rescue':
+      if (snap.rescueStarted && snap.rescueClear) advance(r, out);
       break;
     default:
       break;
@@ -229,6 +249,8 @@ export function navTarget(r: MissionRun, snap: { x: number; z: number }): Target
   switch (s.kind) {
     case 'goto':
     case 'land':
+    case 'tow':
+    case 'hover':
       return s.at;
     case 'interact':
       return s.at;

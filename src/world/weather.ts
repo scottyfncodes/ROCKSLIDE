@@ -93,6 +93,8 @@ export interface WeatherState {
   freshSnow: number;
   /** days since Kessel Bowl was last released, -1 never */
   controlled: boolean;
+  /** a patrol day's weather (null: the forecast as it comes) */
+  kind?: 'powder' | 'windslab' | 'bluebird' | 'whiteout' | 'night' | null;
 }
 
 export const newWeather = (): WeatherState => ({ day: 1, minute: 8 * 60, freshSnow: 38, controlled: false });
@@ -123,19 +125,40 @@ export function conditions(w: WeatherState): Conditions {
   const sunEl = Math.sin(clamp(dayT, -0.15, 1.15) * Math.PI) * 0.62;
   const sunAz = lerp(-1.9, 1.9, clamp(dayT, 0, 1)) + Math.PI;
   const light = smoothstep(-0.12, 0.18, sunEl);
-  const sky = blend > 0.5 && next ? next.sky : now.sky;
+  let sky = blend > 0.5 && next ? next.sky : now.sky;
+  // a patrol day's weather overrides the forecast: clear and calm, a whiteout, snowing powder, the wind
+  let k = { snow, cloud, fog, wind };
+  switch (w.kind) {
+    case 'bluebird':
+      k = { snow: 0, cloud: 0.03, fog: 0, wind: 0.1 };
+      sky = 'clear';
+      break;
+    case 'whiteout':
+      // fog past 1: the rig closes the view in to under a hundred metres
+      k = { snow: 0.55, cloud: 1, fog: 1.5, wind: 0.6 };
+      sky = 'snow';
+      break;
+    case 'powder':
+      k = { snow: Math.max(snow, 0.45), cloud: Math.max(cloud, 0.75), fog: Math.max(fog, 0.35), wind: Math.min(wind, 0.35) };
+      sky = sky === 'storm' ? 'snow' : sky === 'clear' ? 'cloud' : sky;
+      break;
+    case 'windslab':
+      k = { snow: Math.min(snow, 0.2), cloud, fog: Math.min(fog, 0.3), wind: Math.max(wind, 0.75) };
+      break;
+  }
   return {
-    snow,
-    cloud,
-    fog,
-    wind,
+    snow: k.snow,
+    cloud: k.cloud,
+    fog: k.fog,
+    wind: k.wind,
     light,
     sunEl,
     sunAz,
     sky,
     temp: Math.round(lerp(now.temp, next ? next.temp : now.temp, blend)),
     windKmh: Math.round(lerp(now.wind, next ? next.wind : now.wind, blend)),
-    grounded: snow > 0.85 && wind > 0.8,
+    // a storm grounds the helicopter, and so does a whiteout
+    grounded: (k.snow > 0.85 && k.wind > 0.8) || w.kind === 'whiteout',
   };
 }
 
@@ -171,6 +194,7 @@ export function nextDay(w: WeatherState): void {
   // the snowpack settles overnight a little, and the night's snow lands on it
   w.freshSnow = Math.min(120, Math.max(0, w.freshSnow * 0.85) + overnightSnow(w.day));
   w.controlled = false;
+  w.kind = null;
 }
 
 /**
@@ -180,6 +204,8 @@ export function nextDay(w: WeatherState): void {
 export function avalancheDanger(w: WeatherState, c: Conditions): 1 | 2 | 3 | 4 | 5 {
   const load = w.freshSnow / 10 + c.wind * 2;
   let lvl = load < 1.5 ? 1 : load < 3 ? 2 : load < 5 ? 3 : load < 8 ? 4 : 5;
+  if (w.kind === 'powder' || w.kind === 'windslab') lvl = Math.min(5, lvl + 1);
+  if (w.kind === 'bluebird') lvl = Math.max(1, lvl - 1);
   if (w.controlled) lvl = Math.min(lvl, 2);
   return lvl as 1 | 2 | 3 | 4 | 5;
 }

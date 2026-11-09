@@ -17,6 +17,8 @@ import { getTerrain } from '../src/world/terrain';
 
 const t = getTerrain();
 const solid = buildColliders();
+// ride every track: the backcountry gate stands open (it closes the back track to junior ranks only)
+solid.setEnabled('bcgate', false);
 const grid = new TreeGrid(plantForest(t, 1));
 const DT = 1 / 60;
 

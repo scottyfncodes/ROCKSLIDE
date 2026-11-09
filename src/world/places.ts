@@ -35,6 +35,8 @@ export const PADS: Pad[] = [
   { id: 'station', name: 'Grauhorn Weather Station', x: -640, z: -300, r: 20, blend: 30, h: 312 },
   { id: 'cabin', name: 'Fernhut Cabin', x: 760, z: -60, r: 18, blend: 26, h: 268 },
   { id: 'ridge', name: 'Kessel Ridge', x: -215, z: -470, r: 26, blend: 30, h: 402 },
+  // a ledge in the Weisskopf's bowl: only the helicopter gets there (Snow Safety Director)
+  { id: 'helibowl', name: 'Weisskopf Bowl', x: 300, z: -600, r: 11, blend: 22, h: 640 },
 ];
 
 export const pad = (id: string): Pad => PADS.find((p) => p.id === id)!;
@@ -244,17 +246,20 @@ export const SIGNPOSTS: { x: number; z: number; to: District['id'][] }[] = [
  * Marked landing zones for the helicopter (orange-flagged rings on the snow): the patrol's own pad, and
  * the flats it uses on the ridges and at the huts.
  */
-export const LZS: { id: string; name: string; x: number; z: number; r: number }[] = [
+export const LZS: { id: string; name: string; x: number; z: number; r: number; rank?: number }[] = [
   { id: 'ridge', name: 'Kessel Ridge LZ', x: -215, z: -470, r: 14 },
   { id: 'lifttop', name: 'Top Station LZ', x: 572, z: -336, r: 12 },
   { id: 'station', name: 'Grauhorn LZ', x: -628, z: -292, r: 12 },
   { id: 'cabin', name: 'Fernhut LZ', x: 770, z: -52, r: 11 },
+  { id: 'helibowl', name: 'Weisskopf Bowl LZ', x: 300, z: -600, r: 10, rank: 4 },
 ];
 
 /** Patrol HQ's avalanche control bunker (cannon storage) and the vehicle yard's fuel island. */
 export const BUNKER = { x: 422, z: 334, rot: -Math.PI / 2 };
 export const FUEL = { x: 428, z: 286, rot: -Math.PI / 2 };
 /** The terrain park's rope tow: from the plaza's west edge to the top of the park. */
+/** The backcountry gate: a rope and a sign across the Tannberg Back Track behind the top station. */
+export const BC_GATE = { x: 616, z: -327 };
 export const ROPE_TOW = { from: { x: 432, z: 214 }, to: { x: 424, z: 116 } };
 
 /** Light poles down both sides of Main Street, every 24 m. */
