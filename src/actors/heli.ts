@@ -26,6 +26,8 @@ export interface Heli {
   running: boolean;
   /** hard ground contact this step (m/s) */
   bump: number;
+  /** how fast the nose is swinging round (rad/s), for the bank */
+  yawRate?: number;
 }
 
 export interface HeliProfile {
@@ -35,7 +37,8 @@ export interface HeliProfile {
   ceiling: number;
 }
 
-export const HELI: HeliProfile = { accel: 8, top: 32, climb: 7, ceiling: 380 };
+/** a touch less eager than it was (8): it carries its momentum and leans into the change */
+export const HELI: HeliProfile = { accel: 6.5, top: 32, climb: 7, ceiling: 380 };
 
 export const SKID = 0.15;
 
@@ -134,8 +137,10 @@ export function stepHeli(h: Heli, p: HeliProfile, mx: number, mz: number, lift: 
     let d = want - h.yaw;
     while (d > Math.PI) d -= Math.PI * 2;
     while (d < -Math.PI) d += Math.PI * 2;
-    h.yaw += d * Math.min(1, dt * 1.8);
-  }
+    const turn = d * Math.min(1, dt * 1.8);
+    h.yaw += turn;
+    h.yawRate = turn / Math.max(dt, 1e-3);
+  } else h.yawRate = 0;
   // body attitude: nose down to accelerate, roll into turns
   const fx = -Math.sin(h.yaw);
   const fz = -Math.cos(h.yaw);
@@ -143,7 +148,9 @@ export function stepHeli(h: Heli, p: HeliProfile, mx: number, mz: number, lift: 
   const accR = (ax * -fz + az * fx) / Math.max(dt, 1e-3);
   const fwdSp = h.vx * fx + h.vz * fz;
   const wantPitch = -Math.max(-0.35, Math.min(0.35, fwdSp * 0.008 + accF * 0.03));
-  const wantRoll = Math.max(-0.45, Math.min(0.45, accR * 0.04));
-  h.pitch += (wantPitch - h.pitch) * Math.min(1, dt * 3);
-  h.roll += (wantRoll - h.roll) * Math.min(1, dt * 3);
+  // banking: into a sideways shove, and into the turn itself (the nose swinging round at speed)
+  const turnRate = h.yawRate ?? 0;
+  const wantRoll = Math.max(-0.5, Math.min(0.5, accR * 0.05 - turnRate * Math.min(1, fwdSp / 14) * 0.35));
+  h.pitch += (wantPitch - h.pitch) * Math.min(1, dt * 2.4);
+  h.roll += (wantRoll - h.roll) * Math.min(1, dt * 2.4);
 }

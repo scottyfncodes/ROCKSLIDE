@@ -32,7 +32,7 @@ for (const [label, dev] of [
   await page.click('[data-a=new]');
   await page.waitForTimeout(1500);
   // outdoors, then the Map chip, as a thumb would
-  await page.evaluate(() => window.patrol.teleport(10, 236, 0.3));
+  await page.evaluate(() => window.patrol.teleport(395, 286, 0.3));
   await page.waitForTimeout(400);
   await page.locator('button', { hasText: 'Map' }).first().tap();
   await page.waitForSelector('.mappanel .mapview');
@@ -271,7 +271,7 @@ for (const [label, dev] of [
   const after2 = (await page.evaluate(() => window.patrol.state())).pos;
   check('no stray movement in the game after the map', Math.hypot(after2.x - before2.x, after2.z - before2.z) < 0.05 && st.mode === 'foot');
   // the mission board's map pinches too
-  await page.evaluate(() => window.patrol.teleport(-28, 247.8, 0));
+  await page.evaluate(() => window.patrol.teleport(357, 297.8, 0));
   await page.waitForTimeout(500);
   await page.keyboard.down('KeyE');
   await page.waitForTimeout(80);

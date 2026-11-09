@@ -140,7 +140,7 @@ export function rankOf(rep: number): number {
 /** Old patrol badges hidden around the valley (enamel pins from the station's first fifty years). */
 export const BADGES: { id: string; x: number; z: number; name: string }[] = [
   { id: 'b-lake', x: -500, z: 560, name: 'Mirror Lake, 1962' },
-  { id: 'b-chapel', x: 452, z: 572, name: 'Hollin Chapel bell' },
+  { id: 'b-chapel', x: 560, z: 398, name: 'Hollin Chapel bell' },
   { id: 'b-lift', x: 612, z: -352, name: 'Tannberg first chair' },
   { id: 'b-cabin', x: 778, z: -72, name: 'Fernhut stove' },
   { id: 'b-station', x: -668, z: -318, name: 'Grauhorn barometer' },

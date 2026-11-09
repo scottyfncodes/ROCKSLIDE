@@ -8,6 +8,7 @@ import { TitleScreen } from '../ui/title';
 import { RoadNet, trimWay, wayTo, type Way } from '../world/routing';
 import { cleanLanding, forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlider, type Glider } from '../actors/glide';
 import { HELI, heliAgl, newHeli, stepHeli, type Heli } from '../actors/heli';
+import { newTricks, stepTricks, TRICK, type TrickState } from '../actors/tricks';
 import { newHusky, pet, startTrack, stepHusky, type Husky, type Scent } from '../actors/husky';
 import { newWalker, stepWalker, type Walker } from '../actors/walker';
 import { Snowpack, simulateRelease, STORY_LOADED } from '../missions/avalanche';
@@ -33,7 +34,13 @@ import { findPanes, Lamplight } from '../render/lamplight';
 import { buildTerrain, snowUniforms } from '../render/terrainView';
 import { drawTopo, topoJob } from '../render/topoMap';
 import { buildOps, opsObstacles } from '../render/opsView';
-import { PEAKS } from '../world/places';
+import { districtAt, LIFT, LZS, PEAKS, ROPE_TOW, VILLAGE } from '../world/places';
+
+/** Pepper's windowsill at the Kettle, once she is home */
+const KETTLE_SILL = (() => {
+  const k = VILLAGE.find((v) => v.kind === 'lodge')!;
+  return { x: k.x - 3.7, z: k.z - 2.5 };
+})();
 import { WorldView } from '../render/worldView';
 import { KitView, type Kit } from '../render/kitView';
 import { OPS_IDS, PROP_IDS, type PatrolModels } from '../render/patrolModels';
@@ -153,6 +160,15 @@ export class Game {
   /** the ?stats performance readout (off unless asked for) */
   private stats: StatsOverlay | null = null;
   private forest!: ForestView;
+  /** tricks and the style meter on skis */
+  private tricks: TrickState = newTricks();
+  /** riding the chairlift or the rope tow: along a line, then off at the top on skis */
+  private ride: { kind: 'chair' | 'tow'; ax: number; az: number; bx: number; bz: number; t: number; dur: number; endYaw: number } | null = null;
+  /** the ground's last vertical speed under you, for the shake on rough snow */
+  private lastVy = 0;
+  private fov = 0;
+  private miniT = 0;
+  private lastDistrict = '';
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -329,7 +345,7 @@ export class Game {
       this.props.pepper.visible = id === 'pepper' || done(this.p, 'pepper');
       if (done(this.p, 'pepper') && id !== 'pepper') {
         // home on the Kettle's windowsill
-        this.props.pepper.position.set(333.5, this.terrain.height(334, 462) + 1.1, 461.2);
+        this.props.pepper.position.set(KETTLE_SILL.x, this.terrain.height(KETTLE_SILL.x, KETTLE_SILL.z) + 1.1, KETTLE_SILL.z);
       } else this.props.pepper.position.set(pepper.x, this.terrain.height(pepper.x, pepper.z) + 0.05, pepper.z);
     }
     // the crate
@@ -507,6 +523,105 @@ export class Game {
     this.audio.click();
   }
 
+  private sledLeanIn = 0;
+  private readonly qa = new THREE.Quaternion();
+  private readonly qb = new THREE.Quaternion();
+  private readonly tmpAxis = new THREE.Vector3();
+
+  /** What is under the helicopter: a marked LZ, flat enough snow, or too steep to set down on. */
+  private landingBelow(): 'lz' | 'flat' | 'steep' {
+    const h = this.heli;
+    if (LZS.some((l) => Math.hypot(h.x - l.x, h.z - l.z) < l.r)) return 'lz';
+    return this.terrain.slope(h.x, h.z) < 0.21 ? 'flat' : 'steep';
+  }
+
+  /** A trick event on skis: callouts, sound, haptics, the landing's push or tumble. */
+  private onTrick(ev: ReturnType<typeof stepTricks>[number], s: Glider) {
+    const v = this.p.settings.vibrate;
+    if (ev.type === 'start') {
+      this.audio.whoosh();
+      buzz(v, BUZZ.air);
+    } else if (ev.type === 'trick' && ev.trick) {
+      const n = this.tricks.tricks.length;
+      this.hud.trickPop(ev.trick.name, n > 1 ? `Combo x${n}` : '', 'trick', 0.9);
+    } else if (ev.type === 'land') {
+      if (ev.landing === 'clean') {
+        if (ev.points) {
+          const fx = -Math.sin(s.yaw);
+          const fz = -Math.cos(s.yaw);
+          s.vx += fx * (ev.boost ?? 0);
+          s.vz += fz * (ev.boost ?? 0);
+          this.hud.trickPop('Stomped it', `+${ev.points}${ev.combo! > 1 ? ` · combo x${ev.combo}` : ''} · boost`, 'clean', 1.6);
+          this.audio.stomp(ev.combo ?? 1);
+          buzz(v, BUZZ.trick);
+          this.p.trickBest = Math.max(this.p.trickBest, ev.points);
+          this.p.trickPoints += ev.points;
+        } else if (s.flew >= 0.8) this.cleanLanding(s);
+      } else if (ev.landing === 'stumble') {
+        s.vx *= 0.6;
+        s.vz *= 0.6;
+        this.hud.trickPop('Stumble', `${Math.round(ev.off ?? 0)}° off`, 'bad', 1.1);
+        this.cam.kick(0.35);
+        buzz(v, BUZZ.landing);
+      } else {
+        this.hud.trickPop('Wipeout', 'Up you get', 'bad', 1.2);
+        this.audio.crash();
+        this.cam.kick(0.9);
+        buzz(v, BUZZ.crash);
+        this.particles.powder(s.x, s.y + 0.5, s.z, 22, 5, 3.5, s.vx * 0.3, s.vz * 0.3, 1.3, FX_KIND.powder);
+      }
+    } else if (ev.type === 'styleFull') {
+      this.hud.trickPop('Style x2', 'Double points, a little extra speed', 'hot', 1.8);
+      this.audio.reward();
+      buzz(v, BUZZ.trick);
+    }
+  }
+
+  /** Start riding the chairlift or the rope tow (on skis: they go on if you are on foot). */
+  private startRide(kind: 'chair' | 'tow') {
+    if (this.mode === 'foot') this.toggleSkis(true);
+    if (this.mode !== 'skis') return;
+    const a = kind === 'chair' ? { x: LIFT.from[0], z: LIFT.from[1] } : ROPE_TOW.from;
+    const b = kind === 'chair' ? { x: LIFT.to[0], z: LIFT.to[1] } : ROPE_TOW.to;
+    const len = Math.hypot(b.x - a.x, b.z - a.z);
+    // fast-forwarded: the chair takes 9 s, the tow 5
+    this.ride = { kind, ax: a.x, az: a.z, bx: b.x, bz: b.z, t: 0, dur: kind === 'chair' ? 9 : 5, endYaw: Math.PI };
+    void len;
+    this.audio.click();
+    this.hud.toast(kind === 'chair' ? 'Chairlift to the top station' : 'Rope tow to the top of the park', '', 2);
+    this.tricks.recoverT = 0;
+  }
+
+  private stepRide(dt: number) {
+    const r = this.ride!;
+    const s = this.skis;
+    r.t += dt;
+    const k = Math.min(1, r.t / r.dur);
+    const e = k * k * (3 - 2 * k);
+    s.x = r.ax + (r.bx - r.ax) * e;
+    s.z = r.az + (r.bz - r.az) * e;
+    const g = this.terrain.height(s.x, s.z);
+    // on the chair, up on the cable; on the tow, on the snow
+    s.y = r.kind === 'chair' ? g + Math.min(7, 2 + Math.sin(Math.PI * k) * 9) : g;
+    s.yaw = Math.atan2(-(r.bx - r.ax), -(r.bz - r.az));
+    s.vx = s.vy = s.vz = 0;
+    s.airborne = false;
+    if (k >= 1 || this.input.pressed('btn:action') && r.t > 1.5) {
+      // off at the top, a few metres on, facing down
+      const top = r.kind === 'chair' ? { x: 594, z: -322 } : { x: r.bx - 6, z: r.bz + 4 };
+      s.x = top.x;
+      s.z = top.z;
+      s.y = this.terrain.height(top.x, top.z);
+      s.yaw = r.endYaw;
+      this.ride = null;
+      this.cam.snapBehind(s.yaw);
+      // Koda was waiting at the bottom: he catches up
+      this.dog.x = s.x + 2;
+      this.dog.z = s.z + 1.5;
+      this.audio.click();
+    }
+  }
+
   private gradeDim = false;
   /** the lens grade closes in at night and in heavy weather */
   private grade() {
@@ -677,7 +792,14 @@ export class Game {
     // camera
     this.cam.portrait = THREE.MathUtils.clamp((1 - this.rig.camera.aspect) / 0.5, 0, 1);
     const pos = this.focusPos();
-    if (this.watching > 0 && !this.watchSkip) {
+    if (this.qaView) {
+      // a fixed overview for the evidence shots (QA only)
+      this.cam.setMode('watch');
+      this.cam.yaw = this.qaView.yaw;
+      this.cam.pitch = this.qaView.pitch;
+      this.cam.hold = this.qaView.dist;
+      this.cam.update(dt, this.tmp2.copy(this.qaView.at), this.qaView.yaw, 0);
+    } else if (this.watching > 0 && !this.watchSkip) {
       const t = this.avalancheFocus();
       this.cam.setMode('watch');
       // from the side, so you see it run down the slope
@@ -762,6 +884,7 @@ export class Game {
   }
 
   private moveActors(dt: number) {
+    if (this.qaFreeze) return;
     const mv = this.input.move;
     const f = this.cam.forward();
     // stick to world: up is camera-forward
@@ -780,7 +903,16 @@ export class Game {
       const trackStat = item(e.sledTrack).stat ?? 1;
       // the deep lug track floats and bites in powder
       const prof = { ...SLED, powderDrag: SLED.powderDrag * trackStat, powderBite: 1 / Math.sqrt(trackStat) };
+      // sidehilling: across a slope, leaning into the hill (steering uphill) holds the line; otherwise the
+      // sled slides down the fall line
+      const nrm = this.terrain.normal(s.x, s.z);
+      const across = nrm.x * Math.cos(s.yaw) + nrm.z * -Math.sin(s.yaw);
+      const leanIn = Math.abs(across) > 0.12 && mv.x * across < -0.25;
+      if (leanIn) prof.grip = SLED.grip * 1.9;
+      this.sledLeanIn = leanIn ? -Math.sign(across) : 0;
       stepGlider(s, prof, free ? mv.x : 0, free ? mv.y : 0, dt, this.terrain, this.solid, this.grid, boost, this.p.settings.sledAssist);
+      if (s.landed > 1) this.sledMesh.land(s.landed);
+      else if (s.bump > 2) this.sledMesh.land(s.bump * 0.5);
       // climb assist: held on a slope too steep for the track while you are on the throttle: say why
       this.heldT = s.held && mv.y > 0.2 ? this.heldT + dt : 0;
       if (this.heldT > 1.2 && this.time - this.heldHintAt > 10) {
@@ -803,20 +935,36 @@ export class Game {
         const n = Math.round((sp / 8 + s.slip * 0.6) * powder * (this.rig.quality.tier === 'low' ? 1 : 2));
         if (n > 0) this.particles.powder(s.x - fx * 1.9, s.y + 0.4, s.z - fz * 1.9, n, 2.5 + s.slip, 2 + sp * 0.12, -fx * sp * 0.25 + s.vx * 0.3, -fz * sp * 0.25 + s.vz * 0.3, 0.9);
       }
+      // the track digging in on a climb: a rooster tail of snow thrown up behind
+      const climbing = -(nrm.x * fx + nrm.z * fz) > 0.12;
+      if (!s.airborne && climbing && mv.y > 0.5 && s.power > 0.5) {
+        const n = Math.round((this.rig.quality.tier === 'low' ? 1 : 2) * (s.surface === 'powder' ? 2 : 1));
+        this.particles.powder(s.x - fx * 2, s.y + 0.3, s.z - fz * 2, n, 1.2, 4 + sp * 0.15, -fx * 4, -fz * 4, 1.1, FX_KIND.powder);
+      }
       if (s.landed > 3) {
         this.particles.powder(s.x, s.y + 0.3, s.z, 14, 6, 3, s.vx * 0.3, s.vz * 0.3, 1.4, FX_KIND.powder);
         this.audio.landing(s.landed);
         this.cam.kick(Math.min(1, s.landed / 10));
         if (s.landed > 6) buzz(this.p.settings.vibrate, BUZZ.landing);
       }
-      this.cleanLanding(s);
+      // a clean landing on the sled: a shove of speed out of it
+      if (cleanLanding(s) > 0) {
+        s.vx += fx * 3;
+        s.vz += fz * 3;
+        this.hud.trickPop('Clean landing', `${s.flew.toFixed(1)} s of air · boost`, 'clean', 1.4);
+        this.audio.stomp(1);
+        buzz(this.p.settings.vibrate, BUZZ.trick);
+      }
       if (s.bump > 3) {
         this.audio.bump(s.bump);
         this.cam.kick(Math.min(1, s.bump / 10));
         this.particles.powder(s.x, s.y + 1, s.z, 10, 4, 2, 0, 0, 1, FX_KIND.powder);
       }
+    } else if (this.mode === 'skis' && this.ride) {
+      this.stepRide(dt);
     } else if (this.mode === 'skis') {
       const s = this.skis;
+      const tr = this.tricks;
       const st = item(e.skis).stat ?? 1;
       const prof = { ...SKIS, turn: SKIS.turn * st, climb: item(e.skins).stat ?? 0, engine: 0 };
       if (prof.climb > 0) {
@@ -824,29 +972,57 @@ export class Game {
         prof.push = 2.6;
         prof.pushTop = 2.4;
       }
-      stepGlider(s, prof, free ? mv.x : 0, free ? mv.y : 0, dt, this.terrain, this.solid, this.grid, 1);
+      // a wipeout takes the stick away for a moment; a stumble only dulls it
+      const ctl = tr.recoverT <= 0 ? 1 : tr.last === 'wipeout' ? 0 : 0.4;
+      stepGlider(s, prof, free ? mv.x * ctl : 0, free ? mv.y * ctl : 0, dt, this.terrain, this.solid, this.grid, 1);
       const sp = glideSpeed(s);
       const fx = -Math.sin(s.yaw);
       const fz = -Math.cos(s.yaw);
+      // tricks in the air; clean fast lines on the snow feed the style meter
+      const fast = !s.airborne && sp > 11 && s.slip < 2.5 && s.bump < 1;
+      for (const ev of stepTricks(tr, { held: free && this.input.held('trick'), sx: mv.x, sy: mv.y }, s.airborne, dt, fast)) this.onTrick(ev, s);
+      // full style: a little extra glide
+      if (tr.hotT > 0 && !s.airborne && sp > 4) {
+        s.vx += fx * TRICK.hotPush * dt;
+        s.vz += fz * TRICK.hotPush * dt;
+      }
+      // a wipeout skids you to a stop in a spray of snow
+      if (tr.recoverT > 0 && tr.last === 'wipeout' && !s.airborne) {
+        const k = Math.exp(-dt * 2.5);
+        s.vx *= k;
+        s.vz *= k;
+        if (sp > 2 && Math.random() < dt * 20) this.particles.powder(s.x, s.y + 0.4, s.z, 2, 1.6, 2, s.vx * 0.3, s.vz * 0.3, 0.7, FX_KIND.powder);
+      }
       if (!s.airborne && sp > 0.6) {
         this.tracks.add('ski-l', s.x, s.z, fx, fz, 0.06, -0.16, 0.5);
         this.tracks.add('ski-r', s.x, s.z, fx, fz, 0.06, 0.16, 0.5);
+      } else if (s.airborne) {
+        this.tracks.lift('ski-l');
+        this.tracks.lift('ski-r');
       }
+      // spray: off the edges in a carve, more the harder and faster you turn
+      const carve = Math.min(1, Math.abs(s.lean) * Math.min(1, sp / 14));
       if (!s.airborne && (s.slip > 1.5 || sp > 9) && s.surface !== 'ice') {
-        const n = Math.round(s.slip * 0.8 + (sp > 9 ? 1 : 0));
+        const n = Math.round(s.slip * 0.8 + (sp > 9 ? 1 : 0) + carve * (this.rig.quality.tier === 'low' ? 2 : 4));
         const side = Math.sign(s.lean) || 1;
-        this.particles.powder(s.x, s.y + 0.2, s.z, n, 1.5, 1.5 + sp * 0.08, (-fz * side * s.slip) * 0.6, (fx * side * s.slip) * 0.6, 0.6);
+        this.particles.powder(s.x, s.y + 0.2, s.z, n, 1.5 + carve, 1.5 + sp * 0.08 + carve, (-fz * side * (s.slip + carve * 4)) * 0.6, (fx * side * (s.slip + carve * 4)) * 0.6, 0.6 + carve * 0.3);
       }
       if (s.landed > 3) {
         this.particles.powder(s.x, s.y + 0.2, s.z, 10, 4, 2.5, 0, 0, 1, FX_KIND.powder);
         this.audio.landing(s.landed);
+        if (s.landed > 6) buzz(this.p.settings.vibrate, BUZZ.landing);
       }
-      this.cleanLanding(s);
       if (s.bump > 3) {
         this.audio.bump(s.bump);
         this.cam.kick(0.5);
         // a knock you can see: snow shaken loose where you hit
         this.particles.powder(s.x, s.y + 0.8, s.z, 8, 3, 1.8, 0, 0, 0.9, FX_KIND.powder);
+      }
+      // rough snow at speed: the ground's vertical speed jumping about shakes the camera a little
+      if (!s.airborne) {
+        const rough = Math.abs(s.vy - this.lastVy);
+        if (rough > 1.1 && sp > 6) this.cam.kick(Math.min(0.28, (rough - 1.1) * 0.07));
+        this.lastVy = s.vy;
       }
     } else if (this.mode === 'heli') {
       const h = this.heli;
@@ -856,15 +1032,31 @@ export class Game {
       const gust = Math.sin(this.time * 0.7) * 0.5 + Math.sin(this.time * 1.9) * 0.3;
       const w = this.cond.wind * (1 + gust * 0.5) * 1.1;
       stepHeli(h, HELI, free ? wx : 0, free ? wz : 0, lift, dt, this.terrain, { x: w, z: w * 0.3 }, this.p.settings.heliAssist);
+      // easy landings: low, slow and gentle over flat snow or a marked LZ, it settles onto the skids
+      const below = this.landingBelow();
+      if (!h.landed && below !== 'steep' && heliAgl(h, this.terrain) < 2.2 && h.vy > -3.2 && Math.hypot(h.vx, h.vz) < 4.5 && lift <= 0) {
+        h.vy = Math.min(h.vy, -1.2);
+        if (heliAgl(h, this.terrain) < 0.45) {
+          h.landed = true;
+          h.vx = h.vy = h.vz = 0;
+          this.audio.landing(2);
+          buzz(this.p.settings.vibrate, BUZZ.landing);
+          if (below === 'lz') this.hud.toast('Down on the LZ', 'good', 1.6);
+        }
+      }
       // rotor wash: snow blown off the ground when low
       const agl = heliAgl(h, this.terrain);
-      if (h.rotor > 0.6 && agl < 14) {
-        const n = Math.round((1 - agl / 14) * (this.rig.quality.tier === 'low' ? 3 : 6));
+      if (h.rotor > 0.6 && agl < 20) {
+        // the wash: a ring of snow blown out from under the rotor, wider and harder the lower you are
+        const low = 1 - agl / 20;
+        const n = Math.round(low * low * (this.rig.quality.tier === 'low' ? 4 : 8));
+        const ring = 2.5 + low * 4;
         for (let i = 0; i < n; i++) {
           const a = Math.random() * Math.PI * 2;
-          const gx = h.x + Math.cos(a) * 3;
-          const gz = h.z + Math.sin(a) * 3;
-          this.particles.emit(gx, this.terrain.height(gx, gz) + 0.3, gz, Math.cos(a) * 9, 1 + Math.random() * 2, Math.sin(a) * 9, { life: 1.2, size: 1.6, grow: 2.5, alpha: 0.55, drag: 1.4, rise: -1 });
+          const gx = h.x + Math.cos(a) * ring;
+          const gz = h.z + Math.sin(a) * ring;
+          const v = 6 + low * 8;
+          this.particles.emit(gx, this.terrain.height(gx, gz) + 0.3, gz, Math.cos(a) * v, 1 + Math.random() * 2.5 * low, Math.sin(a) * v, { life: 1.3, size: 1.6 + low, grow: 2.8, alpha: 0.45 + low * 0.2, drag: 1.4, rise: -1 });
         }
       }
       if (h.bump > 4) {
@@ -1199,6 +1391,12 @@ export class Game {
       if (near(this.heli.x, this.heli.z, 4.5)) out.push({ id: 'fly', label: this.cond.grounded ? 'Grounded' : 'Fly', hold: 0, enabled: !this.cond.grounded, run: () => this.mountHeli() });
     }
     if (this.mode === 'heli' && this.heli.landed && this.heli.rotor < 0.3) out.push({ id: 'off', label: 'Climb out', hold: 0, run: () => this.dismount() });
+    // the chairlift and the park's rope tow, from their bottom stations, on foot or on skis
+    if ((this.mode === 'foot' || this.mode === 'skis') && !this.ride) {
+      if (near(LIFT.from[0], LIFT.from[1], 9)) out.push({ id: 'chair', label: 'Ride the chairlift', hold: 0, run: () => this.startRide('chair') });
+      if (near(ROPE_TOW.from.x, ROPE_TOW.from.z, 7)) out.push({ id: 'tow', label: 'Rope tow', hold: 0, run: () => this.startRide('tow') });
+    }
+    if (this.ride && this.ride.t > 1.5) out.push({ id: 'hop', label: 'Skip to the top', hold: 0, run: () => (this.ride!.t = this.ride!.dur) });
     // the station
     if (this.mode === 'foot') {
       if (near(SPOTS.table.x, SPOTS.table.z, 2.6)) out.push({ id: 'table', label: 'Mission table', hold: 0, run: () => this.openBoard() });
@@ -1386,7 +1584,9 @@ export class Game {
     const pl = this.player;
     const sledY = this.sled.y;
     const n = this.terrain.normal(this.sled.x, this.sled.z);
-    this.sledMesh.sync(this.sled.x, sledY, this.sled.z, this.sled.yaw, n.x, n.y, n.z, this.sled.lean, glideSpeed(this.sled), this.mode === 'sled' ? this.input.move.x : 0, dt);
+    // sidehilling, the sled leans into the hill on top of the turn's own lean
+    const sledLean = THREE.MathUtils.clamp(this.sled.lean + this.sledLeanIn * 0.7, -1.3, 1.3);
+    this.sledMesh.sync(this.sled.x, sledY, this.sled.z, this.sled.yaw, n.x, n.y, n.z, sledLean, glideSpeed(this.sled), this.mode === 'sled' ? this.input.move.x : 0, dt, this.sled.airborne ? this.sled.vy || 0.001 : 0);
     this.sledMesh.setHeadlight(this.rig.night > 0.4 && this.mode === 'sled');
     const hl = this.heli;
     this.heliMesh.sync(hl.x, hl.y, hl.z, hl.yaw, hl.pitch, hl.roll, hl.rotor, this.time, dt, this.mode === 'heli' && this.p.active ? currentStep(this.p.active)?.kind === 'scan' : false);
@@ -1451,9 +1651,35 @@ export class Game {
       pl.backSkis(false);
     } else if (this.mode === 'skis') {
       const s = this.skis;
+      const tr = this.tricks;
       pl.group.position.set(s.x, s.y + 0.08, s.z);
-      pl.group.quaternion.setFromAxisAngle(UP, s.yaw);
-      pl.animate('ski', s.x + s.z, glideSpeed(s), s.lean, dt);
+      // the spin turns you about the vertical, the flip about your own side, both round the hips
+      this.qa.setFromAxisAngle(UP, s.yaw - tr.spin);
+      let roll = 0;
+      if (tr.recoverT > 0 && tr.last === 'wipeout') {
+        // down in the snow on your side, then back up
+        const k = tr.recoverT / TRICK.wipeoutSecs;
+        roll = Math.sin(Math.min(1, k * 1.6) * Math.PI * 0.5) * 1.35;
+      } else if (tr.recoverT > 0) roll = Math.sin(tr.recoverT * 22) * 0.18 * (tr.recoverT / TRICK.stumbleSecs);
+      this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -tr.flip);
+      this.qa.multiply(this.qb);
+      if (roll) this.qa.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(0, 0, 1), roll));
+      pl.group.quaternion.copy(this.qa);
+      if (tr.flip || roll) {
+        // keep the hips where they were: rotate about 1 m up, not about the boots
+        this.tmpAxis.set(0, 1, 0).applyQuaternion(this.qa);
+        pl.group.position.x -= this.tmpAxis.x;
+        pl.group.position.y += 1 - this.tmpAxis.y;
+        pl.group.position.z -= this.tmpAxis.z;
+      }
+      pl.grab += ((tr.grabT > 0 ? 1 : 0) - pl.grab) * Math.min(1, dt * 14);
+      if (pl.grab > 0.01) {
+        // the grab: the whole body tucks forward over the skis
+        pl.group.quaternion.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -0.45 * pl.grab));
+        pl.group.position.y -= 0.15 * pl.grab;
+      }
+      if (this.ride?.kind === 'chair') pl.animate('ride', 0, 0, 0, dt);
+      else pl.animate('ski', s.x + s.z, this.ride ? 0 : glideSpeed(s), s.lean, dt);
     }
     // Nils on the back of the sled
     const r = this.p.active;
@@ -1624,10 +1850,32 @@ export class Game {
     });
     this.hud.setLever(this.mode === 'heli');
     if (this.mode === 'sled') this.hud.setSpeedo(Math.abs(forwardSpeed(this.sled)) * 3.6, SURFACE_LABEL[this.sled.surface]);
-    else if (this.mode === 'skis') this.hud.setSpeedo(glideSpeed(this.skis) * 3.6, SURFACE_LABEL[this.skis.surface]);
+    else if (this.mode === 'skis') this.hud.setSpeedo(glideSpeed(this.skis) * 3.6, SURFACE_LABEL[this.skis.surface], this.tricks.style, this.tricks.hotT > 0);
     else this.hud.setSpeedo(null, '');
-    if (this.mode === 'heli') this.hud.setAlt(heliAgl(this.heli, this.terrain), elevation(this.heli.y), Math.hypot(this.heli.vx, this.heli.vz));
+    // TRICK takes the action button's place on skis; on the snow, a job or a lift to ride comes first
+    const air = this.mode === 'skis' && this.skis.airborne;
+    this.hud.setTrick(this.mode === 'skis' && !this.ride && (air || !this.lastAct), air);
+    if (this.mode === 'heli') this.hud.setAlt(heliAgl(this.heli, this.terrain), elevation(this.heli.y), Math.hypot(this.heli.vx, this.heli.vz), this.heli.vy, this.heli.landed ? null : this.landingBelow());
     else this.hud.setAlt(null);
+    // speed: lines at the edges and the view widening, on skis and the sled past about 50 km/h
+    const sp = this.mode === 'skis' || this.mode === 'sled' ? this.speedNow() : this.mode === 'heli' ? this.speedNow() * 0.55 : 0;
+    const fast = THREE.MathUtils.smoothstep(sp, 13, 27) * (this.cam.reduced ? 0 : 1);
+    this.fov += (fast * 9 - this.fov) * Math.min(1, dt * 3);
+    this.rig.pushFov(this.fov);
+    this.hud.setSpeedLines(fast * 0.85);
+    // the minimap, five times a second
+    this.miniT -= dt;
+    if (this.miniT <= 0) {
+      this.miniT = 0.2;
+      const d = districtAt(pos.x, pos.z);
+      // walking into a district of the town: its name, once, as you arrive
+      const did = d?.id ?? '';
+      if (did !== this.lastDistrict) {
+        this.lastDistrict = did;
+        if (d && this.mode !== 'heli') this.hud.toast(d.name, '', 1.8);
+      }
+      this.hud.drawMini(this.topo, this.topo.width, pos.x, pos.z, this.headingNow(), target, d ? d.name : 'Map');
+    }
     // the SKYTRACE scanner readout
     const s = r ? currentStep(r) : null;
     if (r && s?.kind === 'scan' && r.scan && this.mode === 'heli' && r.scan.looking >= 0) {
@@ -1674,6 +1922,7 @@ export class Game {
       speed: sp,
       rotor: this.heli.rotor * (this.mode === 'heli' ? 1 : Math.max(0, 1 - Math.hypot(this.heli.x - this.walker.x, this.heli.z - this.walker.z) / 120)),
       hiss: s && !s.airborne ? Math.min(1, sp / 15) : 0,
+      carve: s && !s.airborne ? Math.min(1, Math.abs(s.lean) * Math.min(1, sp / 12) + s.slip * 0.08) : 0,
       wind: this.cond.wind,
       rumble: this.pack.fired && !this.pack.done ? Math.min(1, this.pack.moving / 120) : 0,
       fire: this.indoors * (inLodge(this.walker.x, this.walker.z) ? 1 : 0),
@@ -1845,6 +2094,86 @@ export class Game {
     saveProfile(this.store, p);
   }
 
+  /** QA: a fixed camera for an overview shot (null: the game's own camera) */
+  private qaView: { at: THREE.Vector3; yaw: number; pitch: number; dist: number } | null = null;
+  /** QA: hold the actors still (a mid-air frame for the evidence shots) */
+  private qaFreeze = false;
+
+  /** QA staging for scripts/shots.mjs: put Vince, the camera and the clock where a named view needs them. */
+  private stage(name: string): boolean {
+    const D = this.debug();
+    this.qaView = null;
+    this.cam.hold = null;
+    this.qaFreeze = false;
+    this.hud.trickPop('', '', 'trick', 0.01);
+    if (this.mode !== 'foot') {
+      this.heli.landed = true;
+      this.mode = 'foot';
+      this.dog.mode = 'follow';
+      this.cam.setMode('foot');
+      this.player.setSkis(false);
+    }
+    switch (name) {
+      case 'town': {
+        // the whole base area from above the parking lot: Main Street up to the lift base plaza
+        D.teleport(453, 300, 0);
+        this.qaView = { at: new THREE.Vector3(450, this.terrain.height(450, 320), 320), yaw: 0.1, pitch: 0.72, dist: 230 };
+        return true;
+      }
+      case 'trick': {
+        // off the big kicker in the terrain park, mid-720 with a grab, the combo called out
+        const j = { x: 416, z: 196 };
+        D.teleport(j.x, j.z, Math.PI);
+        this.toggleSkis(true);
+        const sk = this.skis;
+        sk.x = j.x;
+        sk.z = j.z;
+        sk.y = this.terrain.height(j.x, j.z) + 4.2;
+        sk.yaw = Math.PI;
+        sk.vx = 0;
+        sk.vz = 13;
+        sk.vy = 1.5;
+        sk.airborne = true;
+        const tr = this.tricks;
+        tr.air = true;
+        tr.spin = Math.PI * 1.35;
+        tr.grabT = 0.5;
+        tr.style = 0.62;
+        tr.tricks = [{ kind: 'grab', name: 'Mute grab', points: 100 }, { kind: 'spin', name: '360', points: 250 }];
+        this.player.grab = 1;
+        this.hud.trickPop('360', 'Combo x2', 'trick', 60);
+        this.qaView = { at: new THREE.Vector3(sk.x, sk.y + 0.6, sk.z), yaw: Math.PI / 2 + 0.25, pitch: 0.05, dist: 7 };
+        this.qaFreeze = true;
+        return true;
+      }
+      case 'heli': {
+        // coming in to the Kessel Ridge LZ: the landing light on the readout
+        this.mountHeli(true);
+        this.heli.running = true;
+        this.heli.rotor = 1;
+        D.heliTo(-215, -458, this.terrain.height(-215, -458) + 9);
+        this.heli.vy = -1.5;
+        this.heli.yaw = 0;
+        this.cam.snapBehind(0);
+        this.cam.pitch = 0.32;
+        return true;
+      }
+      case 'plaza': {
+        // the lift base plaza from Main Street's head: the base lodge, the chairlift, the run and the park
+        D.teleport(462, 262, 0.15);
+        this.qaView = { at: new THREE.Vector3(466, this.terrain.height(466, 250) + 2, 250), yaw: 0.25, pitch: 0.22, dist: 26 };
+        return true;
+      }
+      case 'street': {
+        D.teleport(453, 405, 0);
+        this.cam.pitch = 0.16;
+        return true;
+      }
+      default:
+        return false;
+    }
+  }
+
   /** For the browser test scripts. */
   /** The read-only view behind `window.game` (see snapshot.ts): plain values only, built on each read. */
   publicState(): GameSnapshot {
@@ -1973,6 +2302,8 @@ export class Game {
       closePanel: () => this.panels.close(),
       save: () => this.save(),
       missions: () => MISSIONS.map((m) => m.id),
+      /** stage a named view for the evidence screenshots (scripts/shots.mjs); false when unknown */
+      stage: (name: string) => this.stage(name),
     };
   }
 }

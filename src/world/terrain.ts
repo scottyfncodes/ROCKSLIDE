@@ -1,6 +1,21 @@
 import { clamp, lerp, makeMonotoneCubic, makePolyline, pathDistance, smoothstep, type PathHit, type Polyline } from '../sim/geom';
 import { fbm2, ridged2 } from '../sim/noise';
-import { BOWL, LAKE, PADS, PEAKS, ROUTES, SHELVES, WORLD_HALF, type Route } from './places';
+import { BOWL, JUMPS, jumpHeight, LAKE, PADS, PEAKS, ROUTES, SHELVES, WORLD_HALF, type Jump, type Route } from './places';
+
+/**
+ * The park's kickers ride on top of the snow (built from it, drawn as their own mesh): each one's
+ * footprint, for a cheap reject in height(). Rollers and cornices are shaped into the ground itself.
+ */
+const JUMP_BOX = JUMPS.filter((j) => j.kind === 'kicker').map((j) => {
+  const r = Math.hypot(j.len * 1.8, j.w / 2 + 3);
+  return { j, x0: j.x - r, x1: j.x + r, z0: j.z - r, z1: j.z + r };
+});
+export function jumpsAt(x: number, z: number): number {
+  let h = 0;
+  for (const b of JUMP_BOX) if (x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1) h += jumpHeight(b.j, x, z);
+  return h;
+}
+export type { Jump };
 
 /**
  * The valley as a heightfield. The shape is evaluated once onto a grid; everything that
@@ -199,12 +214,19 @@ export class Terrain {
         if (d < p.r) h = lerp(p.h, h, smoothstep(p.r * 0.7, p.r, d));
       }
       if (bm > 0) h += bermHeight(x, z);
+      // the natural jumps on the run: rollers and the cornice, part of the snow
+      for (const j of JUMPS) if (j.kind !== 'kicker' && Math.abs(x - j.x) < j.len * 2 + j.w && Math.abs(z - j.z) < j.len * 2 + j.w) h += jumpHeight(j, x, z);
     }
     return h;
   }
 
-  /** Ground height, interpolated on the same triangles the mesh draws. */
+  /** Ground height: the snow (on the same triangles the mesh draws) and any jump built on it. */
   height(x: number, z: number): number {
+    return this.ground(x, z) + jumpsAt(x, z);
+  }
+
+  /** The snow without the jumps, interpolated on the same triangles the terrain mesh draws. */
+  ground(x: number, z: number): number {
     const n = this.n;
     const fx = clamp((x + WORLD_HALF) / this.cell, 0, n - 1.001);
     const fz = clamp((z + WORLD_HALF) / this.cell, 0, n - 1.001);

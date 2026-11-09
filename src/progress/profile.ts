@@ -2,7 +2,10 @@ import { mission, MISSIONS, WIND_LOADS } from '../missions/catalog';
 import { mulberry32 } from '../sim/noise';
 import type { MissionRun } from '../missions/runner';
 import { newWeather, type WeatherState } from '../world/weather';
-import { UPGRADES, upgradeDef, type UpgradeId } from '../world/station';
+import { HQ_SHIFT, SPOTS, UPGRADES, upgradeDef, type UpgradeId } from '../world/station';
+
+/** where the patrol station stood in version-1 saves */
+export const OLD_HQ = { x: 0, z: 250 };
 import { BADGES, DEFAULT_EQUIP, item, ITEMS, RANKS, rankOf, type Item, type Slot } from './catalog';
 
 /**
@@ -11,7 +14,11 @@ import { BADGES, DEFAULT_EQUIP, item, ITEMS, RANKS, rankOf, type Item, type Slot
  */
 
 export const SAVE_KEY = 'rockslide.patrol.v1';
-export const SAVE_VERSION = 1;
+/**
+ * 2: the base area became a planned town (November 2026). The patrol station moved by HQ_SHIFT, so a
+ * version-1 save's player, sled and helicopter parked at the old station move with it.
+ */
+export const SAVE_VERSION = 2;
 
 export type Mode = 'foot' | 'sled' | 'heli' | 'skis';
 
@@ -61,6 +68,9 @@ export interface Profile {
   bowlDays: number;
   cleanReads: number;
   settings: Settings;
+  /** tricks on skis: every clean landing's points, and the best single jump */
+  trickPoints: number;
+  trickBest: number;
   played: number;
   /** a new save that has not seen the opening yet */
   fresh: boolean;
@@ -81,9 +91,9 @@ export function newProfile(): Profile {
     active: null,
     events: [],
     eventClock: 150,
-    player: { x: -33.5, z: 243.2, yaw: -Math.PI / 2, mode: 'foot' },
-    sled: { x: 23, z: 226, yaw: Math.PI / 2 },
-    heli: { x: -24, z: 292, yaw: Math.PI / 2 },
+    player: { x: -33.5 + HQ_SHIFT.x, z: 243.2 + HQ_SHIFT.z, yaw: -Math.PI / 2, mode: 'foot' },
+    sled: { x: SPOTS.sled.x, z: SPOTS.sled.z, yaw: Math.PI / 2 },
+    heli: { x: SPOTS.heli.x, z: SPOTS.heli.z, yaw: Math.PI / 2 },
     affection: 0,
     marked: [],
     loaded: [],
@@ -91,6 +101,8 @@ export function newProfile(): Profile {
     bowlDays: 0,
     cleanReads: 0,
     settings: { sound: true, music: true, look: 1, invertY: false, quality: 'auto', vibrate: true, heliAssist: false, sledAssist: false, routeLine: false },
+    trickPoints: 0,
+    trickBest: 0,
     played: 0,
     fresh: true,
     savedAt: 0,
@@ -102,6 +114,7 @@ export function migrate(raw: unknown): Profile {
   const base = newProfile();
   if (!raw || typeof raw !== 'object') return base;
   const p = { ...base, ...(raw as Partial<Profile>) };
+  const from = Number.isFinite(p.version) ? p.version : 1;
   p.equip = { ...base.equip, ...(p.equip ?? {}) };
   p.settings = { ...base.settings, ...(p.settings ?? {}) };
   p.weather = { ...base.weather, ...(p.weather ?? {}) };
@@ -119,11 +132,23 @@ export function migrate(raw: unknown): Profile {
   if (typeof p.loadWind !== 'string') p.loadWind = '';
   if (!Number.isFinite(p.bowlDays)) p.bowlDays = 0;
   if (!Number.isFinite(p.cleanReads)) p.cleanReads = 0;
+  if (!Number.isFinite(p.trickPoints)) p.trickPoints = 0;
+  if (!Number.isFinite(p.trickBest)) p.trickBest = 0;
   // bowl calls without a loaded bowl behind them (a damaged save) go
   if (!p.loaded.length) p.events = p.events.filter((e) => !mission(e).bowl);
   if (p.active && !MISSIONS.some((m) => m.id === p.active!.id)) p.active = null;
   if (p.active && (p.active.step < 0 || p.active.step >= mission(p.active.id).steps.length)) p.active = null;
   if (p.active && mission(p.active.id).bowl && !(Array.isArray(p.active.loaded) && p.active.loaded.length)) p.active = null;
+  if (from < 2) {
+    // the station moved into town: anything left at (or in) the old station moves with it; out on the
+    // mountain it stays where it was
+    for (const o of [p.player, p.sled, p.heli]) {
+      if (Math.hypot(o.x - OLD_HQ.x, o.z - OLD_HQ.z) < 110) {
+        o.x += HQ_SHIFT.x;
+        o.z += HQ_SHIFT.z;
+      }
+    }
+  }
   p.version = SAVE_VERSION;
   return p;
 }

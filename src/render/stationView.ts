@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { BADGES } from '../progress/catalog';
 import type { Terrain } from '../world/terrain';
-import { EQUIP, GARAGE, HANGAR, KENNEL, LODGE, MAST, PAD, SPOTS, WING, type UpgradeId } from '../world/station';
+import { EQUIP, GARAGE, HANGAR, HQ_SHIFT, KENNEL, LODGE, MAST, PAD, SPOTS, WING, type UpgradeId } from '../world/station';
 import { bakeInPlace, ball, box, cyl, gable, glow, logWall, mat, PAL, shade, snowRoof, windowPane } from './kit';
 import { LODGE_IDS, paintModel, YARD_IDS, type LodgeId, type PatrolModels, type YardId } from './patrolModels';
 
@@ -809,6 +809,8 @@ export class StationView {
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5, 8, 1), new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide }));
     flag.position.set(7.25, y + 8.1, 270);
     g.add(pole, flag);
+    // laid out round the station's old place: moved with it
+    g.position.set(HQ_SHIFT.x, 0, HQ_SHIFT.z);
     return { group: g, flag };
   }
 

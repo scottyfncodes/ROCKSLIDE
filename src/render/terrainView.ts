@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { fbm2, mulberry32, ridged2 } from '../sim/noise';
 import { smoothstep } from '../sim/geom';
-import { LAKE, PADS, WORLD_HALF } from '../world/places';
+import { JUMPS, LAKE, PADS, WORLD_HALF } from '../world/places';
 import type { Terrain } from '../world/terrain';
 import { NOISE_GLSL } from './shaderChunks';
 import { rangeAt } from '../world/frontRange';
@@ -383,8 +383,81 @@ export function buildTerrain(t: Terrain): THREE.Group {
       mesh.receiveShadow = true;
       group.add(mesh);
     }
+  group.add(buildJumps(t, material));
   group.add(buildBackdrop(t));
   return group;
+}
+
+/**
+ * The jumps (kickers in the park, rollers and the cornice on the run): a fine patch of the same snow,
+ * shaped by Terrain.height (which carries them), laid a whisker over the coarse terrain so the edges
+ * meet it. One mesh for all of them.
+ */
+function buildJumps(t: Terrain, material: THREE.Material): THREE.Mesh {
+  const pos: number[] = [];
+  const nor: number[] = [];
+  const cols: number[] = [];
+  const ground: number[] = [];
+  const nz4: number[] = [];
+  const nz2: number[] = [];
+  const idx: number[] = [];
+  const col = new THREE.Color();
+  const n = { x: 0, y: 1, z: 0 };
+  const a4 = new Float32Array(4);
+  const a2 = new Float32Array(2);
+  for (const j of JUMPS) {
+    if (j.kind !== 'kicker') continue;
+    const fx = -Math.sin(j.yaw);
+    const fz = -Math.cos(j.yaw);
+    const L = j.len + 4;
+    const W = j.w + 7;
+    // fine enough along the line for a kicker's curved transition and its lip, coarse across
+    const nu = Math.ceil(L / (j.kind === 'kicker' ? 0.6 : 1.2));
+    const nv = Math.ceil(W / (j.kind === 'kicker' ? 1.2 : 2.4));
+    const base = pos.length / 3;
+    for (let b = 0; b <= nv; b++)
+      for (let a = 0; a <= nu; a++) {
+        const u = -2 - j.len / 2 + (a / nu) * L;
+        const v = -W / 2 + (b / nv) * W;
+        const x = j.x + fx * u - fz * v;
+        const z = j.z + fz * u + fx * v;
+        // the edge rows sit exactly on the snow; inside, a whisker over it
+        const edge = a === 0 || b === 0 || a === nu || b === nv;
+        pos.push(x, t.height(x, z) + (edge ? -0.05 : 0.04), z);
+        t.normal(x, z, n);
+        nor.push(n.x, n.y, n.z);
+        groundColor(t, x, z, n.x, n.y, n.z, col);
+        cols.push(col.r, col.g, col.b);
+        const [rk, sc] = groundMasks(t, x, z, n.y);
+        ground.push(rk * 0, sc);
+        groundNoise(x, z, n.x, n.z, a4, 0, a2, 0);
+        nz4.push(...a4);
+        nz2.push(...a2);
+      }
+    for (let b = 0; b < nv; b++)
+      for (let a = 0; a < nu; a++) {
+        const i0 = base + b * (nu + 1) + a;
+        const i1 = i0 + 1;
+        const i2 = i0 + nu + 1;
+        const i3 = i2 + 1;
+        // the terrain's winding: a-c-b, c-d-b
+        idx.push(i0, i2, i1, i2, i3, i1);
+      }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  geo.setAttribute('aGround', new THREE.Float32BufferAttribute(ground, 2));
+  geo.setAttribute('aNz', new THREE.Float32BufferAttribute(nz4, 4));
+  geo.setAttribute('aNz2', new THREE.Float32BufferAttribute(nz2, 2));
+  geo.setIndex(idx);
+  geo.computeBoundingSphere();
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.name = 'jumps';
+  mesh.receiveShadow = true;
+  mesh.castShadow = true;
+  return mesh;
 }
 
 /**

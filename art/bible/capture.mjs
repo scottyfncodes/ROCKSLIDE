@@ -42,6 +42,7 @@ async function shot(page, name, kind, note) {
   record.push({ name, kind, note, viewport: `${vp.width}x${vp.height}` });
   console.log('shot', name);
 }
+// (the station moved into the planned town in November 2026: its views are at the old place + (385, 50))
 // place the patroller and the camera: the camera sits at player + (sin yaw, cos yaw) * dist
 const stage = (page, s) =>
   page.evaluate((s) => {
@@ -79,14 +80,14 @@ async function at(page, name, kind, s, note, wait = 2600) {
   const G = (f, a) => page.evaluate(f, a);
 
   // --- the station, through the day (one view of the lodge front)
-  const lodge = { x: -12, z: 258, yaw: 0.74, pitch: 0.18 };
+  const lodge = { x: 373, z: 308, yaw: 0.74, pitch: 0.18 };
   await at(page, 'env-lodge-dawn', 'env', { ...lodge, minute: 6 * 60 + 40 }, 'Lodge front, 06:40');
   await at(page, 'env-lodge-day', 'env', { ...lodge, minute: 12 * 60 }, 'Lodge front, 12:00, clear');
   await at(page, 'env-lodge-dusk', 'env', { ...lodge, minute: 18 * 60 + 40 }, 'Lodge front, 18:40, first snow of the evening');
   await at(page, 'env-lodge-night', 'env', { ...lodge, minute: 21 * 60 + 30 }, 'Lodge front, 21:30');
-  await at(page, 'env-yard', 'env', { x: 30, z: 254, yaw: 0.35, minute: 9 * 60 }, 'The station yard, 09:00');
-  await at(page, 'env-lodge-inside', 'env', { x: -28, z: 245, yaw: 1.2, pitch: 0.5, minute: 12 * 60 }, 'Inside the lodge: the roof lifts away');
-  await at(page, 'env-pad', 'env', { x: -6, z: 300, yaw: 1.2, pitch: 0.2, minute: 10 * 60 + 30 }, 'Helipad and hangar');
+  await at(page, 'env-yard', 'env', { x: 415, z: 304, yaw: 0.35, minute: 9 * 60 }, 'The station yard, 09:00');
+  await at(page, 'env-lodge-inside', 'env', { x: 357, z: 295, yaw: 1.2, pitch: 0.5, minute: 12 * 60 }, 'Inside the lodge: the roof lifts away');
+  await at(page, 'env-pad', 'env', { x: 379, z: 350, yaw: 1.2, pitch: 0.2, minute: 10 * 60 + 30 }, 'Helipad and hangar');
 
   // --- the valley
   // look at a target (tx, tz) from d metres away on bearing a (0 = south of it): the camera sits behind the player
@@ -143,28 +144,28 @@ async function at(page, name, kind, s, note, wait = 2600) {
 
   // --- interface: the HUD on foot with a radio line, a call accepted (chapter card), the marker
   if (want('ui-hud-foot')) {
-    await stage(page, { x: 30, z: 254, yaw: 0.35, minute: 9 * 60 + 30 });
+    await stage(page, { x: 415, z: 304, yaw: 0.35, minute: 9 * 60 + 30 });
     await page.waitForTimeout(2200);
     await G(() => window.patrol.game.hud.radio('Dispatch', 'Kessel Patrol, morning. The Grauhorn station has gone quiet again. Can you run up and have a look?', 8));
     await page.waitForTimeout(900);
     await shot(page, 'ui-hud-foot', 'ui', 'HUD on foot with a dispatch radio line');
   }
   if (want('ui-chapter')) {
-    await stage(page, { x: 30, z: 254, yaw: 0.35, minute: 9 * 60 + 30 });
+    await stage(page, { x: 415, z: 304, yaw: 0.35, minute: 9 * 60 + 30 });
     await G(() => window.patrol.accept('rounds'));
     await page.waitForTimeout(900);
     await shot(page, 'ui-chapter', 'ui', 'Chapter card on accepting a call');
     await page.waitForTimeout(4000);
   }
   await G(() => { const p = window.patrol.profile(); if (p.settings) p.settings.routeLine = true; window.patrol.apply && window.patrol.apply(); });
-  await at(page, 'ui-hud-mission', 'ui', { x: 40, z: 236, yaw: 2.6, pitch: 0.24, minute: 9 * 60 + 40 }, 'HUD during a call: the objective, the route line on the snow', 3000);
-  await at(page, 'env-beacon', 'env', { x: -12, z: 258, yaw: 0.74, pitch: 0.18, minute: 18 * 60 + 40 }, 'Mission beacon over the objective (here the lodge), dusk');
+  await at(page, 'ui-hud-mission', 'ui', { x: 425, z: 286, yaw: 2.6, pitch: 0.24, minute: 9 * 60 + 40 }, 'HUD during a call: the objective, the route line on the snow', 3000);
+  await at(page, 'env-beacon', 'env', { x: 373, z: 308, yaw: 0.74, pitch: 0.18, minute: 18 * 60 + 40 }, 'Mission beacon over the objective (here the lodge), dusk');
 
   // --- vehicles
   if (want('ui-hud-sled') || want('env-sled')) {
     await G(() => window.patrol.game.mountSled(true));
-    await at(page, 'ui-hud-sled', 'ui', { x: 40, z: 300, yaw: 1.9, pitch: 0.22, minute: 10 * 60 }, 'HUD on the snowmobile');
-    await at(page, 'env-sled', 'env', { x: 40, z: 300, yaw: 1.9, cam: 1.9 + 2.3, pitch: 0.16, dist: 5.4, minute: 10 * 60 }, 'The snowmobile with Koda on the rack');
+    await at(page, 'ui-hud-sled', 'ui', { x: 425, z: 350, yaw: 1.9, pitch: 0.22, minute: 10 * 60 }, 'HUD on the snowmobile');
+    await at(page, 'env-sled', 'env', { x: 425, z: 350, yaw: 1.9, cam: 1.9 + 2.3, pitch: 0.16, dist: 5.4, minute: 10 * 60 }, 'The snowmobile with Koda on the rack');
     await G(() => { const g = window.patrol.game; g.cam.__dist = null; });
     await G(() => window.patrol.game.dismount());
     await page.waitForTimeout(800);
@@ -207,7 +208,7 @@ async function at(page, name, kind, s, note, wait = 2600) {
   await page.click('[data-a=new]');
   await page.waitForTimeout(1800);
   await page.addStyleTag({ content: '.dispatch{display:none!important}' });
-  await at(page, 'phone-hud', 'ui', { x: 30, z: 254, yaw: 0.35, minute: 9 * 60 + 30 }, 'HUD on a phone: stick, look, the action button and chips');
+  await at(page, 'phone-hud', 'ui', { x: 415, z: 304, yaw: 0.35, minute: 9 * 60 + 30 }, 'HUD on a phone: stick, look, the action button and chips');
   await page.evaluate(() => window.patrol.game.openBoard('calls'));
   await page.waitForTimeout(1500);
   await shot(page, 'phone-board', 'ui', 'The mission table on a phone');

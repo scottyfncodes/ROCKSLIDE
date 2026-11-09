@@ -3,7 +3,7 @@
  * turn the camera, and big buttons for the rest. Keyboard and mouse do the same on a desktop.
  */
 
-export type Btn = 'action' | 'alt' | 'up' | 'down' | 'boost';
+export type Btn = 'action' | 'alt' | 'up' | 'down' | 'boost' | 'trick' | 'bark';
 
 /** Below this share of the stick's throw nothing moves: a resting thumb never creeps. */
 export const STICK_DEAD = 0.14;
@@ -192,6 +192,10 @@ export class Input {
         return this.key('KeyC', 'ControlLeft', 'ControlRight');
       case 'boost':
         return this.key('ShiftLeft', 'ShiftRight');
+      case 'trick':
+        return this.key('KeyT');
+      case 'bark':
+        return this.key('KeyB');
     }
   }
 

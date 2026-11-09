@@ -1,41 +1,48 @@
 import { Colliders, roomWalls } from './colliders';
-import { VILLAGE } from './places';
+import { BUNKER, FUEL, VILLAGE } from './places';
 
 /**
  * Kessel Patrol Station: the home base. It starts as a log lodge, a garage, a helipad and a
  * dog house, and grows as the operation does. Every upgrade is a building you can walk up to.
  */
 
-export const HQ = { x: 0, z: 250 };
+/**
+ * The station was laid out round (0, 250) before the town was planned; it now stands on the west
+ * side of Main Street. Every place in it keeps its old layout, moved by this much.
+ */
+export const HQ_SHIFT = { x: 385, z: 50 };
+const X = HQ_SHIFT.x;
+const Z = HQ_SHIFT.z;
+export const HQ = { x: 0 + X, z: 250 + Z };
 
-export const LODGE = { x: -30, z: 245, w: 16, d: 12, wallH: 3.1 };
-export const GARAGE = { x: 24, z: 226, w: 12, d: 10, wallH: 3.6 };
-export const PAD = { x: -24, z: 292, r: 8 };
-export const HANGAR = { x: -1, z: 292, w: 14, d: 16, wallH: 6 };
-export const EQUIP = { x: 25, z: 211, w: 9, d: 6, wallH: 3 };
-export const WING = { x: -30, z: 231, w: 12, d: 8, wallH: 3 };
-export const KENNEL = { x: -8, z: 272 };
-export const MAST = { x: -52, z: 220 };
+export const LODGE = { x: -30 + X, z: 245 + Z, w: 16, d: 12, wallH: 3.1 };
+export const GARAGE = { x: 24 + X, z: 226 + Z, w: 12, d: 10, wallH: 3.6 };
+export const PAD = { x: -24 + X, z: 292 + Z, r: 8 };
+export const HANGAR = { x: -1 + X, z: 292 + Z, w: 14, d: 16, wallH: 6 };
+export const EQUIP = { x: 25 + X, z: 211 + Z, w: 9, d: 6, wallH: 3 };
+export const WING = { x: -30 + X, z: 231 + Z, w: 12, d: 8, wallH: 3 };
+export const KENNEL = { x: -8 + X, z: 272 + Z };
+export const MAST = { x: -52 + X, z: 220 + Z };
 
 /** Where things are inside and around the station. */
 export const SPOTS = {
-  bed: { x: -35.2, z: 240.8 },
-  fireplace: { x: -37, z: 247.5 },
-  table: { x: -29, z: 246 },
-  wardrobe: { x: -24.5, z: 240.3 },
-  badges: { x: -30.5, z: 250.6 },
-  dogBed: { x: -35, z: 250 },
-  lodgeDoor: { x: -21.5, z: 245 },
-  lodgeInside: { x: -27, z: 245 },
-  sled: { x: 23, z: 226, yaw: Math.PI / 2 },
-  workbench: { x: 28.6, z: 222 },
-  locker: { x: 28.6, z: 230.2 },
-  crate: { x: 12, z: 236 },
-  bowl: { x: -5.5, z: 274.5 },
-  kennel: { x: -8, z: 272 },
+  bed: { x: -35.2 + X, z: 240.8 + Z },
+  fireplace: { x: -37 + X, z: 247.5 + Z },
+  table: { x: -29 + X, z: 246 + Z },
+  wardrobe: { x: -24.5 + X, z: 240.3 + Z },
+  badges: { x: -30.5 + X, z: 250.6 + Z },
+  dogBed: { x: -35 + X, z: 250 + Z },
+  lodgeDoor: { x: -21.5 + X, z: 245 + Z },
+  lodgeInside: { x: -27 + X, z: 245 + Z },
+  sled: { x: 23 + X, z: 226 + Z, yaw: Math.PI / 2 },
+  workbench: { x: 28.6 + X, z: 222 + Z },
+  locker: { x: 28.6 + X, z: 230.2 + Z },
+  crate: { x: 12 + X, z: 236 + Z },
+  bowl: { x: -5.5 + X, z: 274.5 + Z },
+  kennel: { x: -8 + X, z: 272 + Z },
   heli: { x: PAD.x, z: PAD.z, yaw: Math.PI / 2 },
-  equipDoor: { x: 25, z: 214.6 },
-  hangarDoor: { x: -8, z: 292 },
+  equipDoor: { x: 25 + X, z: 214.6 + Z },
+  hangarDoor: { x: -8 + X, z: 292 + Z },
   mast: { x: MAST.x, z: MAST.z },
 };
 
@@ -70,8 +77,8 @@ export function buildColliders(): Colliders {
   for (const b of roomWalls(LODGE.x, LODGE.z, LODGE.w, LODGE.d, { side: 'e', width: 2.4 })) c.add(b);
   // inside the lodge: the table, the bed, the hearth
   c.add({ x: SPOTS.table.x, z: SPOTS.table.z, hw: 1.5, hd: 1, rot: 0 });
-  c.add({ x: -35.6, z: 240.2, hw: 1.9, hd: 1.0, rot: 0 });
-  c.add({ x: -37.6, z: 247.5, hw: 0.4, hd: 1.4, rot: 0 });
+  c.add({ x: -35.6 + X, z: 240.2 + Z, hw: 1.9, hd: 1.0, rot: 0 });
+  c.add({ x: -37.6 + X, z: 247.5 + Z, hw: 0.4, hd: 1.4, rot: 0 });
   // outside the lodge's yard (south) wall: the woodpile under the eaves (Art Direction A, rs_lodge)
   c.add({ x: LODGE.x + 3, z: LODGE.z + LODGE.d / 2 + 0.6, hw: 0.8, hd: 0.35, rot: 0 });
   for (const b of roomWalls(GARAGE.x, GARAGE.z, GARAGE.w, GARAGE.d, { side: 'w', width: 5.5 })) c.add(b);
@@ -83,8 +90,11 @@ export function buildColliders(): Colliders {
   c.add({ x: WING.x, z: WING.z, hw: WING.w / 2, hd: WING.d / 2, rot: 0, tag: 'wing' });
   c.add({ x: KENNEL.x, z: KENNEL.z, hw: 1.1, hd: 1.3, rot: 0 });
   c.add({ x: MAST.x, z: MAST.z, hw: 1.2, hd: 1.2, rot: 0, tag: 'mast' });
+  // the avalanche control bunker and the fuel island
+  c.add({ x: BUNKER.x, z: BUNKER.z, hw: 4.6, hd: 3.4, rot: BUNKER.rot });
+  c.add({ x: FUEL.x + Math.sin(FUEL.rot) * -2.4, z: FUEL.z + Math.cos(FUEL.rot) * -2.4, hw: 2.3, hd: 1.2, rot: FUEL.rot });
   for (const v of VILLAGE) {
-    const size = v.kind === 'lodge' ? [9, 7] : v.kind === 'chapel' ? [5, 8] : v.kind === 'clinic' ? [7, 6] : [5.5, 5];
+    const size = v.kind === 'lodge' || v.kind === 'bar' ? [9, 7] : v.kind === 'baselodge' ? [10, 7.5] : v.kind === 'condo' ? [8, 6.5] : v.kind === 'gear' || v.kind === 'rentals' ? [6.5, 5.5] : v.kind === 'chapel' ? [5, 8] : v.kind === 'clinic' ? [7, 6] : [5.5, 5];
     c.add({ x: v.x, z: v.z, hw: size[0] / 2, hd: size[1] / 2, rot: v.rot });
   }
   return c;

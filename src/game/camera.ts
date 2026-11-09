@@ -49,6 +49,8 @@ export class FollowCamera {
     return this.reduced ? 0.25 : 1;
   }
   private clock = 0;
+  /** QA: a fixed distance (null: the profile's own) */
+  hold: number | null = null;
 
   constructor(private cam: THREE.PerspectiveCamera, private terrain: Terrain) {}
 
@@ -101,6 +103,7 @@ export class FollowCamera {
     const wantDist = p.dist * (1 + p.portrait * this.portrait) * (1 + pull);
     // out gently as you speed up, back in a little quicker when you stop
     this.dist += (wantDist - this.dist) * Math.min(1, dt * (this.mode !== 'foot' ? 3 : wantDist > this.dist ? 1.6 : 2.6));
+    if (this.hold !== null) this.dist = this.hold;
     // target: smoothed, a little ahead of fast vehicles
     const lead = this.mode === 'sled' || this.mode === 'skis' ? Math.min(3, speed * 0.12) : 0;
     this.tmp.set(pos.x - Math.sin(heading) * lead, pos.y + p.lift, pos.z - Math.cos(heading) * lead);

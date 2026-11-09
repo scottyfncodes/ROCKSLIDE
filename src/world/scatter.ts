@@ -84,18 +84,18 @@ function groundUnder(t: Terrain, x: number, z: number, r: number): number {
 
 /** Hand-placed patrol props: a rescue toboggan at the station, the lift top and the base; rescue caches where trouble happens; lanterns by doors. */
 export const PATROL_PROPS: { kind: KitId; x: number; z: number; rot: number; hang?: number }[] = [
-  { kind: 'rs_akja', x: 36, z: 238, rot: 0.25 },
+  { kind: 'rs_akja', x: 36 + 385, z: 238 + 50, rot: 0.25 },
   { kind: 'rs_akja', x: 612, z: -340, rot: -0.6 },
-  { kind: 'rs_akja', x: 518, z: 184, rot: 1.9 },
+  { kind: 'rs_akja', x: 452, z: 214, rot: 1.9 },
   { kind: 'rs_cache', x: 582, z: -346, rot: 0.1 },
   { kind: 'rs_cache', x: -168, z: -30, rot: 1.2 },
   { kind: 'rs_cache', x: -652, z: -286, rot: 0.7 },
   { kind: 'rs_cache', x: 748, z: -46, rot: -0.4 },
   { kind: 'rs_cache', x: -198, z: -458, rot: 2.6 },
-  { kind: 'rs_cache', x: 14, z: 244, rot: 0 },
-  { kind: 'rs_lantern', x: -19.2, z: 250.4, rot: 0, hang: 2.35 },
-  { kind: 'rs_lantern', x: 16.6, z: 232.6, rot: 0, hang: 2.35 },
-  { kind: 'rs_lantern', x: -31, z: 285, rot: 0, hang: 2.35 },
+  { kind: 'rs_cache', x: 14 + 385, z: 244 + 50, rot: 0 },
+  { kind: 'rs_lantern', x: -19.2 + 385, z: 250.4 + 50, rot: 0, hang: 2.35 },
+  { kind: 'rs_lantern', x: 16.6 + 385, z: 232.6 + 50, rot: 0, hang: 2.35 },
+  { kind: 'rs_lantern', x: -31 + 385, z: 285 + 50, rot: 0, hang: 2.35 },
   { kind: 'rs_lantern', x: 604, z: -345, rot: 0, hang: 2.35 },
   { kind: 'rs_lantern', x: 766, z: -55, rot: 0, hang: 2.35 },
 ];
@@ -179,4 +179,4 @@ export function kitObstacles(list: readonly Placed[]): Tree[] {
 }
 
 /** The pads every placement stays clear of (exported for tests). */
-export const KEEP_CLEAR_PADS = ['hq', 'village', 'resort', 'lifttop', 'station', 'cabin', 'ridge'].map(pad);
+export const KEEP_CLEAR_PADS = ['hq', 'village', 'resort', 'parking', 'lifttop', 'station', 'cabin', 'ridge'].map(pad);

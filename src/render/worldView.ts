@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mulberry32 } from '../sim/noise';
-import { BOWL, LAKE, LIFT, pad, VILLAGE } from '../world/places';
+import { BOWL, BUNKER, DISTRICTS, FUEL, LAKE, LIFT, LZS, pad, ROPE_TOW, SIGNPOSTS, streetLights, VILLAGE } from '../world/places';
 import { routeSamples, type Terrain } from '../world/terrain';
 import { bakeInPlace, ball, bake, box, cyl, gable, glow, logWall, mat, PAL, shade, snowRoof, windowPane } from './kit';
 import { BUILDING_IDS, LIFT_IDS, mountAtPivot, paintModel, roleOf, type BuildingId, type PatrolModels } from './patrolModels';
@@ -72,6 +72,7 @@ export class WorldView {
     region(() => this.buildCabin());
     region(() => this.buildBoathouse());
     region(() => this.buildBowl());
+    for (const lz of LZS) region(() => this.buildLZ(lz));
     this.buildPoles();
   }
 
@@ -234,6 +235,52 @@ export class WorldView {
           b.add(s);
           break;
         }
+        case 'gear': {
+          b = this.chalet(6.5, 5.5, PAL.mustard, PAL.burgundy, 2, false);
+          const s = sign('GEAR SHOP', 2.8, 0.55, { bg: '#7b2f3b', fg: '#f6ecdc' });
+          s.position.set(0, 2.3, 2.82);
+          b.add(s);
+          // a rack of new skis and poles by the door
+          for (let i = 0; i < 6; i++) b.add(box(0.1, 1.7, 0.04, [PAL.red, 0x2f5f9e, PAL.yellow][i % 3], -2.4 + i * 0.22, 0.95, 3.2));
+          b.add(box(1.5, 0.08, 0.3, PAL.logDark, -1.85, 1.4, 3.25));
+          break;
+        }
+        case 'rentals': {
+          b = this.chalet(6.5, 5.5, PAL.powder, 0x4f5f70, 2, false);
+          const s = sign('RENTALS', 2.6, 0.55, { bg: '#2f5f9e', fg: '#f3efe6' });
+          s.position.set(0, 2.3, 2.82);
+          b.add(s);
+          // the rental racks out front: two rows of skis standing in the snow
+          for (const row of [3.6, 4.4])
+            for (let i = 0; i < 9; i++) b.add(box(0.09, 1.6, 0.04, i % 2 ? PAL.red : 0xf3efe6, -2.4 + i * 0.6, 0.8, row));
+          b.add(box(5.6, 0.1, 0.12, PAL.logDark, 0, 1.3, 4));
+          break;
+        }
+        case 'bar': {
+          b = this.chalet(9, 7, PAL.blush, PAL.burgundy, 2, true);
+          const s = sign('APRÈS', 3, 0.7, { bg: '#7b2f3b', fg: '#f6ecdc', accent: '#f2c230' });
+          s.position.set(0, 2.25, 3.6);
+          b.add(s);
+          // the deck: picnic tables, a fire pit
+          for (const x of [-2.8, 0, 2.8]) b.add(box(1.4, 0.08, 0.8, PAL.logDark, x, 0.75, 5.4), box(1.4, 0.06, 0.3, PAL.logDark, x, 0.45, 4.8), box(1.4, 0.06, 0.3, PAL.logDark, x, 0.45, 6));
+          b.add(cyl(0.6, 0.7, 0.4, 10, PAL.stone, 0, 0.2, 7.6));
+          this.smokeSources.push(new THREE.Vector3(v.x + Math.sin(v.rot) * 7.6, y + 0.8, v.z + Math.cos(v.rot) * 7.6));
+          break;
+        }
+        case 'condo': {
+          b = this.chalet(8, 6.5, walls[Math.floor(rng() * walls.length)], roofs[Math.floor(rng() * roofs.length)], 2, true);
+          break;
+        }
+        case 'baselodge': {
+          b = this.chalet(10, 7.5, PAL.blush, PAL.burgundy, 2, true);
+          const s = sign('TANNBERG', 4, 0.8, { bg: '#2f5f9e', fg: '#f3efe6' });
+          s.position.set(0, 5.9, 4.05);
+          b.add(s);
+          const t2 = sign('TICKETS · PATROL', 3.2, 0.5, { bg: '#f6ecdc', fg: '#2f5f9e' });
+          t2.position.set(0, 2.3, 3.81);
+          b.add(t2);
+          break;
+        }
         case 'chapel': {
           if (this.bm) {
             b = this.building('rs_chapel', { wall: mat(PAL.powder), roof: mat(PAL.burgundy) });
@@ -283,43 +330,156 @@ export class WorldView {
         b.add(wp);
       }
     }
-    // street lamps along the main street
-    for (let i = 0; i < 6; i++) {
-      const x = 260 + i * 30;
-      const z = 470 + Math.sin(i) * 8;
-      const y = this.ground(x, z);
+    parts.add(this.buildTown());
+    this.group.add(parts);
+  }
+
+  /**
+   * The town's furniture: light poles down both sides of Main Street, signposts at the corners pointing
+   * to the districts, the plaza's lit spruce and trail map, the avalanche control bunker and the fuel
+   * pumps in the patrol's vehicle yard, and the rope tow up the terrain park.
+   */
+  private buildTown(): THREE.Group {
+    const g = new THREE.Group();
+    const dark = 0x262a30;
+    for (const p of streetLights()) {
       const l = new THREE.Group();
-      l.add(cyl(0.08, 0.1, 3.4, 6, 0x262a30, 0, 1.7, 0), box(0.4, 0.5, 0.4, this.streetLights, 0, 3.5, 0), box(0.55, 0.1, 0.55, 0x262a30, 0, 3.8, 0));
-      l.position.set(x, y, z);
-      parts.add(l);
+      l.add(cyl(0.09, 0.12, 4.6, 6, dark, 0, 2.3, 0), box(0.5, 0.55, 0.5, this.streetLights, 0, 4.75, 0), box(0.7, 0.12, 0.7, dark, 0, 5.08, 0));
+      // a cream band at eye height: the poles are the way-markers in a whiteout
+      l.add(cyl(0.13, 0.13, 0.3, 6, PAL.white, 0, 1.6, 0));
+      l.position.set(p.x, this.ground(p.x, p.z), p.z);
+      g.add(l);
     }
-    // a village Christmas-tree-sized spruce with lights in the square
+    // every signpost arm reads from one canvas (a row per district), so the posts merge into one draw call
+    const names = Object.fromEntries(DISTRICTS.map((d) => [d.id, d]));
+    const rows = DISTRICTS.length;
+    const atlas = document.createElement('canvas');
+    atlas.width = 512;
+    atlas.height = 80 * rows;
+    const ctx = atlas.getContext('2d');
+    if (ctx) {
+      DISTRICTS.forEach((d, i) => {
+        ctx.fillStyle = d.id === 'hq' || d.id === 'yard' ? '#7b2f3b' : '#2f5f9e';
+        ctx.fillRect(0, i * 80, 512, 80);
+        ctx.fillStyle = '#f6ecdc';
+        ctx.font = '600 44px Jost, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(d.name.toUpperCase(), 256, i * 80 + 42);
+      });
+    }
+    const tex = new THREE.CanvasTexture(atlas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const armMat = new THREE.MeshLambertMaterial({ map: tex });
+    for (const sp of SIGNPOSTS) {
+      const post = new THREE.Group();
+      post.add(cyl(0.1, 0.12, 3.6, 6, PAL.logDark, 0, 1.8, 0), box(0.3, 0.3, 0.3, PAL.roofSnow, 0, 3.65, 0));
+      sp.to.forEach((id, i) => {
+        const d = names[id];
+        const row = DISTRICTS.indexOf(d);
+        // the arm points at the district: a board on the post's side, its text along the arm
+        const geo = new THREE.PlaneGeometry(2.2, 0.36);
+        const uv = geo.getAttribute('uv') as THREE.BufferAttribute;
+        for (let k = 0; k < uv.count; k++) uv.setY(k, 1 - (row + 1 - uv.getY(k)) / rows);
+        // the back face carries the text the right way round from the other side
+        const back = geo.clone();
+        const buv = back.getAttribute('uv') as THREE.BufferAttribute;
+        for (let k = 0; k < buv.count; k++) buv.setX(k, 1 - buv.getX(k));
+        const ang = Math.atan2(d.x - sp.x, d.z - sp.z) - Math.PI / 2;
+        for (const [gg, a2] of [[geo, ang], [back, ang + Math.PI]] as const) {
+          const arm = new THREE.Mesh(gg, armMat);
+          arm.rotation.y = a2;
+          arm.translateX(a2 === ang ? 1.25 : -1.25);
+          arm.translateZ(a2 === ang ? 0.02 : 0.02);
+          arm.position.y = 3.1 - i * 0.48;
+          post.add(arm);
+        }
+      });
+      post.position.set(sp.x, this.ground(sp.x, sp.z), sp.z);
+      g.add(post);
+    }
+    // the plaza: a lit spruce and the trail map, facing down Main Street
+    const plaza = pad('resort');
     const sq = new THREE.Group();
+    const bulbs = [0xffd23f, 0xff5a3a, 0x7fd3e8].map((c) => glow(c));
     for (let i = 0; i < 4; i++) sq.add(new THREE.Mesh(new THREE.ConeGeometry(2.2 - i * 0.45, 2.4, 8), mat(0x2b4a33)).translateY(1.6 + i * 1.3));
     for (let i = 0; i < 18; i++) {
       const a = i * 1.7;
       const h = 1 + (i / 18) * 5;
       const r = 2.1 - (i / 18) * 1.7;
-      sq.add(ball(0.12, glow([0xffd23f, 0xff5a3a, 0x7fd3e8][i % 3]), Math.cos(a) * r, h, Math.sin(a) * r, 6));
+      // three lit colours, three materials: the merged tree is three draw calls, not eighteen
+      sq.add(ball(0.12, bulbs[i % 3], Math.cos(a) * r, h, Math.sin(a) * r, 6));
     }
-    sq.position.set(325, this.ground(325, 490), 490);
-    parts.add(sq);
-    this.group.add(parts);
+    sq.position.set(plaza.x - 12, this.ground(plaza.x - 12, plaza.z + 18), plaza.z + 18);
+    g.add(sq);
+    const map = new THREE.Group();
+    map.add(box(0.15, 2.4, 0.15, PAL.logDark, -1.6, 1.2, 0), box(0.15, 2.4, 0.15, PAL.logDark, 1.6, 1.2, 0));
+    const board = sign('TRAIL MAP', 3.4, 1.4, { bg: '#f6ecdc', fg: '#2f5f9e', accent: '#d8382a' });
+    board.position.set(0, 2.1, 0.09);
+    map.add(board, box(3.6, 0.2, 0.5, PAL.roofSnow, 0, 2.95, 0));
+    map.position.set(plaza.x + 8, this.ground(plaza.x + 8, plaza.z + 22), plaza.z + 22);
+    g.add(map);
+    // Patrol HQ's avalanche control bunker: a squat concrete magazine, earthed in, with the cannon storage
+    // doors and the howitzer's barrel under a tarp out front
+    const bk = new THREE.Group();
+    bk.add(box(9, 3, 6.5, 0x8a8d8f, 0, 1.5, 0), box(9.6, 0.4, 7.1, PAL.roofSnow, 0, 3.2, 0));
+    bk.add(box(3.4, 2.4, 0.12, 0x4d5a3c, -1.9, 1.2, 3.28), box(1.4, 2.1, 0.12, 0x4d5a3c, 2.6, 1.05, 3.28));
+    const bs = sign('AVALANCHE CONTROL', 3.2, 0.5, { bg: '#d8382a', fg: '#ffffff' });
+    bs.position.set(0, 2.75, 3.36);
+    bk.add(bs);
+    const barrel = cyl(0.13, 0.17, 3.2, 8, dark, -2, 1.3, 5.2);
+    barrel.rotation.x = Math.PI / 2 - 0.35;
+    bk.add(barrel, box(1.2, 0.8, 1.4, 0x4d5a3c, -2, 0.55, 4), cyl(0.45, 0.45, 0.25, 10, dark, -2.75, 0.45, 4).rotateZ(Math.PI / 2), cyl(0.45, 0.45, 0.25, 10, dark, -1.25, 0.45, 4).rotateZ(Math.PI / 2));
+    bk.position.set(BUNKER.x, this.ground(BUNKER.x, BUNKER.z), BUNKER.z);
+    bk.rotation.y = BUNKER.rot;
+    g.add(bk);
+    // the vehicle yard's fuel: a tank on a cradle and two pumps on an island
+    const fuel = new THREE.Group();
+    const tank = cyl(1.1, 1.1, 4.4, 14, PAL.red, 0, 1.6, -2.4);
+    tank.rotation.z = Math.PI / 2;
+    fuel.add(tank, box(4, 0.6, 1.4, 0x8a8d8f, 0, 0.3, -2.4), box(2.6, 0.25, 1.2, 0x8a8d8f, 0, 0.12, 1));
+    for (const x of [-0.7, 0.7]) fuel.add(box(0.5, 1.5, 0.4, PAL.red, x, 0.95, 1), box(0.52, 0.3, 0.42, 0xf3efe6, x, 1.45, 1));
+    const fs = sign('FUEL', 1.4, 0.4, { bg: '#f2c230', fg: '#3a2632' });
+    fs.position.set(0, 2.4, 1);
+    fuel.add(fs, cyl(0.06, 0.06, 2.2, 5, dark, 0, 1.2, 1.2));
+    fuel.position.set(FUEL.x, this.ground(FUEL.x, FUEL.z), FUEL.z);
+    fuel.rotation.y = FUEL.rot;
+    g.add(fuel);
+    // the park's rope tow: a bull wheel at each end on posts, the rope between
+    const a = ROPE_TOW.from;
+    const b = ROPE_TOW.to;
+    const ya = this.ground(a.x, a.z);
+    const yb = this.ground(b.x, b.z);
+    for (const [p, y] of [[a, ya], [b, yb]] as const) g.add(cyl(0.12, 0.12, 2.4, 6, 0xd8382a, p.x, y + 1.2, p.z), cyl(0.5, 0.5, 0.12, 12, dark, p.x, y + 2.4, p.z));
+    const ropeGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x, ya + 2.3, a.z), new THREE.Vector3(b.x, yb + 2.3, b.z)]);
+    g.add(new THREE.Line(ropeGeo, new THREE.LineBasicMaterial({ color: 0x1d1f22 })));
+    const ps = sign('TERRAIN PARK', 2.6, 0.5, { bg: '#2f5f9e', fg: '#f3efe6', accent: '#f2c230' });
+    ps.position.set(a.x + 3, ya + 2.2, a.z + 1);
+    g.add(ps, cyl(0.08, 0.08, 2.2, 5, dark, a.x + 3, ya + 1.1, a.z + 0.9));
+    return g;
+  }
+
+  /** The marked LZs for the helicopter: a ring of orange wands on the snow and a windsock, each its own region. */
+  private buildLZ(lz: (typeof LZS)[number]) {
+    const g = new THREE.Group();
+    const dark = 0x262a30;
+    for (let i = 0; i < 8; i++) {
+      const a2 = (i / 8) * Math.PI * 2;
+      const x = lz.x + Math.cos(a2) * lz.r * 0.8;
+      const z = lz.z + Math.sin(a2) * lz.r * 0.8;
+      const y = this.ground(x, z);
+      g.add(cyl(0.04, 0.04, 1.3, 4, dark, x, y + 0.65, z), box(0.14, 0.4, 0.14, 0xf07a1a, x, y + 1.35, z));
+    }
+    const sx = lz.x + lz.r * 0.95;
+    const sy = this.ground(sx, lz.z);
+    const sock = cyl(0.28, 0.12, 1.4, 8, 0xf07a1a, sx + 0.7, sy + 3.6, lz.z);
+    sock.rotation.z = Math.PI / 2;
+    g.add(cyl(0.05, 0.05, 3.8, 5, dark, sx, sy + 1.9, lz.z), sock);
+    this.group.add(g);
   }
 
   private buildResort() {
-    const base = pad('resort');
     const top = pad('lifttop');
-    const yb = this.ground(base.x, base.z);
-    // base lodge
-    const lodge = this.chalet(12, 8, PAL.blush, PAL.burgundy, 2, true);
-    lodge.position.set(base.x + 18, yb, base.z + 14);
-    lodge.rotation.y = -0.3;
-    const s = sign('TANNBERG', 4, 0.8, { bg: '#2f5f9e', fg: '#f3efe6' });
-    s.position.set(0, 5.9, 4.3);
-    lodge.add(s);
-    this.group.add(lodge);
-    this.smokeSources.push(new THREE.Vector3(base.x + 19, yb + 9, base.z + 14));
     // top station hut
     if (this.bm) {
       // the MeshCraft log cabin fitted to the hut: 6 x 4 m, walls 2.6 m, its roof 7 x 5.4 m, pitch 1.6

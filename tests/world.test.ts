@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getTerrain } from '../src/world/terrain';
 import { PADS, CHARGE_SPOTS, BOWL } from '../src/world/places';
 import { plantForest, TreeGrid } from '../src/world/forest';
-import { buildColliders, SPOTS } from '../src/world/station';
+import { buildColliders, HQ_SHIFT, SPOTS } from '../src/world/station';
 import { conditions, forecast, newWeather, tickWeather, avalancheDanger, DAY_START } from '../src/world/weather';
 
 const t = getTerrain();
@@ -48,7 +48,7 @@ describe('the valley', () => {
   it('builds walls you cannot walk through, with a door you can', () => {
     const c = buildColliders();
     // through the lodge wall: pushed back out
-    const r = c.resolve(-22, 240, 0.4);
+    const r = c.resolve(-22 + HQ_SHIFT.x, 240 + HQ_SHIFT.z, 0.4);
     expect(r.hit).toBe(true);
     // through the door: free
     expect(c.resolve(SPOTS.lodgeDoor.x, SPOTS.lodgeDoor.z, 0.4).hit).toBe(false);

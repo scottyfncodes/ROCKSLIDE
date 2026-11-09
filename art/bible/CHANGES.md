@@ -1,3 +1,11 @@
+# Captures re-taken for the gameplay expansion, phase 1 (2026-11-09)
+
+The base area became one planned town (Tannberg Village: Main Street, Patrol HQ and the vehicle yard,
+Hollin guest village, the lift base plaza and terrain park). No palette, type, token, model or shader
+changed: the new buildings, signposts, light poles, bunker, fuel island and kickers are built from the
+existing kit in its existing roles. Every capture of edition 2.7 was re-taken from the new build
+(`capture.mjs`; the station views moved with the station by (385, 50)); `tokens.json` is unchanged.
+
 # Art bible edition 2.7: Character Evolution (2026-11-09)
 
 Character Evolution (`docs/character-evolution/REPORT.md`): Vince and Koda rebuilt as characters on their existing

@@ -5,7 +5,11 @@ import { mission, MISSIONS } from '../src/missions/catalog';
 import { newRun, tickRun, interact, interactables, fire, fireState, navTarget, currentStep, safeToFire, type Snapshot } from '../src/missions/runner';
 import { available, buy, build, complete, findBadge, loadProfile, migrate, newProfile, saveProfile, tickEvents, blockReason, SAVE_KEY } from '../src/progress/profile';
 import { item, ITEMS } from '../src/progress/catalog';
-import { pad, CHARGE_SPOTS } from '../src/world/places';
+import { pad, CHARGE_SPOTS, VILLAGE } from '../src/world/places';
+import { HQ, SPOTS } from '../src/world/station';
+
+const KET = VILLAGE.find((v) => v.kind === 'lodge')!;
+const CLIN = VILLAGE.find((v) => v.kind === 'clinic')!;
 
 const t = getTerrain();
 
@@ -53,12 +57,12 @@ describe('missions', () => {
     expect(interactables(r)[0].dog).toBe(true);
     interact(r, 'pet');
     expect(currentStep(r)!.kind).toBe('mount');
-    tickRun(r, snap({ vehicle: 'sled', x: 20, z: 226 }), 0.1);
+    tickRun(r, snap({ vehicle: 'sled', x: SPOTS.sled.x - 3, z: SPOTS.sled.z }), 0.1);
     expect(currentStep(r)!.kind).toBe('goto');
     const st = pad('station');
     tickRun(r, snap({ vehicle: 'sled', x: st.x, z: st.z }), 0.1);
     interact(r, 'anemometer');
-    const ev = tickRun(r, snap({ vehicle: 'sled', x: 0, z: 250 }), 0.1);
+    const ev = tickRun(r, snap({ vehicle: 'sled', x: HQ.x, z: HQ.z }), 0.1);
     expect(ev.some((e) => e.type === 'complete')).toBe(true);
   });
 
@@ -78,7 +82,7 @@ describe('missions', () => {
     }
     expect(found.sort()).toEqual(['A', 'C']);
     expect(currentStep(r)!.kind).toBe('land');
-    const ev = tickRun(r, snap({ vehicle: 'heli', heliLanded: true, x: -24, z: 292 }), 0.1);
+    const ev = tickRun(r, snap({ vehicle: 'heli', heliLanded: true, x: SPOTS.heli.x, z: SPOTS.heli.z }), 0.1);
     expect(ev.some((e) => e.type === 'complete')).toBe(true);
   });
 
@@ -118,9 +122,9 @@ describe('missions', () => {
     expect(interactables(r)[0].onSled).toBe(true);
     interact(r, 'board');
     expect(r.passenger).toBe(true);
-    tickRun(r, snap({ vehicle: 'foot', x: 380, z: 506 }), 0.1);
+    tickRun(r, snap({ vehicle: 'foot', x: CLIN.x, z: CLIN.z }), 0.1);
     expect(currentStep(r)!.kind).toBe('goto'); // on foot does not count: bring him on the sled
-    tickRun(r, snap({ vehicle: 'sled', x: 380, z: 506 }), 0.1);
+    tickRun(r, snap({ vehicle: 'sled', x: CLIN.x, z: CLIN.z }), 0.1);
     interact(r, 'handover-nils');
     expect(currentStep(r)).toBeNull();
   });
@@ -130,7 +134,7 @@ describe('missions', () => {
     interact(r, 'crate');
     expect(r.cargo).toBe(true);
     tickRun(r, snap({ vehicle: 'sled' }), 0.1);
-    tickRun(r, snap({ vehicle: 'sled', x: 330, z: 461 }), 0.1);
+    tickRun(r, snap({ vehicle: 'sled', x: KET.x, z: KET.z }), 0.1);
     interact(r, 'unload');
     expect(currentStep(r)).toBeNull();
     const q = play('pepper');
@@ -140,7 +144,7 @@ describe('missions', () => {
     tickRun(q, snap({ x: cat.x, z: cat.z }), 0.1);
     interact(q, 'pepper');
     expect(q.carrying).toBe(true);
-    tickRun(q, snap({ x: 330, z: 461 }), 0.1);
+    tickRun(q, snap({ x: KET.x, z: KET.z }), 0.1);
     interact(q, 'pepper-home');
     expect(currentStep(q)).toBeNull();
   });

@@ -174,7 +174,19 @@ export class Rig {
     const aspect = w / h;
     // a phone held upright keeps at least a 36 degree view across. (It was 40, which on a 19.5:9 phone
     // opened a 76 degree view top to bottom: the patroller small in a sea of foreground snow and sky.)
-    this.camera.fov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(18)) / aspect) * 180) / Math.PI, 55, 70);
+    this.baseFov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(18)) / aspect) * 180) / Math.PI, 55, 70);
+    this.camera.fov = this.baseFov + this.fovPush;
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** the view's own field of view, before the speed push */
+  baseFov = 55;
+  private fovPush = 0;
+  /** Widen the view at speed (degrees over the base); only touches the projection when it changes. */
+  pushFov(deg: number) {
+    if (Math.abs(deg - this.fovPush) < 0.02) return;
+    this.fovPush = deg;
+    this.camera.fov = this.baseFov + deg;
     this.camera.updateProjectionMatrix();
   }
 

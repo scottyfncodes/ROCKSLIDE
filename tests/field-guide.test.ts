@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
+import { pad } from '../src/world/places';
+const PLAZA = pad('resort');
 import { describe, expect, it } from 'vitest';
 import { LAMPLIGHT, NIGHT, RANGE_BANDS, SNOW_LIGHT } from '../src/render/fieldGuide';
 import { findPanes } from '../src/render/lamplight';
@@ -65,12 +67,13 @@ describe('the surround: three planes, each its own silhouette', () => {
     expect(rough(0)).toBeLessThan(rough(1));
   });
 
-  it('seen from the station, each band rises above the one in front (looking out of the valley)', () => {
+  it('seen from the town, each band rises above the one in front (looking out of the valley)', () => {
     const t = new Terrain();
     const range = buildTerrain(t).children.find((c) => c.name === 'range') as THREE.Mesh;
     const pos = range.geometry.getAttribute('position') as THREE.BufferAttribute;
     const haze = range.geometry.getAttribute('aHaze') as THREE.BufferAttribute;
-    const eye = new THREE.Vector3(0, t.height(0, 260) + 1.7, 260);
+    // the town's own view: from the lift base plaza down Main Street, out of the valley
+    const eye = new THREE.Vector3(PLAZA.x, t.height(PLAZA.x, PLAZA.z) + 1.7, PLAZA.z);
     // looking south, out of the open end of the valley
     const top = [-90, -90, -90];
     for (let i = 0; i < pos.count; i++) {
