@@ -978,11 +978,13 @@ export class PatrollerMesh {
         spine += Math.abs(k) * -0.06;
         headY = k * 0.06;
       } else {
-        const k = Math.sin(t * 6);
-        arm.L = { arm: 0.25, roll: -0.2, elbow: 0.4 };
-        arm.R = { arm: 0.85 + k * 0.25, roll: 0.1, elbow: 0.55 - k * 0.3 };
-        headX = 0.15;
-        headY = -0.2;
+        // Character Evolution: the hand goes to Koda's head (he wiggles in to arm's length, PET_REACH),
+        // stroking from the crown down the back of the neck; the other hand rests on his shoulder
+        const k = Math.sin(t * 5);
+        arm.L = { arm: 1.05, roll: 0.22, elbow: 0.35 };
+        arm.R = { arm: 1.7 + k * 0.16, roll: -0.3, elbow: 0.3 - k * 0.22 };
+        headX = 0.12;
+        headY = 0;
         // a fond tilt of the head
         headZ = 0.18 + Math.sin(t * 1.3) * 0.05;
       }

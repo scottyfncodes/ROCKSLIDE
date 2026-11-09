@@ -2504,3 +2504,172 @@ body.titled #loading .loading-bar {
 .hud .scan .bar .p i {
   background: var(--nav-ink);
 }
+
+/* ---------------- Character Evolution: the phone HUD ----------------
+   The notebook pages stay; they are organised. The top is one bar the full width of the screen (the
+   instruments, then the map and pause as two 44 px buttons, all one height), the compass and its
+   waypoint tag share the second line edge to edge, and the thumb gets a cluster instead of a column:
+   the action button in the corner and the controls that apply right now on an arc round it (Get off,
+   Skis, Koda), each a round notebook button with its word under the glyph. Petting Koda, who is nearly
+   always at your heel, is a small paper button; a job or a place takes the big one. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.hud .cond {
+  gap: 6px;
+}
+.hud .cond .strip {
+  height: 44px;
+}
+.hud .cond .iconbtn {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border-radius: 4px;
+  order: 2;
+}
+.hud .cond .mapbtn {
+  order: 1;
+  margin-left: auto;
+}
+.hud .cond .iconbtn svg {
+  width: 19px;
+  height: 19px;
+}
+.hud .cond .big {
+  font-size: 15px;
+}
+.act.long {
+  letter-spacing: 0.01em;
+  padding: 0 4px;
+}
+.act.quiet:not(.hidden) {
+  background-color: rgba(247, 240, 227, 0.95);
+  background-image:
+    linear-gradient(rgba(47, 111, 143, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 111, 143, 0.09) 1px, transparent 1px);
+  background-size: 9px 9px;
+  color: var(--graphite);
+  box-shadow: inset 0 0 0 1px var(--kraft), 0 2px 0 rgba(150, 112, 70, 0.55), 0 4px 10px rgba(40, 30, 20, 0.14);
+}
+@media (max-width: 520px) {
+  .hud .cond {
+    left: calc(10px + var(--safe-l));
+    right: calc(10px + var(--safe-r));
+    top: calc(8px + var(--safe-t));
+  }
+  .hud .cond .strip {
+    flex: 1;
+    min-width: 0;
+    justify-content: space-between;
+  }
+  .hud .cond .box,
+  .hud .cond .box.wx,
+  .hud .cond .box:last-child {
+    padding: 0 10px;
+  }
+  .hud .cond .box.wx {
+    justify-content: flex-start;
+    flex: 1;
+  }
+  .hud .cond .box:last-child {
+    flex: 1;
+    justify-content: flex-end;
+  }
+  /* the compass fills the line; the waypoint's tag sits flush right under the buttons */
+  .hud > .stack {
+    top: calc(58px + var(--safe-t));
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .hud .stack > .compass {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    height: 26px;
+  }
+  .hud .stack > .wp-dist {
+    flex: none;
+    max-width: 58%;
+    line-height: 24px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* the thumb cluster: the action button in the corner, the round buttons on an arc 86 px out from its
+     centre (left of it, up and left, above), nearest first */
+  .actions {
+    bottom: calc(16px + var(--safe-b));
+    right: calc(12px + var(--safe-r));
+  }
+  .actions > .side {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 0;
+    height: 0;
+    display: block;
+  }
+  .hud .side .chip {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    padding: 0;
+    border-radius: 50%;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    line-height: 1.05;
+  }
+  .hud .side .chip.hidden {
+    display: none;
+  }
+  .hud .side .chip span {
+    max-width: 50px;
+    white-space: normal;
+    text-align: center;
+  }
+  .hud .side .chip svg {
+    width: 20px;
+    height: 20px;
+  }
+  .hud .side .chip[data-slot='0'] {
+    right: 97px;
+    bottom: 11px;
+  }
+  .hud .side .chip[data-slot='1'] {
+    right: 72px;
+    bottom: 72px;
+  }
+  .hud .side .chip[data-slot='2'] {
+    right: 11px;
+    bottom: 97px;
+  }
+  .act {
+    width: 78px;
+    height: 78px;
+    font-size: 12px;
+  }
+  .act.quiet:not(.hidden) {
+    width: 62px;
+    height: 62px;
+    margin: 8px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .act.quiet svg.ring {
+    width: 74px;
+    height: 74px;
+  }
+  .alert {
+    bottom: calc(184px + var(--safe-b));
+  }
+}

@@ -70,7 +70,6 @@ loadPatrolModels('/models/').then((models) => {
   for (const p of people) {
     p.useModel(models.rs_patroller);
     p.setLook(0xd8382a, 0x2b2f38, hat, hat === 'hat-helmet' ? 0xf3efe6 : 0x2b2f38, hat === 'hat-helmet' ? 0xd8382a : 0xe0b042, 0xf2a33a, 0xc79a62);
-    if (pose === 'ski') p.setSkis(true);
   }
   const nd = Number(q.get('dogs') ?? 0);
   for (let i = 0; i < nd; i++) {
@@ -91,14 +90,20 @@ loadPatrolModels('/models/').then((models) => {
     scene.add(d.group);
     dogs.push(d);
   }
+  // ?poses=idle,walk,run,ski: a pose per view (else ?pose for all)
+  const poses = (q.get('poses') ?? '').split(',').filter(Boolean) as Pose[];
   const t = Number(q.get('t') ?? 1.5);
-  const speed = pose === 'walk' || pose === 'carry' ? 1.4 : pose === 'run' ? 5.5 : pose === 'ski' ? 6 : 0;
   const dt = 1 / 60;
-  let stride = 0;
-  for (let k = 0; k < t / dt; k++) {
-    stride += speed * dt;
-    for (const p of people) p.animate(pose, stride, speed, 0, dt);
-  }
+  people.forEach((p, i) => {
+    const ps = poses[i] ?? pose;
+    if (ps === 'ski') p.setSkis(true);
+    const speed = ps === 'walk' || ps === 'carry' ? 1.4 : ps === 'run' ? 5.5 : ps === 'ski' ? 6 : 0;
+    let stride = 0;
+    for (let k = 0; k < t / dt; k++) {
+      stride += speed * dt;
+      p.animate(ps, stride, speed, ps === 'ski' ? Number(q.get('lean') ?? 0) : 0, dt);
+    }
+  });
   renderer.render(scene, cam);
   lab.ready = true;
   const loop = () => {
