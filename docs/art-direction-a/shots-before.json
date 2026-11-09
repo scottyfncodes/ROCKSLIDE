@@ -1,0 +1,79 @@
+{
+ "url": "http://localhost:4173/",
+ "taken": "2026-11-09T01:52:40.691Z",
+ "shots": [
+  {
+   "name": "p-lodge",
+   "kind": "env",
+   "note": "Phone, the lodge from the yard, 11:00",
+   "viewport": "390x844",
+   "calls": 287,
+   "tris": 249473
+  },
+  {
+   "name": "p-lodge-dusk",
+   "kind": "ui",
+   "note": "Phone HUD, the lodge at dusk, 18:50",
+   "viewport": "390x844",
+   "calls": 290,
+   "tris": 259353
+  },
+  {
+   "name": "p-cast",
+   "kind": "env",
+   "note": "Phone, Vince front three-quarter at the porch, 10:30",
+   "viewport": "390x844",
+   "calls": 264,
+   "tris": 228881
+  },
+  {
+   "name": "p-back-hud",
+   "kind": "ui",
+   "note": "Phone HUD, default camera behind Vince, 10:30",
+   "viewport": "390x844",
+   "calls": 263,
+   "tris": 249635
+  },
+  {
+   "name": "p-sled",
+   "kind": "ui",
+   "note": "Phone HUD, Vince and Koda on the sled at the lodge, 09:44 (the concept frame)",
+   "viewport": "390x844",
+   "calls": 315,
+   "tris": 267861
+  },
+  {
+   "name": "d-lodge",
+   "kind": "env",
+   "note": "The lodge from the yard, 11:00",
+   "viewport": "1440x900",
+   "calls": 318,
+   "tris": 408949
+  },
+  {
+   "name": "d-sled",
+   "kind": "env",
+   "note": "Vince and Koda on the sled at the lodge, 09:44",
+   "viewport": "1440x900",
+   "calls": 349,
+   "tris": 493246
+  },
+  {
+   "name": "d-cast",
+   "kind": "env",
+   "note": "Vince front three-quarter, 10:30",
+   "viewport": "1440x900",
+   "calls": 315,
+   "tris": 436863
+  },
+  {
+   "name": "d-lodge-dusk",
+   "kind": "env",
+   "note": "The lodge at dusk, 18:50",
+   "viewport": "1440x900",
+   "calls": 344,
+   "tris": 425949
+  }
+ ],
+ "problems": []
+}

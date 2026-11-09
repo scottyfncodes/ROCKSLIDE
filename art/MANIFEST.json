@@ -274,19 +274,19 @@
   },
   {
    "path": "../public/models/rs_patroller.glb",
-   "bytes": 297920,
+   "bytes": 341720,
    "tools": "MeshCraft",
    "status": "shipped",
-   "notes": "rs_patroller: the patroller (and villagers), skinned on a 25-bone skeleton of the code's own joints; face pass: eyes with catchlights blinking about their own centres, visible brows, button nose, blush discs, a smile crescent, rounded ears, temple tufts; hats cut as shells that stop above the brows; 2642 tris drawn with the beanie and gear; art/3d/scripts/patrol_people.py; Khronos 0 errors, engine-checked (three@0.170), motion matched to the code-built figure in tests/people.test.ts",
-   "sha256": "4a68a1fc14b1db4e0c47801e45f6f0996b190353202b881f818b34ba022542a2"
+   "notes": "rs_patroller: the patroller (and villagers), skinned on a 25-bone skeleton of the code's own joints; face pass: eyes with catchlights blinking about their own centres, visible brows, button nose, blush discs, a smile crescent, rounded ears, temple tufts; hats cut as shells that stop above the brows; 2642 tris drawn with the beanie and gear; art/3d/scripts/patrol_people.py; Khronos 0 errors, engine-checked (three@0.170), motion matched to the code-built figure in tests/people.test.ts; Art Direction A milestone 1 (Stylized Alpine 3D, alpine_kit.py)",
+   "sha256": "2636526fc853dee27290276d75fdfcd097ec918133d3f7fe92030b4654f59585"
   },
   {
    "path": "../public/models/rs_sled.glb",
-   "bytes": 147852,
+   "bytes": 269076,
    "tools": "MeshCraft",
    "status": "shipped",
-   "notes": "rs_sled: patrol snowmobile (1964 tris), replaces the code-built SledMesh shape; art/3d/scripts/patrol_models.py; validated (Khronos 0 errors) and engine-checked (three@0.170), game three.js in tests/models.test.ts",
-   "sha256": "35477831e78c05148680a5e59c587f30fdf2171131eea464c45d484b62a2f3c6"
+   "notes": "rs_sled: patrol snowmobile (3824 tris), replaces the code-built SledMesh shape; art/3d/scripts/patrol_models.py; validated (Khronos 0 errors) and engine-checked (three@0.170), game three.js in tests/models.test.ts; Art Direction A milestone 1 (Stylized Alpine 3D, alpine_kit.py)",
+   "sha256": "14ae5e0033884f206e3c3a2a6a2da3db56890e0e642748320ba44e0c915489c5"
   },
   {
    "path": "../public/models/rs_spruce_a.glb",
@@ -338,11 +338,11 @@
   },
   {
    "path": "../public/models/rs_villager.glb",
-   "bytes": 271516,
+   "bytes": 276804,
    "tools": "MeshCraft",
    "status": "shipped",
-   "notes": "rs_villager: the villagers' outfit on the patroller's 25-bone skeleton: knitted cardigan with Fair Isle yoke, button band, elbow patches, fur-cuffed boots; goggles as their own mesh; no patrol gear; art/3d/scripts/patrol_people.py (civilian=True); Khronos 0 errors, engine-checked (three@0.170)",
-   "sha256": "949714d03fdda5b2036d458808a02e269717d67a22991846ff3600c737f117e0"
+   "notes": "rs_villager: the villagers' outfit on the patroller's 25-bone skeleton: knitted cardigan with Fair Isle yoke, button band, elbow patches, fur-cuffed boots; goggles as their own mesh; no patrol gear; art/3d/scripts/patrol_people.py (civilian=True); Khronos 0 errors, engine-checked (three@0.170); Art Direction A milestone 1 (Stylized Alpine 3D, alpine_kit.py)",
+   "sha256": "faa2b7e8ec75c3ad322c093ac4df6ab4f508fa13f92bcf0c993d6030cfb13787"
   },
   {
    "path": "../public/og-image.jpg",
@@ -1178,11 +1178,11 @@
   },
   {
    "path": "../public/models/rs_lodge.glb",
-   "bytes": 477756,
+   "bytes": 833968,
    "tools": "MeshCraft",
    "status": "shipped",
-   "notes": "rs_lodge: Kessel Patrol lodge: plinth and porch, wall_n/s/w/e (cut-away), roof, chimney; notched log corners, shuttered windows through the logs; art/3d/scripts/valley_buildings.py; validate_asset 0 failures, engine-checked (three@0.170)",
-   "sha256": "117380cdd9bf2cb688e2326c8a57b3376d9621a653ad895334426b45917eb8a7"
+   "notes": "rs_lodge: Kessel Patrol lodge: plinth and porch, wall_n/s/w/e (cut-away), roof, chimney; notched log corners, shuttered windows through the logs; art/3d/scripts/valley_buildings.py; validate_asset 0 failures, engine-checked (three@0.170); Art Direction A milestone 1 (Stylized Alpine 3D, alpine_kit.py)",
+   "sha256": "7287c3b1124803165b6329fd6e887b4e1e096d6b8fb1bd848bd6206562c041d4"
   },
   {
    "path": "../public/models/rs_lodge_wing.glb",
@@ -1266,19 +1266,19 @@
   },
   {
    "path": "kessel-art-bible.pdf",
-   "bytes": 6372841,
+   "bytes": 6363984,
    "tools": "DesignCraft layout and PDF export (Playwright captures of the game, colour tokens from the code)",
    "status": "shipped",
    "notes": "The art bible, edition 2: the canonical visual reference, 20 pages. Built by art/bible/build_bible.py from art/bible/captures (capture.mjs) and art/bible/tokens.json (tokens.ts); fonts pinned in art/bible/fonts.json; review in art/bible/QA.md. Supersedes edition 1 (dark slate).",
-   "sha256": "d465b2fa93087980bb420d638457b417b683fcd8f69212f9eef988f14418187e"
+   "sha256": "116b05241b68dc727e7933a693cc6cd80304f8263623ae1e396c4d77a6700f8e"
   },
   {
    "path": "bible/kessel-art-bible.designcraft",
-   "bytes": 6364482,
+   "bytes": 6355649,
    "tools": "DesignCraft",
    "status": "source",
    "notes": "The editable layout of the art bible (open beside a Document Fonts folder holding the fonts in art/bible/fonts.json)",
-   "sha256": "1308b7f8fd12a4d76ad516bf46a34dd1aa2ad7c8f6bf33232f8415cdf5987b6f"
+   "sha256": "fbf0457d7dae0cfb463d0e92546f8fe49146b7c6b30ca0832625c083202de872"
   },
   {
    "path": "bible/qa-contact-sheet.jpg",

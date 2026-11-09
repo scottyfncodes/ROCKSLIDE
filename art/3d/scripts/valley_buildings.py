@@ -21,7 +21,7 @@ Materials are roles (wall, roof, shutter, window...). The game paints each role 
 that building (each house's wall and roof colour, the lit windows), so every region still merges into
 one mesh per material. Low-poly and faceted, like the rest of the valley.
 """
-import math
+import math, os
 import bpy, bmesh
 from mathutils import Matrix, Vector
 
@@ -53,9 +53,15 @@ ROLES = {
     "blanketDark": "#7D2A22", "pillow": "#F3EFE6", "wardrobe": "#7A4F2E", "wardrobeDark": "#6A4226", "chairCloth": "#3C6B4A",
     "chairDark": "#2F553A", "shelf": "#6B4428", "bookRed": "#A63A2C", "bookBlue": "#2F5F9E", "bookOchre": "#E9C46A",
     "bookGreen": "#3C6B4A", "dogBed": "#2F5F9E", "rope": "#D9A429", "shade": "#3D4A3A",
+    # Art Direction A, the Alpine kit (alpine_kit.py): the fieldstone socle's third tone and its mortar,
+    # and the skis leaning on the lodge wall
+    "stoneLight": "#C4BAB0", "mortar": "#7D756F", "ski": "#C79A62",
 }
 mats = K.Materials(pal, ROLES, prefix="RS")
 M = mats.__getitem__
+# the shared Alpine kit (art/3d/scripts/alpine_kit.py): snow loads, fieldstone, the yard's working detail
+exec(open(os.path.join(os.path.dirname(A["palette"]), "3d", "scripts", "alpine_kit.py")).read())
+AK = AlpineKit(K, paint=lambda o, role: K.assign(o, M(role)))  # noqa: F821
 
 
 # ------------------------------------------------------------------ helpers, in three.js space
@@ -108,14 +114,16 @@ def turn(parts, angle):
     return parts
 
 
-def finish(parts, name, pivot=(0, 0, 0)):
+def finish(parts, name, pivot=(0, 0, 0), smooth=None):
+    """smooth: shade smooth, hard only where faces meet at more than this angle (Art Direction A: the
+    lodge, so its snow load is soft while boards, stones and seven-sided logs keep their edges)."""
     o = K.join(parts, name)
     o.data.transform(o.matrix_world); o.matrix_world = Matrix()
     pv = Vector(pivot)
     o.data.transform(Matrix.Translation(-pv))
     o.data.transform(TO_BLENDER)
     o.location = TO_BLENDER @ pv
-    K.shade(o)
+    K.shade(o, smooth)
     K.bake_vertex_colors(o, mats, jitter=0.03, seed=len(name))
     o["gitcraft_asset"] = asset
     return o
@@ -1071,9 +1079,13 @@ def lodge():
     base += [B("logDark", 0.5, 0.08, 1.8, (hw + 0.5, 0.5, -1.6)), B("logDark", 0.08, 0.45, 1.8, (hw + 0.28, 0.75, -1.6))]
     for z in (-2.3, -0.9):
         base.append(B("logDark", 0.4, 0.4, 0.08, (hw + 0.5, 0.27, z)))
-    # a drift banked against the plinth and the porch, as the plows leave it
+    # drifts banked against the plinth as the wind and the plough leave them: soft, uneven mounds
+    # (Alpine kit), in a few lengths, not one tilted slab
     for s in (-1, 1):
-        base.append(B("roofSnow", w * 0.9, 0.28, 0.6, (0, 0.18, s * (hd + 0.55)), (s * 0.35, 0, 0)))
+        for k, (x0, ln, ht) in enumerate(((-5.2, 5.4, 0.42), (0.6, 3.6, 0.32), (5.6, 3.8, 0.5))):
+            base.append(AK.drift(ln, ht, 1.3, (x0, 0.02, s * (hd + 0.75)), role="roofSnow", seed=k + (s > 0) * 3))
+    for k, (z0, ln) in enumerate(((-4.2, 3.4), (4.4, 3.0))):
+        base.append(AK.drift(1.2, 0.4, ln, (-hw - 0.75, 0.02, z0), role="roofSnow", seed=10 + k))
 
     walls = []
     # long walls (n/s) run along x at z=-hd/+hd; end walls (w/e) along z at x=-hw/+hw, half a log higher
@@ -1094,11 +1106,36 @@ def lodge():
            B("door", 1.1, 2.3, 0.1, (hw - 0.75, 1.4, -1.12))]
     for k in range(4):
         we.append(B("logDark", 0.95, 0.06, 0.12, (hw - 0.75, 0.5 + k * 0.6, -1.06)))
-    walls = [finish(wn, "wall_n"), finish(ws, "wall_s"), finish(ww, "wall_w"), finish(we, "wall_e")]
+    # Art Direction A: the logs stand on a fieldstone socle (Alpine kit), 0.7 m of coursed stone round
+    # the outside of every wall, under the window sills; the porch deck covers the east wall's middle.
+    # Each band belongs to its wall's node, so it lifts away with the wall in the cut-away.
+    sy, out = 0.18, LOG_R
+    wn += AK.fieldstone(w + 0.9, 0.7, (0, sy, -hd - out), True, -1, seed=1)
+    ws += AK.fieldstone(w + 0.9, 0.7, (0, sy, hd + out), True, 1, seed=2)
+    ww += AK.fieldstone(d + 0.2, 0.7, (-hw - out, sy, 0), False, -1, seed=3)
+    we += AK.fieldstone(d + 0.2, 0.7, (hw + out, sy, 0), False, 1, seed=4, skip=[(-2.9, 2.9)])
+    # the yard side (south) says who lives here: the patrol plaque between the windows with a gooseneck
+    # lamp over it, split wood stacked under the eaves, skis and poles leaning by the corner
+    face = hd + out + 0.12
+    ws += AK.patrol_sign((-1.5, 1.95, face - 0.04), True, 1, size=0.9, frame="logDark", board="red", cross="white")
+    ws += AK.wall_lamp((-1.5, 2.75, face - 0.04), True, 1)
+    ws += AK.woodpile(1.45, 0.95, (3.0, sy, face), True, 1, seed=5, log="logShade", grain="grain", snow="roofSnow")
+    ws += AK.skis_against_wall((6.55, sy, face), True, 1, pairs=2, seed=6, colors=("red", "ski"))
+    walls = [finish(wn, "wall_n", smooth=40), finish(ws, "wall_s", smooth=40), finish(ww, "wall_w", smooth=40), finish(we, "wall_e", smooth=40)]
 
     # the roof: ridge along x, span across z, pitch 2.7 from the top of the walls (3.35)
     top = wh + 0.25
-    roof = snow_roof(d + 1.6, w + 1.8, 2.7)
+    # Art Direction A: a real snow load (Alpine kit): a soft blanket rolling over the eaves, a crest roll,
+    # fascia boards and icicles; purlin ends and a bargeboard under each gable's overhang
+    span, L = d + 1.6, w + 1.8
+    roof = AK.snow_roof(span, L, 2.7, roof="roof", snow="roofSnow", seed=21)
+    for s in (-1, 1):
+        for x in (-3.6, -1.8, 1.8, 3.6):
+            yy = 2.7 * (1 - abs(x) / (span / 2)) - 0.24
+            roof.append(B("logDark", 0.2, 0.22, 0.75, (x, yy, s * (hw + 0.42))))
+        a = math.atan2(2.7, span / 2)
+        for sx in (-1, 1):
+            roof.append(B("logDark", math.hypot(span / 2, 2.7), 0.3, 0.07, (sx * span / 4, 1.35 - 0.2, s * (L / 2 - 0.02)), (0, 0, -sx * a)))
     for s in (-1, 1):
         roof.append(gable_end("logLight", d, 2.7, s * (hw - 0.05), t=0.32))
         # board-and-batten on the gables, a vent and the end of the ridge beam
@@ -1112,12 +1149,12 @@ def lodge():
     for o in roof:
         o.location.y += top
     # the porch roof: a lean-to off the east wall, on the porch posts, with its own snow and a lip
-    a = math.atan2(0.55, 3.4)
-    ln = math.hypot(0.55, 3.4)
-    roof += [B("roof", ln, 0.16, 6.0, (hw + 1.7, 2.95 + 0.28, 0), (0, 0, -a)),
-             B("roofSnow", ln - 0.1, 0.22, 5.9, (hw + 1.7 + 0.03, 3.13 + 0.28, 0), (0, 0, -a)),
-             C("roofSnow", 0.15, 0.15, 5.8, 6, (hw + 3.35, 2.98, 0), (math.pi / 2, 0, 0)),
-             B("logDark", 0.2, 0.2, 5.6, (hw + 2.8, 2.95, 0))]
+    # (Art Direction A: under the same soft snow as the main roof, with icicles at its eave)
+    porch = AK.snow_shed(3.4, 6.0, 0.55, roof="roof", snow="roofSnow", seed=22)
+    for o in porch:
+        o.location.x += hw
+        o.location.y += 2.955
+    roof += porch + [B("logDark", 0.2, 0.2, 5.6, (hw + 2.8, 2.95, 0))]
     # the chimney on the west end: a fieldstone stack, coursed, with a cap and a drip of soot
     ch = [B("stone", 1.2, wh + 4.5, 1.2, (-hw - 0.5, (wh + 4.5) / 2, 2.5)),
           B("stoneDark", 1.5, 0.3, 1.5, (-hw - 0.5, wh + 4.6, 2.5)),
@@ -1129,7 +1166,7 @@ def lodge():
         for sx, sz in ((-1, 0), (0, 1), (0, -1)):
             ch.append(B("stoneDark" if i % 2 else "stone", 0.62 if sz else 0.07, 0.3, 0.07 if sz else 0.62,
                         (-hw - 0.5 + sx * 0.62 + (0.3 if sz and i % 2 else -0.3 if sz else 0), y, 2.5 + sz * 0.62 + (0.3 if sx and i % 2 else -0.3 if sx else 0))))
-    return [finish(base, "base")] + walls + [finish(roof, "roof"), finish(ch, "chimney")]
+    return [finish(base, "base", smooth=40)] + walls + [finish(roof, "roof", smooth=40), finish(ch, "chimney")]
 
 
 def lodge_wing():
