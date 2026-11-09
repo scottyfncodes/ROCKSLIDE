@@ -1,4 +1,4 @@
-"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.4. Laid out in GITCRAFT DesignCraft from captures of the
+"""SNOW PATROL (formerly ROCKSLIDE): the Kessel art bible, edition 2.5. Laid out in GITCRAFT DesignCraft from captures of the
 running game and colour tokens read from the game's own code. Reproducible end to end:
 
   npm ci && npx vite build && (npx vite preview --port 4173 &)
@@ -96,7 +96,7 @@ d = None
 
 def chrome(sp, n, section, source, dark=False):
     ink = MUTED if dark else BTN
-    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.4", J, "SemiBold", 7.5, ink, tracking=300)
+    d.text(sp, [M, 26, 600, 38], "SNOW PATROL  ·  KESSEL ART BIBLE  ·  EDITION 2.5", J, "SemiBold", 7.5, ink, tracking=300)
     d.text(sp, [W - M - 300, 26, W - M, 38], f"{section}   {n:02d} / {PAGES}", J, "SemiBold", 7.5, ink, tracking=300, align="right")
     d.rect(sp, [M, 42, W - M, 42.75], fill=MUTED if not dark else "#6A4552")
     if source:
@@ -167,7 +167,7 @@ def p_cover(sp):
     d.gradient(sp, [428, 0, 800, H], [{"location": 0, "color": INK, "opacity": 100}, {"location": 40, "color": INK, "opacity": 78}, {"location": 100, "color": INK, "opacity": 0}])
     d.rect(sp, [20, 20, W - 20, H - 20], stroke=CREAM, weight=1.5)
     d.tool("place_image", {"path": os.path.join(WORK, "emblem-round.png"), "x": 72, "y": 76, "width": 96, "spread": sp})
-    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.4", J, "Medium", 10, PINK, tracking=420)
+    d.text(sp, [72, 214, 1000, 226], "THE KESSEL PATROL  ·  ART BIBLE  ·  EDITION 2.5", J, "Medium", 10, PINK, tracking=420)
     d.text(sp, [66, 242, 900, 330], "SNOW PATROL", J, "SemiBold", 72, CREAM, tracking=110, leading=80)
     d.text(sp, [72, 334, 800, 360], "KESSEL VALLEY", J, "Medium", 20, PINK, tracking=520)
     d.rect(sp, [72, 386, 118, 387.5], fill=CREAM)
@@ -551,7 +551,7 @@ def p_station(sp):
     bullets(sp, [M + 320, 560, 700, 760], [
         "Logs weathered grey-brown (#886C5C), end grain showing at the corners; dark standing-seam roof under a thick snow load.",
         "Shuttered windows that glow warm (#DFC8A6) from dusk; a lantern by the door that swings.",
-        "The yard: the garage (barn-red board and batten on a concrete stem wall, cream trim, a timber-framed bay, stovepipe, woodpile, icicles), kennel, equipment room, hangar, radio mast. Buildings are built the way they would be: footing, frame, trim, overhang.",
+        "The yard wears one livery: barn red or ochre timber or cream steel, cream trim, red doors and flashing, charcoal roofs. Garage, hangar, equipment room, kennel and mast hut are built the way they would be: footing, frame, trim, overhang, icicles, a sign of use.",
         "Inside: hearth, mission table, bunk, wardrobe, armchair, books, Koda's bed, a hanging lamp.",
     ], size=9, gap=4)
 
@@ -603,6 +603,7 @@ def p_light(sp):
         "Snow is never white: sunlight on it leans cream (peach at golden hour), skylight in its shade cobalt-violet (fieldGuide.ts SNOW_LIGHT).",
         "The surround is three ridge bands, timbered foothills, a serrated range, separate summits, each a step further into the haze.",
         "Night is dark but the people read: a cold moon on the snow, a cold fill and sky rim on figures, window light thrown on the snow.",
+        "Snow throws light back up: walls, eaves and soffits out of the sun take a bounce from the snow (kit.ts snowBounce), so no building in shade goes to a black block.",
         "Aerial perspective, not fog. The amber column is the beacon of a call waiting at the lodge.",
     ], size=8.6, gap=3)
 
@@ -768,7 +769,7 @@ def main():
     shots, _ = captures()
     shutil.copy(os.path.join(REPO, "public/og-image.jpg"), os.path.join(CAPS, "share-card.jpg"))
     d = DC(REPO, os.path.join(WORK, "designcraft.log"))
-    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.4"})
+    d.tool("new_document", {"width": W, "height": H, "pages": PAGES, "facingPages": False, "intent": "print", "margins": 0, "title": "SNOW PATROL: the Kessel art bible, edition 2.5"})
     d.tool("save_document", {"path": DOC})
     r = d.tool("open_document", {"path": DOC})
     print("document fonts:", r.get("documentFonts"))
@@ -796,7 +797,7 @@ def main():
     elif over:
         raise SystemExit(f"overset text: {json.dumps([(s['id'], s.get('preview')) for s in over])[:1500]}")
     d.tool("save_document", {"path": DOC})
-    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.4", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
+    r = d.x("file.exportPdf", {"path": PDF, "title": "SNOW PATROL: the Kessel art bible, edition 2.5", "author": "The Kessel Patrol (SNOW PATROL)", "compressImages": True})
     print("pdf:", r)
     os.makedirs(os.path.join(WORK, "pages"), exist_ok=True)
     for i in range(PAGES):

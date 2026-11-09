@@ -1,3 +1,16 @@
+# Art bible edition 2.5: Field Guide Alpine, Phase C (2026-11-09)
+
+Art Direction 2.0, Phase C (`docs/art-direction-2/phase-c/REPORT.md`): every building gets the garage's
+construction logic, and walls in shade take light bounced from the snow. Palette roles, type, `grade()` and the
+`:root` tokens are unchanged.
+
+| Page | What changed in the game | In the bible |
+| --- | --- | --- |
+| Every page with a world capture | Hangar, equipment room, kennel and mast hut rebuilt; chalets, chapel, cabin, boathouse and barrier hut detailed; shaded walls lifted by the snow bounce | All captures re-taken from the new build (`capture.mjs`) |
+| 13 Places | The yard livery and construction rule | Caption |
+| 15 Light | The snow bounce | A rule beside the sky ramp |
+| Running header | Edition | SNOW PATROL · KESSEL ART BIBLE · EDITION 2.5 |
+
 # Art bible edition 2.4: Field Guide Alpine, Phase B (2026-11-09)
 
 Art Direction 2.0, Phase B (`docs/art-direction-2/phase-b/REPORT.md`): one modelling language for the cast, a
