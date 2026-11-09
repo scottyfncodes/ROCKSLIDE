@@ -172,7 +172,9 @@ export class Rig {
     this.camera.aspect = w / h;
     // a phone held upright keeps at least a 40° view across, so you still see around you
     const aspect = w / h;
-    this.baseFov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(20)) / aspect) * 180) / Math.PI, 55, 76);
+    // a phone held upright keeps at least a 36 degree view across. (It was 40, which on a 19.5:9 phone
+    // opened a 76 degree view top to bottom: the patroller small in a sea of foreground snow and sky.)
+    this.baseFov = aspect >= 1 ? 55 : THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(18)) / aspect) * 180) / Math.PI, 55, 70);
     this.camera.fov = this.baseFov + this.fovPush;
     this.camera.updateProjectionMatrix();
   }

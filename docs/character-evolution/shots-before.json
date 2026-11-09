@@ -1,0 +1,98 @@
+{
+ "url": "http://localhost:4180/",
+ "taken": "2026-11-09T04:35:23.639Z",
+ "shots": [
+  {
+   "name": "p-1-base",
+   "note": "Standing at the patrol base (default camera) (390x844)",
+   "viewport": "390x844",
+   "calls": 256,
+   "tris": 266707
+  },
+  {
+   "name": "p-2-walk-koda",
+   "note": "Walking with Koda (390x844)",
+   "viewport": "390x844",
+   "calls": 247,
+   "tris": 241173
+  },
+  {
+   "name": "p-3-behind",
+   "note": "From behind, close (390x844)",
+   "viewport": "390x844",
+   "calls": 266,
+   "tris": 308692
+  },
+  {
+   "name": "p-4-ski",
+   "note": "Skiing the Tannberg Run (390x844)",
+   "viewport": "390x844",
+   "calls": 227,
+   "tris": 266734
+  },
+  {
+   "name": "p-5-work",
+   "note": "Working at the garage bench (390x844)",
+   "viewport": "390x844",
+   "calls": 236,
+   "tris": 272476
+  },
+  {
+   "name": "p-6-pet",
+   "note": "Petting Koda (390x844)",
+   "viewport": "390x844",
+   "calls": 245,
+   "tris": 267611
+  },
+  {
+   "name": "p-7-heli",
+   "note": "Near the helicopter (390x844)",
+   "viewport": "390x844",
+   "calls": 244,
+   "tris": 244225
+  },
+  {
+   "name": "p-8-sled",
+   "note": "Near the snowmobile (390x844)",
+   "viewport": "390x844",
+   "calls": 205,
+   "tris": 192480
+  },
+  {
+   "name": "p-9-face",
+   "note": "Face, front three-quarter (look drag) (390x844)",
+   "viewport": "390x844",
+   "calls": 252,
+   "tris": 239985
+  },
+  {
+   "name": "d-1-base",
+   "note": "Standing at the patrol base (default camera) (desktop)",
+   "viewport": "1440x900",
+   "calls": 303,
+   "tris": 420541
+  },
+  {
+   "name": "d-4-ski",
+   "note": "Skiing the Tannberg Run (desktop)",
+   "viewport": "1440x900",
+   "calls": 275,
+   "tris": 472306
+  },
+  {
+   "name": "d-6-pet",
+   "note": "Petting Koda (desktop)",
+   "viewport": "1440x900",
+   "calls": 303,
+   "tris": 438427
+  },
+  {
+   "name": "d-9-face",
+   "note": "Face, front three-quarter (look drag) (desktop)",
+   "viewport": "1440x900",
+   "calls": 275,
+   "tris": 408218
+  }
+ ],
+ "problems": []
+}

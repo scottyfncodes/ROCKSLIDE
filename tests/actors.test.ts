@@ -6,7 +6,7 @@ import type { Terrain } from '../src/world/terrain';
 import { newWalker, stepWalker, RUN } from '../src/actors/walker';
 import { newGlider, stepGlider, SLED, SKIS, glideSpeed, forwardSpeed } from '../src/actors/glide';
 import { newHeli, stepHeli, HELI, heliAgl } from '../src/actors/heli';
-import { newHusky, stepHusky, startTrack, pet } from '../src/actors/husky';
+import { newHusky, stepHusky, startTrack, pet, PET_REACH } from '../src/actors/husky';
 import { pad } from '../src/world/places';
 import { CHARGE_SPOTS } from '../src/world/places';
 
@@ -231,5 +231,20 @@ describe('Koda', () => {
     pet(d);
     stepHusky(d, { x: 0, z: 248, yaw: 0, speed: 0 }, dt, t, solid, []);
     expect(d.anim).toBe('happy');
+  });
+
+  it('comes in to your hand when petted from a couple of metres, and faces you', () => {
+    const d = newHusky(1.6, 249, t);
+    const o = { x: 0, z: 250.2, yaw: 0, speed: 0 };
+    pet(d);
+    for (let i = 0; i < 90; i++) stepHusky(d, o, dt, t, solid, []);
+    const reach = Math.hypot(d.x - o.x, d.z - o.z);
+    expect(reach).toBeLessThan(PET_REACH + 0.2);
+    expect(reach).toBeGreaterThan(PET_REACH - 0.2);
+    expect(d.anim).toBe('happy');
+    // nose toward you (forward is -z at yaw 0)
+    const fx = -Math.sin(d.yaw);
+    const fz = -Math.cos(d.yaw);
+    expect((fx * (o.x - d.x) + fz * (o.z - d.z)) / reach).toBeGreaterThan(0.9);
   });
 });

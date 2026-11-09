@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ContactShadows } from '../render/contactShadow';
 import { AudioEngine } from '../audio/audio';
 import { Input } from '../core/input';
 import { BUZZ, buzz, hitStopScale, HIT_TOTAL } from './feel';
@@ -66,6 +67,8 @@ interface Act {
   run: () => void;
   /** working pose and sound while holding */
   work?: 'saw' | 'dig' | 'fix';
+  /** a nice-to-have (petting Koda in free play): the small paper action button, not the big one */
+  quiet?: boolean;
 }
 
 const storage = (): Store | null => browserStore();
@@ -165,6 +168,7 @@ export class Game {
   private lastVy = 0;
   private fov = 0;
   private miniT = 0;
+  private lastDistrict = '';
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -242,7 +246,7 @@ export class Game {
     this.drift = new GroundDrift(this.terrain, this.rig.quality.tier === 'low' ? 380 : 700, this.rig.quality.tier === 'low' ? 36 : 64);
     this.tracks = new Tracks(this.terrain, this.rig.quality.tier === 'low' ? 1100 : 1800);
     scene.add(this.station.group, this.world.group, this.markers.group, this.avView.group, this.props.group, this.particles.points, this.snowfall.points, this.tracks.mesh, this.drift.group);
-    scene.add(this.player.group, this.dogMesh.group, this.sledMesh.group, this.heliMesh.group);
+    scene.add(this.player.group, this.dogMesh.group, this.sledMesh.group, this.heliMesh.group, this.contact.group);
     // warm light thrown on the snow by the lit windows (one draw call) and Vince's headlamp
     this.lamps = new Lamplight((x, z) => this.terrain.height(x, z));
     this.lamps.setWindows(findPanes([this.station.group, this.world.group], [this.station.windowMaterial, this.world.windowMaterial]));
@@ -1403,7 +1407,7 @@ export class Game {
       if (near(SPOTS.heli.x, SPOTS.heli.z, 10) && !near(this.heli.x, this.heli.z, 4.5)) out.push({ id: 'heligear', label: 'Helicopter kit', hold: 0, run: () => this.openOutfit('Helicopter kit', ['heli']) });
       if (hasUpgrade(p, 'hangar') && near(SPOTS.hangarDoor.x, SPOTS.hangarDoor.z, 4)) out.push({ id: 'hangar', label: 'Hangar', hold: 0, run: () => this.openOutfit('Hangar', ['heli']) });
       if (hasUpgrade(p, 'equipment') && near(SPOTS.equipDoor.x, SPOTS.equipDoor.z, 3)) out.push({ id: 'equip', label: 'Equipment room', hold: 0, run: () => this.openOutfit('Equipment room', ['skis', 'patroller']) });
-      if (near(this.dog.x, this.dog.z, 2.4) && this.dog.mode !== 'track') out.push({ id: 'pet', label: 'Pet Koda', hold: 0, run: () => this.petDog() });
+      if (near(this.dog.x, this.dog.z, 2.4) && this.dog.mode !== 'track') out.push({ id: 'pet', label: 'Pet Koda', hold: 0, quiet: true, run: () => this.petDog() });
     }
     return out;
   }
@@ -1467,7 +1471,7 @@ export class Game {
     if (pressed && !enabled) this.audio.deny();
     if (a.hold <= 0) {
       if (pressed && enabled) a.run();
-      this.hud.setAction(a.label, !!a.red, 0, enabled);
+      this.hud.setAction(a.label, !!a.red, 0, enabled, !!a.quiet);
       this.lastAct = { label: a.label, hold: 0, enabled };
       return;
     }
@@ -1552,6 +1556,30 @@ export class Game {
 
   // ------------------------------------------------------------------ actors on screen
 
+  /** the soft shade under Vince, Koda, the sled and the helicopter where they meet the snow */
+  private readonly contact = new ContactShadows();
+  private placeContactShadows() {
+    const c = this.contact;
+    const ground = (key: string, x: number, z: number, w: number, d: number, yaw: number, k: number, lift = 0) => {
+      const n = this.terrain.normal(x, z);
+      const indoor = inLodge(x, z) || inGarage(x, z);
+      c.set(key, x, (indoor ? this.station.y + 0.32 : this.terrain.height(x, z)) + lift, z, w, d, yaw, k, n.x, n.y, n.z);
+    };
+    // dimmer at night (there is little light to block) and in a storm's flat light it is all there is
+    const k = 0.55 - this.rig.night * 0.25;
+    const onFoot = this.mode === 'foot' || this.mode === 'skis';
+    const pos = this.mode === 'skis' ? this.skis : this.walker;
+    if (onFoot && this.player.group.visible) ground('vince', pos.x, pos.z, this.mode === 'skis' ? 0.8 : 0.95, this.mode === 'skis' ? 1.7 : 0.8, pos.yaw, k);
+    else c.set('vince', 0, 0, 0, 1, 1, 0, 0);
+    const d = this.dog;
+    if (this.dogMesh.group.visible && d.mode !== 'ride') ground('koda', d.x, d.z, 0.62, 1.2, d.yaw, k * 0.9);
+    else c.set('koda', 0, 0, 0, 1, 1, 0, 0);
+    ground('sled', this.sled.x, this.sled.z, 1.5, 3.2, this.sled.yaw, k);
+    // the helicopter's fades as it lifts off the pad
+    const agl = heliAgl(this.heli, this.terrain);
+    ground('heli', this.heli.x, this.heli.z, 3.2, 6.5, this.heli.yaw, k * THREE.MathUtils.clamp(1 - agl / 12, 0, 1));
+  }
+
   private placeActors(dt: number, title: boolean) {
     const pl = this.player;
     const sledY = this.sled.y;
@@ -1582,6 +1610,14 @@ export class Game {
       pl.group.quaternion.setFromAxisAngle(UP, w.yaw);
       const carrying = !!this.p.active?.carrying;
       pose = this.holdT > 0 && this.holdId && this.holdId !== 'pet-pose' ? 'work' : this.holdId === 'pet-pose' ? 'pet' : carrying ? 'carry' : w.speed > 4 ? 'run' : w.speed > 0.3 ? 'walk' : 'idle';
+      if (pose === 'pet' && w.speed < 0.3) {
+        // kneel facing Koda (who wiggles in to the hand), not wherever you happened to be looking
+        let a = Math.atan2(-(this.dog.x - w.x), -(this.dog.z - w.z)) - w.yaw;
+        while (a > Math.PI) a -= Math.PI * 2;
+        while (a < -Math.PI) a += Math.PI * 2;
+        w.yaw += a * Math.min(1, dt * 7);
+        pl.group.quaternion.setFromAxisAngle(UP, w.yaw);
+      }
       // the ground's rise ahead, so planted feet meet a slope instead of floating over it
       const fx = -Math.sin(w.yaw);
       const fz = -Math.cos(w.yaw);
@@ -1685,6 +1721,7 @@ export class Game {
       dm.animate(d.anim, d.stride, dt);
       if ((d.anim === 'run' || d.anim === 'trot') && Math.random() < dt * 6 && this.terrain.surface(d.x, d.z) === 'powder') this.particles.powder(d.x, d.y + 0.1, d.z, 1, 0.6, 0.6, 0, 0, 0.4);
     }
+    this.placeContactShadows();
   }
 
   /** The FXCraft flipbook atlas for the particles (Light, or a failed load, keeps the plain discs). */
@@ -1802,10 +1839,13 @@ export class Game {
     this.hud.setConditions(clock(p.weather.minute), `${c.temp}°${c.sky === 'snow' || c.sky === 'storm' ? ` ${SKY_LABEL[c.sky]}` : ''}`, danger, DANGER_LABEL[danger], p.funds);
     // chips
     const busyDog = this.dog.mode === 'track';
+    // one skis toggle (blue while they are on), Koda's command as the word that button will say to
+    // Koda, and the way out of a vehicle only while you are in one
     this.hud.setChips({
-      off: this.mode === 'sled' ? 'Get off' : this.mode === 'heli' ? (this.heli.landed ? 'Shut down' : null) : this.mode === 'skis' ? 'Skis off' : null,
-      skis: this.mode === 'foot' && !this.indoorsNow() ? 'Skis on' : null,
-      koda: this.mode === 'foot' || this.mode === 'skis' ? (busyDog ? 'Koda: tracking' : this.dog.mode === 'stay' ? 'Koda: heel' : 'Koda: stay') : null,
+      off: this.mode === 'sled' ? 'Get off' : this.mode === 'heli' ? (this.heli.landed ? 'Shut down' : null) : null,
+      skis: (this.mode === 'foot' && !this.indoorsNow()) || this.mode === 'skis' ? 'Skis' : null,
+      skisOn: this.mode === 'skis',
+      koda: this.mode === 'foot' || this.mode === 'skis' ? (busyDog ? 'Tracking' : this.dog.mode === 'stay' ? 'Heel' : 'Stay') : null,
       kodaOn: busyDog || this.dog.mode === 'stay',
     });
     this.hud.setLever(this.mode === 'heli');
@@ -1828,6 +1868,12 @@ export class Game {
     if (this.miniT <= 0) {
       this.miniT = 0.2;
       const d = districtAt(pos.x, pos.z);
+      // walking into a district of the town: its name, once, as you arrive
+      const did = d?.id ?? '';
+      if (did !== this.lastDistrict) {
+        this.lastDistrict = did;
+        if (d && this.mode !== 'heli') this.hud.toast(d.name, '', 1.8);
+      }
       this.hud.drawMini(this.topo, this.topo.width, pos.x, pos.z, this.headingNow(), target, d ? d.name : 'Map');
     }
     // the SKYTRACE scanner readout

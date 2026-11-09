@@ -34,8 +34,8 @@ code-built fallbacks, the terrain's own snow material for the kickers).
   four condos, a house and the chapel.
 - **Lift Base Plaza:** the base lodge, the chairlift's bottom station (now rideable), the lit spruce, the
   trail map, the bottom of the Tannberg run, and off it the **terrain park** (three kickers, a rope tow).
-- The map tints and names each district; the Map chip is now a **minimap** that names the district you
-  are in. Spawn points, the sled, the helicopter, Greta, the clinic, the van callout and Pepper's sill
+- The map tints and names each district; the top bar's map button is now a **minimap** (tap it for the
+  full map), and each district's name is called out as you walk into it. Spawn points, the sled, the helicopter, Greta, the clinic, the van callout and Pepper's sill
   all moved with the town; all mission triggers still work (tests).
 - Old saves (version 1) parked at the old station move into the town; nothing is wiped
   (`tests/migration.test.ts`).
@@ -60,7 +60,7 @@ flat snow and marked LZs (orange wands and windsocks at Kessel Ridge, Top Statio
 Koda rides along (as before).
 
 ### Mobile
-New actions have touch controls (TRICK, the chairlift/tow on the action button, the minimap chip); no
+New actions have touch controls (TRICK in the thumb cluster's corner slot, the chairlift/tow on the action button, the minimap button); no
 overlaps at 5 phone viewports (`scripts/verify.mjs` now also checks the skis HUD). Haptics on trick
 starts, clean landings, stumbles and wipeouts.
 

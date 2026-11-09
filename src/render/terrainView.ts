@@ -624,8 +624,10 @@ function buildBackdrop(t: Terrain): THREE.Mesh {
   const SNOW = new THREE.Color(0.93, 0.95, 0.98);
   const ROCK_A = new THREE.Color(0.33, 0.32, 0.35);
   const ROCK_B = new THREE.Color(0.42, 0.36, 0.32);
-  // Engelmann spruce seen from kilometres away: a dark blue-green, never black
-  const TIMBER = new THREE.Color(0.04, 0.085, 0.075);
+  // Engelmann spruce seen from kilometres away: a dark blue-green, never black. (Character Evolution: a
+  // touch bluer and lighter, frosted, so a far forest reads as winter woods behind the snow instead of
+  // a muddy smear on a phone)
+  const TIMBER = new THREE.Color(0.06, 0.1, 0.105);
   for (let i = 0; i < nv; i++) {
     const x = pos[i * 3];
     const y = pos[i * 3 + 1];
@@ -686,7 +688,7 @@ export function createRangeMaterial(): THREE.MeshLambertMaterial {
           // dark timber is a forest, not a smear: snow shows between the stands, finer up close
           float dark = 1.0 - smoothstep(0.12, 0.3, dot(diffuseColor.rgb, vec3(0.333)));
           float sp = eNoise2(vFogWorld.xz * 0.045) * 0.6 + eNoise2(vFogWorld.xz * 0.13) * 0.4;
-          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.8, 0.84, 0.9), dark * smoothstep(0.55, 0.8, sp) * 0.7);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.8, 0.84, 0.9), dark * smoothstep(0.6, 0.85, sp) * 0.45);
         }
         #endif`,
       )
@@ -711,6 +713,6 @@ export function createRangeMaterial(): THREE.MeshLambertMaterial {
         #include <fog_fragment>`,
       );
   };
-  m.customProgramCacheKey = () => 'range-bands-v4';
+  m.customProgramCacheKey = () => 'range-bands-v5';
   return m;
 }

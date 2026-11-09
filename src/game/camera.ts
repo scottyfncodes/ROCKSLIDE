@@ -8,10 +8,14 @@ export type CamMode = 'foot' | 'sled' | 'skis' | 'heli' | 'indoor' | 'watch';
  * you rather than at you puts you in the lower third and shows the ground you are heading into.
  * `portrait`: how much further back the camera sits on a tall, narrow phone screen.
  */
-const PROFILE: Record<CamMode, { dist: number; pitch: number; lift: number; follow: number; ahead: number; portrait: number }> = {
-  foot: { dist: 5.6, pitch: 0.3, lift: 1.5, follow: 0.6, ahead: 0.32, portrait: 0.3 },
-  sled: { dist: 8.6, pitch: 0.26, lift: 1.6, follow: 3.2, ahead: 0.5, portrait: 0.32 },
-  skis: { dist: 7.2, pitch: 0.3, lift: 1.4, follow: 2.6, ahead: 0.5, portrait: 0.3 },
+// Character Evolution, the phone camera: on a phone held upright the view is taller (see rig.ts), so the
+// camera no longer needs to back so far away to see round you. It sits closer (portrait 0.3 -> 0.1 on
+// foot), aims less far past you (`aheadPortrait`), and so frames you a little above the lower third,
+// about a fifth of the screen tall, with Koda at your heel and the ground ahead still in view.
+const PROFILE: Record<CamMode, { dist: number; pitch: number; lift: number; follow: number; ahead: number; portrait: number; aheadPortrait?: number }> = {
+  foot: { dist: 5.6, pitch: 0.3, lift: 1.5, follow: 0.6, ahead: 0.32, portrait: 0.1, aheadPortrait: 0.24 },
+  sled: { dist: 8.6, pitch: 0.26, lift: 1.6, follow: 3.2, ahead: 0.5, portrait: 0.16, aheadPortrait: 0.42 },
+  skis: { dist: 7.2, pitch: 0.3, lift: 1.4, follow: 2.6, ahead: 0.5, portrait: 0.14, aheadPortrait: 0.42 },
   heli: { dist: 19, pitch: 0.36, lift: 2.5, follow: 1.4, ahead: 0.4, portrait: 0.4 },
   indoor: { dist: 9.5, pitch: 0.95, lift: 0.8, follow: 0, ahead: 0, portrait: 0.15 },
   watch: { dist: 115, pitch: 0.2, lift: 4, follow: 0, ahead: 0, portrait: 0.35 },
@@ -147,7 +151,8 @@ export class FollowCamera {
       this.cam.position.y += (Math.random() - 0.5) * s;
     }
     // aim a little past the character, along the way the camera looks
-    this.ahead += (p.ahead * (1 + this.portrait * 0.25) - this.ahead) * Math.min(1, dt * 4);
+    const ahead = p.aheadPortrait !== undefined ? THREE.MathUtils.lerp(p.ahead, p.aheadPortrait, this.portrait) : p.ahead * (1 + this.portrait * 0.25);
+    this.ahead += (ahead - this.ahead) * Math.min(1, dt * 4);
     const reach = this.ahead * dist;
     this.aim.set(this.target.x - Math.sin(this.yaw) * reach, this.target.y, this.target.z - Math.cos(this.yaw) * reach);
     // over a crest the ground ahead falls away: never aim below the character's own feet

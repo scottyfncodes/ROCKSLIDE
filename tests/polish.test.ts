@@ -95,6 +95,32 @@ describe('the follow camera', () => {
       a.update(1 / 60, pos, 0, 0);
       b.update(1 / 60, pos, 0, 0);
     }
-    expect(b.dist).toBeGreaterThan(a.dist * 1.2);
+    // Character Evolution: a phone held upright already sees more top to bottom (rig.ts), so the camera
+    // backs off only a little (it was 1.3x, which left the patroller small in a field of snow)
+    expect(b.dist).toBeGreaterThan(a.dist * 1.05);
+    expect(b.dist).toBeLessThan(a.dist * 1.2);
+  });
+
+  it('frames the patroller on a phone held upright: above the bottom third, about a fifth of the screen tall', () => {
+    // 390 x 844 (iPhone 13), with the field of view rig.ts gives a portrait screen
+    const aspect = 390 / 844;
+    const fov = THREE.MathUtils.clamp((2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(18)) / aspect) * 180) / Math.PI, 55, 70);
+    const cam = new THREE.PerspectiveCamera(fov, aspect, 0.25, 2600);
+    const fc = new FollowCamera(cam, t);
+    fc.portrait = 1;
+    fc.reduced = true;
+    const pos = new THREE.Vector3(10, t.height(10, 236), 236);
+    fc.snapBehind(0);
+    for (let i = 0; i < 240; i++) fc.update(1 / 60, pos, 0, 0);
+    cam.updateMatrixWorld();
+    const feet = pos.clone().project(cam);
+    const head = pos.clone().setY(pos.y + 1.95).project(cam);
+    // the screen's height is 2 in these units: the figure is 18-30 % of it, centred left to right
+    expect(head.y - feet.y).toBeGreaterThan(0.36);
+    expect(head.y - feet.y).toBeLessThan(0.6);
+    expect(Math.abs(feet.x)).toBeLessThan(0.05);
+    // feet well clear of the thumb cluster (about 70 % down), head near the middle of the screen
+    expect(feet.y).toBeGreaterThan(-0.55);
+    expect(head.y).toBeLessThan(0.15);
   });
 });

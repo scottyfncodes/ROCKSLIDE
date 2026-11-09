@@ -5,7 +5,7 @@
     "plaza": "ok",
     "trick": "ok",
     "heli": "ok",
-    "medianFrameMs": 280.8,
+    "medianFrameMs": 316.7,
     "console": []
   },
   "phone": {
@@ -14,7 +14,7 @@
     "plaza": "ok",
     "trick": "ok",
     "heli": "ok",
-    "medianFrameMs": 129.4,
+    "medianFrameMs": 138,
     "console": []
   }
 }

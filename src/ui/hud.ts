@@ -102,10 +102,15 @@ export class Hud {
     fbox.append(this.fundsEl, el('div', 'small', 'funds'));
     this.pause = el('button', 'iconbtn', ICON.pause) as HTMLButtonElement;
     this.pause.setAttribute('aria-label', 'Pause');
+    dbox.setAttribute('aria-label', 'Avalanche danger');
     // one slim strip of instruments rather than three separate cards
     const strip = el('div', 'strip housing');
     strip.append(tbox, dbox, fbox);
-    cond.append(strip, this.pause);
+    // Character Evolution: the map is navigation, so it lives in the top bar beside pause (an icon
+    // button; its word stays in the DOM for screen readers and tests), not in the thumb cluster
+    const map = el('button', 'iconbtn mapbtn', `${ICON.map}<span class="sr">Map</span>`) as HTMLButtonElement;
+    map.setAttribute('aria-label', 'Map');
+    cond.append(strip, this.pause, map);
 
     const actions = el('div', 'actions');
     const side = el('div', 'side');
@@ -113,18 +118,19 @@ export class Hud {
       const b = el('button', 'chip', `${icon}<span>${label}</span>`) as HTMLButtonElement;
       return b;
     };
-    this.chips = { koda: chip(ICON.paw, 'Koda'), skis: chip(ICON.skis, 'Skis on'), off: chip(ICON.off, 'Get off'), map: chip(ICON.map, 'Map') };
-    // the Map chip is a minimap: the ground round you, north up, and the district you are in
+    this.chips = { koda: chip(ICON.paw, 'Koda'), skis: chip(ICON.skis, 'Skis'), off: chip(ICON.off, 'Get off'), map: map };
+    // the thumb cluster: round buttons on an arc round the action button, filled in order (setChips)
+    side.append(this.chips.off, this.chips.skis, this.chips.koda);
+    // the map button is a minimap: the ground round you, north up (the district you are in is read
+    // out with its name, and called out on screen as you enter it)
     this.miniCanvas = document.createElement('canvas');
     this.miniCanvas.width = this.miniCanvas.height = 112;
     this.miniCanvas.className = 'mini';
     this.miniCanvas.setAttribute('aria-hidden', 'true');
-    this.miniLabel = el('span', 'mini-label', 'Map');
-    this.chips.map.className = 'chip minimap';
-    this.chips.map.innerHTML = '';
-    this.chips.map.append(this.miniCanvas, this.miniLabel);
-    this.chips.map.setAttribute('aria-label', 'Map');
-    side.append(this.chips.map, this.chips.koda, this.chips.skis, this.chips.off);
+    this.miniLabel = map.querySelector('.sr') ?? el('span', 'sr', 'Map');
+    map.classList.add('minimap');
+    map.querySelector('svg')?.remove();
+    map.prepend(this.miniCanvas);
     this.lever = el('div', 'lever hidden');
     const up = el('button', 'chip', `${ICON.up}<span>Climb</span>`);
     const down = el('button', 'chip', `${ICON.down}<span>Descend</span>`);
@@ -314,7 +320,11 @@ export class Hud {
     this.setFunds(funds);
   }
 
-  setAction(label: string | null, red = false, progress = 0, enabled = true) {
+  /**
+   * `quiet`: a nice-to-have (petting Koda, who is nearly always at your heel) shows as a small paper
+   * button; anything the job or the place offers takes the big button and pops in.
+   */
+  setAction(label: string | null, red = false, progress = 0, enabled = true, quiet = false) {
     const was = this.actLabel.textContent;
     const hidden = this.act.classList.contains('hidden');
     this.act.classList.toggle('hidden', !label);
@@ -327,6 +337,9 @@ export class Hud {
       this.act.classList.add('pop');
     }
     this.act.classList.toggle('red', red);
+    this.act.classList.toggle('quiet', quiet && !red);
+    // one long word (WORKBENCH) sets a little tighter so it stays inside the circle
+    this.act.classList.toggle('long', label.split(' ').some((w) => w.length >= 8));
     this.act.classList.toggle('disabled', !enabled);
     const off = (Math.PI * 92 * (1 - progress)).toFixed(1);
     if (this.ringCircle.getAttribute('stroke-dashoffset') !== off) this.ringCircle.setAttribute('stroke-dashoffset', off);
@@ -357,7 +370,12 @@ export class Hud {
     this.fundsEl.parentElement!.classList.add('paid');
   }
 
-  setChips(c: { off?: string | null; skis?: string | null; koda?: string | null; kodaOn?: boolean }) {
+  /**
+   * The contextual controls. Each shows only when it can be used; the shown ones take the arc's slots in
+   * order (nearest the action button first), so the cluster never leaves a gap. `on` marks a state that
+   * is engaged (skis on, Koda told to stay or on a scent) with the nav-pencil blue ring.
+   */
+  setChips(c: { off?: string | null; skis?: string | null; koda?: string | null; kodaOn?: boolean; skisOn?: boolean }) {
     const set = (b: HTMLButtonElement, t: string | null | undefined) => {
       b.classList.toggle('hidden', !t);
       if (t) {
@@ -369,6 +387,14 @@ export class Hud {
     set(this.chips.skis, c.skis);
     set(this.chips.koda, c.koda);
     this.chips.koda.classList.toggle('on', !!c.kodaOn);
+    this.chips.skis.classList.toggle('on', !!c.skisOn);
+    this.chips.skis.setAttribute('aria-pressed', String(!!c.skisOn));
+    this.chips.koda.setAttribute('aria-label', c.koda ? `Koda: ${c.koda}` : 'Koda');
+    let slot = 0;
+    for (const b of [this.chips.off, this.chips.skis, this.chips.koda]) {
+      const v = b.classList.contains('hidden') ? '' : String(slot++);
+      if (b.dataset.slot !== v) b.dataset.slot = v;
+    }
   }
 
   setLever(on: boolean) {
@@ -464,7 +490,7 @@ export class Hud {
     g.beginPath();
     g.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2);
     g.stroke();
-    this.put('mini', this.miniLabel, label || 'Map');
+    this.put('mini', this.miniLabel, label ? `Map: ${label}` : 'Map');
   }
 
   /**
