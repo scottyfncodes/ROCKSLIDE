@@ -148,4 +148,39 @@ describe('natural jumps on the Tannberg run', async () => {
     }
     expect(jumps).toBeGreaterThanOrEqual(3);
   });
+
+  it('on the snow, TRICK with the stick forward is a nose butter, scored when it ends', () => {
+    const s = newTricks();
+    const ev: TrickEvent[] = [];
+    for (let t = 0; t < 1.2; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: 1 }, false, dt));
+    expect(s.press).toBeGreaterThan(0.9);
+    expect(ev.some((e) => e.type === 'butter')).toBe(false);
+    ev.push(...stepTricks(s, idle, false, dt));
+    const b = ev.find((e) => e.type === 'butter')!;
+    expect(b.trick!.name).toBe('Nose butter');
+    expect(b.points).toBeGreaterThan(TRICK.butterPoints);
+    expect(s.score).toBe(b.points);
+    expect(s.style).toBeGreaterThan(0);
+  });
+
+  it('a blip of a butter scores nothing, a tail press needs the stick back, and nothing while stopped', () => {
+    const s = newTricks();
+    const ev: TrickEvent[] = [];
+    for (let t = 0; t < 0.3; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: -1 }, false, dt));
+    expect(s.press).toBeLessThan(-0.5);
+    ev.push(...stepTricks(s, idle, false, dt));
+    expect(ev.some((e) => e.type === 'butter')).toBe(false);
+    for (let t = 0; t < 1; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: 1 }, false, dt, false, false));
+    expect(Math.abs(s.press)).toBeLessThan(0.05);
+    expect(s.score).toBe(0);
+  });
+
+  it('a butter carried off a lip ends there (and the held button does not flip you)', () => {
+    const s = newTricks();
+    const ev: TrickEvent[] = [];
+    for (let t = 0; t < 0.8; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: 1 }, false, dt));
+    for (let t = 0; t < 0.5; t += dt) ev.push(...stepTricks(s, { held: true, sx: 0, sy: 1 }, true, dt));
+    expect(ev.filter((e) => e.type === 'butter').length).toBe(1);
+    expect(s.flipRate).toBe(0);
+  });
 });

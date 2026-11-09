@@ -180,8 +180,17 @@ function longHair(mat: THREE.Material): THREE.Mesh {
 export class PatrollerMesh {
   /** a grab in the air on skis, 0..1: a deep tuck with a hand down to the skis */
   grab = 0;
-  /** on skis, -1..1: crouched for a jump (> 0, the knees folded and the hands forward), or the legs snapping straight off the pop (< 0) */
+  /** on skis, -1..1: crouched for a jump or soaking up a landing (> 0, the knees folded and the hands forward), or the legs snapping straight off the pop (< 0) */
   crouch = 0;
+  /**
+   * On skis, what the pose needs from the game: in the air; spinning or flipping (the rotation's sign, 0
+   * when it has stopped); which grab; the butter's press on the snow (-1 tail .. 1 nose).
+   */
+  readonly ski = { air: false, spin: 0, flip: 0, grabKind: 'mute' as 'mute' | 'safety' | 'tail', press: 0 };
+  /** the pole plant at each turn's start: which hand, how far through (s), the side of the last turn */
+  private plantT = 9;
+  private plantR = false;
+  private edgeSide = 0;
   readonly group = new THREE.Group();
   /** leans with turns, inside the group the game places */
   private body: THREE.Object3D = new THREE.Group();
@@ -903,46 +912,182 @@ export class PatrollerMesh {
       this.lastTy = y;
       this.lastTvy = tvy;
     } else if (pose === 'ski') {
-      const crouch = Math.min(1, speed / 14);
-      y = LEG - 0.12 - crouch * 0.18;
+      // Smooth as butter (and a world away from the walk): a skier who knows what they are doing.
       ik = true;
-      // carving: the feet stagger with the turn and the hips angulate over them
-      fwdL = 0.06 + lean * 0.06;
-      fwdR = -0.06 - lean * 0.06;
+      const sk = this.ski;
+      const k = Math.min(1, speed / 12);
+      const e = clamp(lean, -1, 1);
+      const ae = Math.abs(e);
+      // a tall, relaxed athletic stance; it flexes deeper through the turn and rises a touch between turns
+      y = LEG - 0.1 - 0.12 * k - 0.11 * ae * k + 0.03 * (1 - ae) * k;
+      spine = -0.3 - 0.12 * k;
+      chest = -0.04;
+      // angulation: the hips and knees go into the turn, the shoulders stay nearly level over the skis
+      sway = e * 0.1 * k;
+      bank = -e * 0.42 * k;
+      spineRoll = e * 0.3 * k;
+      // the upper body stays quiet, facing a little down the hill (counter to the skis); the eyes go
+      // where the turn goes
+      pyaw = e * 0.16 * k;
+      chestYaw = e * 0.12 * k;
+      headY = -e * 0.42 * k;
+      headZ = e * 0.12 * k;
+      // the inside ski leads, the feet hip-width and parallel
+      fwdL = 0.03 - e * 0.1;
+      fwdR = 0.03 + e * 0.1;
       pitchL = pitchR = 0;
-      spine = -0.34 - crouch * 0.24;
-      chest = -0.05;
-      headX = -(spine + chest) * 0.9;
-      headY = lean * 0.2;
-      spineRoll = -lean * 0.42;
-      pyaw = lean * 0.22;
-      chestYaw = -lean * 0.3;
-      sway = lean * 0.05;
-      bank = -lean * 0.2;
-      arm.L = { arm: 0.6, roll: -0.45 + lean * 0.15, elbow: 0.55 };
-      arm.R = { arm: 0.6, roll: 0.45 + lean * 0.15, elbow: 0.55 };
+      // hands out in front, wide, as if carrying a tray
+      arm.L = { arm: 0.58, roll: -0.52, elbow: 0.72 };
+      arm.R = { arm: 0.58, roll: 0.52, elbow: 0.72 };
       blow = Math.min(1, speed / 9);
-      if (speed < 3 && speed > 0.3) {
-        // poling along: a real push, the body dipping into each plant
-        this.phase = (this.phase + ds / 2.2) % 1;
-        const s = Math.sin(TAU * this.phase);
-        arm.L.arm = 0.45 + s * 0.8;
-        arm.R.arm = 0.45 - s * 0.8;
-        arm.L.elbow = 0.5 + Math.max(0, s) * 0.5;
-        arm.R.elbow = 0.5 + Math.max(0, -s) * 0.5;
-        spine += Math.abs(s) * -0.14;
-      } else if (speed >= 3) {
-        // a little pole flick on the inside of the turn, in time with the carve
-        const flick = Math.max(0, Math.sin(t * 2.4)) * 0.25;
-        if (lean > 0.2) arm.R.arm += flick;
-        else if (lean < -0.2) arm.L.arm += flick;
+      if (!sk.air && speed >= 5) {
+        // the pole plant: as one turn hands over to the next, the new inside hand flicks forward, touches
+        // the snow and the body flows past it
+        const side = e > 0.14 ? 1 : e < -0.14 ? -1 : 0;
+        if (side && side !== this.edgeSide) {
+          if (this.edgeSide) {
+            this.plantT = 0;
+            this.plantR = side > 0;
+          }
+          this.edgeSide = side;
+        }
+      }
+      this.plantT += dt;
+      if (this.plantT < 0.5) {
+        const p = this.plantT / 0.5;
+        const reach = Math.sin(Math.PI * Math.min(1, p / 0.5)) - Math.max(0, p - 0.5) * 0.6;
+        const a = this.plantR ? arm.R : arm.L;
+        a.arm += 0.38 * reach;
+        a.elbow -= 0.25 * reach;
+        a.roll += (this.plantR ? -1 : 1) * 0.15 * reach;
+      }
+      // the tuck: flat out and running straight, fold up small, fists together under the chin
+      const tuck = clamp((speed - 15) / 7, 0, 1) * clamp(1 - ae / 0.45, 0, 1) * (sk.air ? 0 : 1);
+      if (tuck > 0) {
+        y -= 0.3 * tuck;
+        spine -= 0.55 * tuck;
+        arm.L = { arm: mix(arm.L.arm, 1.15, tuck), roll: mix(arm.L.roll, 0.18, tuck), elbow: mix(arm.L.elbow, 1.75, tuck) };
+        arm.R = { arm: mix(arm.R.arm, 1.15, tuck), roll: mix(arm.R.roll, -0.18, tuck), elbow: mix(arm.R.elbow, 1.75, tuck) };
+        headY *= 1 - tuck;
+      }
+      if (!sk.air && speed < 3) {
+        const still = clamp(1 - speed / 0.6, 0, 1);
+        if (speed > 0.3) {
+          // poling along: a real push, the body dipping into each plant
+          this.phase = (this.phase + ds / 2.2) % 1;
+          const sn = Math.sin(TAU * this.phase);
+          arm.L.arm = 0.45 + sn * 0.8;
+          arm.R.arm = 0.45 - sn * 0.8;
+          arm.L.elbow = 0.5 + Math.max(0, sn) * 0.5;
+          arm.R.elbow = 0.5 + Math.max(0, -sn) * 0.5;
+          spine += Math.abs(sn) * -0.14;
+        }
+        if (still > 0) {
+          // stood still: hip cocked, poles planted wide, a slow bounce in the knees, the head nodding along
+          const b = Math.sin(t * 2.4);
+          y = mix(y, LEG - 0.1 + b * 0.018, still);
+          sway += 0.045 * still;
+          roll = 0.06 * still;
+          spine = mix(spine, -0.18, still);
+          fwdL = mix(fwdL, 0.1, still);
+          fwdR = mix(fwdR, -0.05, still);
+          arm.L = { arm: mix(arm.L.arm, 0.3, still), roll: mix(arm.L.roll, -0.62, still), elbow: mix(arm.L.elbow, 0.5, still) };
+          arm.R = { arm: mix(arm.R.arm, 0.3, still), roll: mix(arm.R.roll, 0.62, still), elbow: mix(arm.R.elbow, 0.5, still) };
+          headX = Math.max(0, b) * 0.07 * still;
+          headY = mix(headY, 0.25, still);
+          headZ = mix(headZ, -0.08, still);
+        }
+      }
+      if (sk.press && !sk.air) {
+        // the butter: right over the nose (the tails come up) or sat back on the tails (the tips come up),
+        // the arms out for balance, the head looking where the skis go
+        const pr = sk.press;
+        const ap = Math.abs(pr);
+        if (pr > 0) {
+          spine -= 0.35 * ap;
+          y -= 0.08 * ap;
+          arm.L = { arm: mix(arm.L.arm, -0.25, ap), roll: mix(arm.L.roll, -0.95, ap), elbow: mix(arm.L.elbow, 0.2, ap) };
+          arm.R = { arm: mix(arm.R.arm, -0.25, ap), roll: mix(arm.R.roll, 0.95, ap), elbow: mix(arm.R.elbow, 0.2, ap) };
+          headX -= 0.25 * ap;
+        } else {
+          spine += 0.25 * ap;
+          y -= 0.14 * ap;
+          arm.L = { arm: mix(arm.L.arm, 1.3, ap), roll: mix(arm.L.roll, -0.7, ap), elbow: mix(arm.L.elbow, 0.15, ap) };
+          arm.R = { arm: mix(arm.R.arm, 1.3, ap), roll: mix(arm.R.roll, 0.7, ap), elbow: mix(arm.R.elbow, 0.15, ap) };
+          headX -= 0.2 * ap;
+        }
+      }
+      if (sk.air) {
+        // in the air: quiet and composed, skis together and level, knees soft, arms out loose
+        bank = sway = spineRoll = pyaw = chestYaw = 0;
+        headY = headZ = 0;
+        fwdL = fwdR = 0.02;
+        liftL = liftR = 0.14;
+        spine = -0.22;
+        arm.L = { arm: 0.5, roll: -0.8, elbow: 0.45 };
+        arm.R = { arm: 0.5, roll: 0.8, elbow: 0.45 };
+        if (sk.spin) {
+          // spinning: arms wrapped in tight, the head leading the turn and the shoulders after it, the
+          // knees drawn up, the axis tipped a little off true
+          const d = sk.spin;
+          headY = -d * 0.6;
+          chestYaw = -d * 0.32;
+          bank = d * 0.16;
+          liftL = liftR = 0.22;
+          // hands together in front, poles trailing low behind
+          arm.L = { arm: 0.75, roll: d < 0 ? 0.3 : -0.05, elbow: 0.55 };
+          arm.R = { arm: 0.75, roll: d > 0 ? -0.3 : 0.05, elbow: 0.55 };
+        }
+        if (sk.flip) {
+          // flipping: a tight tuck, the hands to the shins, the chin down (or the head thrown back)
+          liftL = liftR = 0.4;
+          y -= 0.12;
+          spine = -0.55;
+          headX = sk.flip > 0 ? 0.35 : -0.25;
+          arm.L = { arm: 1.25, roll: -0.12, elbow: 0.85 };
+          arm.R = { arm: 1.25, roll: 0.12, elbow: 0.85 };
+        }
+        const g = this.grab;
+        if (g > 0) {
+          // the grab: the knees come up to the hand, not the hand down to the boots, and the free arm
+          // goes out long for style
+          liftL = mix(liftL, 0.36, g);
+          liftR = mix(liftR, 0.36, g);
+          y -= 0.08 * g;
+          if (sk.grabKind === 'tail') {
+            // reach back for the tail of the right ski: the legs tuck forward, the tips tweak up
+            fwdL = mix(fwdL, 0.22, g);
+            fwdR = mix(fwdR, 0.22, g);
+            pitchL = pitchR = 0.35 * g;
+            spine = mix(spine, -0.15, g);
+            arm.R = { arm: mix(arm.R.arm, -0.75, g), roll: mix(arm.R.roll, 0.3, g), elbow: mix(arm.R.elbow, 0.12, g) };
+            arm.L = { arm: mix(arm.L.arm, 1.5, g), roll: mix(arm.L.roll, -0.55, g), elbow: mix(arm.L.elbow, 0.1, g) };
+            headY = mix(headY, 0.35, g);
+          } else if (sk.grabKind === 'safety') {
+            // the right hand straight down to the right binding, the skis tweaked out to the side
+            spine = mix(spine, -0.5, g);
+            roll = -0.18 * g;
+            arm.R = { arm: mix(arm.R.arm, 0.75, g), roll: mix(arm.R.roll, 0.2, g), elbow: mix(arm.R.elbow, 0.05, g) };
+            arm.L = { arm: mix(arm.L.arm, 0.7, g), roll: mix(arm.L.roll, -1.35, g), elbow: mix(arm.L.elbow, 0.05, g) };
+            headY = mix(headY, -0.3, g);
+            headX = mix(headX, 0.2, g);
+          } else {
+            // the mute: the right hand across to the left ski in front of the boot, the skis tweaked
+            spine = mix(spine, -0.6, g);
+            roll = 0.16 * g;
+            chestYaw = mix(chestYaw, 0.25, g);
+            arm.R = { arm: mix(arm.R.arm, 1.05, g), roll: mix(arm.R.roll, -0.42, g), elbow: mix(arm.R.elbow, 0.2, g) };
+            arm.L = { arm: mix(arm.L.arm, -0.35, g), roll: mix(arm.L.roll, -1.15, g), elbow: mix(arm.L.elbow, 0.1, g) };
+            headY = mix(headY, 0.25, g);
+            headX = mix(headX, 0.25, g);
+          }
+        }
       }
       if (this.crouch > 0) {
-        // loading the jump: sink, fold forward over the boots, hands out in front for balance
+        // loading the jump or soaking up a landing: sink, fold forward over the boots, hands out in front
         const c = this.crouch;
         y -= 0.34 * c;
         spine -= 0.3 * c;
-        headX = -(spine + chest) * 0.9;
         arm.L.arm += 0.35 * c;
         arm.R.arm += 0.35 * c;
         arm.L.elbow += 0.3 * c;
@@ -952,17 +1097,10 @@ export class PatrollerMesh {
         const x = -this.crouch;
         y += 0.05 * x;
         spine += 0.28 * x;
-        headX = -(spine + chest) * 0.9;
         arm.L.arm += 0.7 * x;
         arm.R.arm += 0.7 * x;
       }
-      if (this.grab > 0) {
-        const g = this.grab;
-        y -= 0.3 * g;
-        spine -= 0.4 * g;
-        arm.R = { arm: 0.6 + 1.0 * g, roll: 0.3, elbow: 0.55 - 0.45 * g };
-        arm.L.arm += 0.6 * g;
-      }
+      if (!(sk.air && sk.flip)) headX += -(spine + chest) * 0.9;
     } else if (pose === 'ride' || pose === 'pilot') {
       y = pose === 'ride' ? 0.62 : 0.5;
       leg.L = { hip: 1.45, hipRoll: -0.1, knee: -1.5, ankle: 0.05 };

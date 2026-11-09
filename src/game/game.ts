@@ -1187,6 +1187,7 @@ export class Game {
   private readonly qa = new THREE.Quaternion();
   private readonly qb = new THREE.Quaternion();
   private readonly tmpAxis = new THREE.Vector3();
+  private readonly tmpAxis2 = new THREE.Vector3();
 
   /** What is under the helicopter: a marked LZ, flat enough snow, or too steep to set down on. */
   private landingBelow(): 'lz' | 'flat' | 'steep' {
@@ -1237,6 +1238,11 @@ export class Game {
         buzz(v, BUZZ.crash);
         this.particles.powder(s.x, s.y + 0.5, s.z, 22, 5, 3.5, s.vx * 0.3, s.vz * 0.3, 1.3, FX_KIND.powder);
       }
+    } else if (ev.type === 'butter' && ev.trick) {
+      this.hud.trickPop(ev.trick.name, `+${ev.points}`, 'clean', 1.3);
+      this.audio.stomp(1);
+      buzz(v, BUZZ.air);
+      this.p.trickPoints += ev.points ?? 0;
     } else if (ev.type === 'styleFull') {
       this.hud.trickPop('Style x2', 'Double points, a little extra speed', 'hot', 1.8);
       this.audio.reward();
@@ -1707,13 +1713,15 @@ export class Game {
       // JUMP: crouch while it is held, spring up when it lets go (off a lip, on top of what the lip gives)
       const jp = stepJump(this.jump, free && this.input.held('jump'), s.airborne, s.air, dt, tr.recoverT <= 0);
       if (jp) this.popSkis(s, jp.vy, jp.charge, jp.lip);
-      stepGlider(s, prof, free ? mv.x * ctl : 0, free ? mv.y * ctl : 0, dt, this.terrain, this.solid, this.grid, 1);
+      // in a butter the stick is the press, not the throttle or the snowplough
+      const thr = Math.abs(tr.press) > 0.3 ? 0 : mv.y;
+      stepGlider(s, prof, free ? mv.x * ctl : 0, free ? thr * ctl : 0, dt, this.terrain, this.solid, this.grid, 1);
       const sp = glideSpeed(s);
       const fx = -Math.sin(s.yaw);
       const fz = -Math.cos(s.yaw);
       // tricks in the air; clean fast lines on the snow feed the style meter
       const fast = !s.airborne && sp > 11 && s.slip < 2.5 && s.bump < 1;
-      for (const ev of stepTricks(tr, { held: free && this.input.held('trick'), sx: mv.x, sy: mv.y }, s.airborne, dt, fast)) this.onTrick(ev, s);
+      for (const ev of stepTricks(tr, { held: free && this.input.held('trick'), sx: mv.x, sy: mv.y }, s.airborne, dt, fast, sp > 2.5)) this.onTrick(ev, s);
       if (!s.airborne) this.hopFrom = null;
       this.towToboggan(s, sp, dt);
       // full style: a little extra glide
@@ -2457,12 +2465,25 @@ export class Game {
       pl.grab += ((tr.grabT > 0 ? 1 : 0) - pl.grab) * Math.min(1, dt * 14);
       // the crouch while JUMP is held (at once, deeper as it charges), the legs snapping straight on the pop
       this.extendT = Math.max(0, this.extendT - dt);
+      // a landing soaks into the knees, deeper the harder it was
+      if (s.flew > 0) pl.crouch = Math.max(pl.crouch, Math.min(0.85, 0.3 + s.into * 0.1));
       const crouch = this.extendT > 0 ? -0.6 : s.airborne ? 0 : crouchOf(this.jump);
       pl.crouch += (crouch - pl.crouch) * Math.min(1, dt * (this.extendT > 0 ? 30 : crouch > pl.crouch ? 18 : 9));
-      if (pl.grab > 0.01) {
-        // the grab: the whole body tucks forward over the skis
-        pl.group.quaternion.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -0.45 * pl.grab));
-        pl.group.position.y -= 0.15 * pl.grab;
+      // what the pose needs: in the air, the rotation, the grab (Mute, Safety, Tail), the butter
+      const sk = pl.ski;
+      sk.air = s.airborne;
+      sk.spin = Math.sign(tr.spinRate);
+      sk.flip = Math.sign(tr.flipRate);
+      if (tr.grabT > 0) sk.grabKind = tr.grabName.startsWith('Tail') ? 'tail' : tr.grabName.startsWith('Safety') ? 'safety' : 'mute';
+      sk.press = s.airborne ? 0 : tr.press;
+      if (Math.abs(sk.press) > 0.01) {
+        // the butter: the body tips onto the tips (tails up) or the tails (tips up), pivoting about the
+        // end still on the snow
+        const a = -0.3 * sk.press;
+        const pivot = this.tmp2.set(0, 0, sk.press > 0 ? -0.82 : 0.78);
+        const swung = this.tmpAxis.copy(pivot).applyAxisAngle(this.tmpAxis2.set(1, 0, 0), a);
+        pl.group.position.add(pivot.sub(swung).applyQuaternion(pl.group.quaternion));
+        pl.group.quaternion.multiply(this.qb.setFromAxisAngle(this.tmpAxis2.set(1, 0, 0), a));
       }
       if (this.ride?.kind === 'chair') pl.animate('ride', 0, 0, 0, dt);
       else pl.animate('ski', s.x + s.z, this.ride ? 0 : glideSpeed(s), s.lean, dt);
