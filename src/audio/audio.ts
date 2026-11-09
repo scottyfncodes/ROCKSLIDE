@@ -460,6 +460,13 @@ export class AudioEngine {
     if (hard > 3) this.files?.hit('thud', Math.min(0.5, hard * 0.04), { rate: 0.9, lowpass: 900 });
   }
 
+  /** The pop off the snow (0..1 how charged): the skis' scuff and the tails slapping up, deeper for a big one. */
+  pop(charge: number) {
+    if (!this.on) return;
+    this.burst({ dur: 0.1 + charge * 0.06, gain: 0.1 + charge * 0.08, type: 'bandpass', freq: 2600, freqEnd: 900, q: 0.9 });
+    this.tone(150 - charge * 30, 0.05 + charge * 0.05, 0.09, 'sine', 0, 0.5);
+  }
+
   /** Air under you on a trick: a short whoosh. */
   whoosh() {
     if (!this.on) return;

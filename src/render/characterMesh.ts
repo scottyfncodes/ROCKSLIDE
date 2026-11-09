@@ -180,6 +180,8 @@ function longHair(mat: THREE.Material): THREE.Mesh {
 export class PatrollerMesh {
   /** a grab in the air on skis, 0..1: a deep tuck with a hand down to the skis */
   grab = 0;
+  /** on skis, -1..1: crouched for a jump (> 0, the knees folded and the hands forward), or the legs snapping straight off the pop (< 0) */
+  crouch = 0;
   readonly group = new THREE.Group();
   /** leans with turns, inside the group the game places */
   private body: THREE.Object3D = new THREE.Group();
@@ -934,6 +936,25 @@ export class PatrollerMesh {
         const flick = Math.max(0, Math.sin(t * 2.4)) * 0.25;
         if (lean > 0.2) arm.R.arm += flick;
         else if (lean < -0.2) arm.L.arm += flick;
+      }
+      if (this.crouch > 0) {
+        // loading the jump: sink, fold forward over the boots, hands out in front for balance
+        const c = this.crouch;
+        y -= 0.34 * c;
+        spine -= 0.3 * c;
+        headX = -(spine + chest) * 0.9;
+        arm.L.arm += 0.35 * c;
+        arm.R.arm += 0.35 * c;
+        arm.L.elbow += 0.3 * c;
+        arm.R.elbow += 0.3 * c;
+      } else if (this.crouch < 0) {
+        // the pop: tall, chest up, arms swinging up with it
+        const x = -this.crouch;
+        y += 0.05 * x;
+        spine += 0.28 * x;
+        headX = -(spine + chest) * 0.9;
+        arm.L.arm += 0.7 * x;
+        arm.R.arm += 0.7 * x;
       }
       if (this.grab > 0) {
         const g = this.grab;

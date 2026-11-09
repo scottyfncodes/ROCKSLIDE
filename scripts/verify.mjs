@@ -65,7 +65,7 @@ for (const [name, width, height] of SIZES) {
         if (!b.width || !b.height) return null;
         return { sel, x: b.left, y: b.top, r: b.right, b: b.bottom };
       };
-      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act:not(.trick)', '.hud .act.trick', '.hud .side', '.hud .lever', '.hud .aimpanel', '.hud .beaconpanel'].map(pick).filter(Boolean);
+      return ['.hud .task', '.hud .compass', '.hud .wp-dist', '.hud .cond', '.hud .radio.on', '.hud .speedo', '.hud .alt', '.hud .act:not(.trick):not(.jump)', '.hud .act.trick', '.hud .act.jump', '.hud .side', '.hud .lever', '.hud .aimpanel', '.hud .beaconpanel'].map(pick).filter(Boolean);
     });
     const overlaps = [];
     for (let i = 0; i < boxes.length; i++)
@@ -123,6 +123,13 @@ for (const [name, width, height] of SIZES) {
   await page.waitForTimeout(600);
   r.hudSkis = await hud('on skis');
   check(await P(() => !document.querySelector('.hud .act.trick').classList.contains('hidden')), `${name}: no TRICK button on skis`);
+  check(await P(() => !document.querySelector('.hud .act.jump').classList.contains('hidden')), `${name}: no JUMP button on skis`);
+  // JUMP: Space held is a crouch, let go is a pop into the air
+  await page.keyboard.down('Space');
+  check(await until(() => window.patrol.game.jump.charge > 0.5), `${name}: Space did not crouch on skis`);
+  await page.keyboard.up('Space');
+  check(await until(() => window.patrol.game.skis.airborne), `${name}: letting go of JUMP did not jump`);
+  check(await until(() => !window.patrol.game.skis.airborne), `${name}: never came down from the jump`);
   await page.keyboard.press('KeyQ');
   check(await until(() => window.patrol.state().mode === 'foot'), `${name}: could not take the skis off`);
   await P(() => {

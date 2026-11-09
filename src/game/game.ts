@@ -9,6 +9,7 @@ import { RoadNet, trimWay, wayTo, type Way } from '../world/routing';
 import { cleanLanding, forwardSpeed, glideSpeed, newGlider, SKIS, SLED, stepGlider, type Glider } from '../actors/glide';
 import { HELI, heliAgl, newHeli, stepHeli, type Heli } from '../actors/heli';
 import { newTricks, stepTricks, TRICK, type TrickState } from '../actors/tricks';
+import { crouchOf, newJump, stepJump, type JumpState } from '../actors/jump';
 import { addBond, BOND, SKILLS, TREAT_COST } from '../actors/bond';
 import { hareMesh, tobogganMesh } from '../render/missionProps';
 import { GUNS, LOAD_LABEL, loaded as zoneLoaded, METHOD_LABEL, openRuns, ZONES } from '../missions/control';
@@ -183,6 +184,12 @@ export class Game {
   private forest!: ForestView;
   /** tricks and the style meter on skis */
   private tricks: TrickState = newTricks();
+  /** the jump on skis: the crouch while JUMP is held, the pop when it lets go */
+  private jump: JumpState = newJump();
+  /** where a pop off the flat left the snow (height), to tell a hop from a real jump at the landing */
+  private hopFrom: number | null = null;
+  /** seconds left of the legs snapping straight after a pop (the pose) */
+  private extendT = 0;
   /** riding the chairlift or the rope tow: along a line, then off at the top on skis */
   private ride: { kind: 'chair' | 'tow'; ax: number; az: number; bx: number; bz: number; t: number; dur: number; endYaw: number } | null = null;
   /** the ground's last vertical speed under you, for the shake on rough snow */
@@ -1214,7 +1221,7 @@ export class Game {
             this.dog.happy = 1.5;
           }
           this.p.trickPoints += ev.points;
-        } else if (s.flew >= 0.8) this.cleanLanding(s);
+        } else if (s.flew >= 0.8 && !this.flatHop(s)) this.cleanLanding(s);
       } else if (ev.landing === 'stumble') {
         s.vx *= 0.6;
         s.vz *= 0.6;
@@ -1237,6 +1244,32 @@ export class Game {
     }
   }
 
+  /**
+   * The pop: JUMP let go. Off the snow it springs you up from the slope you are on; just past a lip it adds
+   * to the lip's throw. A puff of snow, a scuff and a tick under the thumb.
+   */
+  private popSkis(s: Glider, vy: number, charge: number, lip: boolean) {
+    if (lip) s.vy += vy;
+    else {
+      // the slope's own rise or fall under the skis carries into the jump (bounded: rough snow is noisy)
+      s.vy = Math.max(-12, Math.min(6, s.vy)) + vy;
+      s.airborne = true;
+      s.air = 0;
+      this.hopFrom = s.y;
+    }
+    this.extendT = 0.14;
+    this.audio.pop(charge);
+    buzz(this.p.settings.vibrate, BUZZ.air);
+    this.particles.powder(s.x, s.y + 0.15, s.z, 4 + Math.round(charge * 6), 1.2 + charge, 1.4, s.vx * 0.2, s.vz * 0.2, 0.6, FX_KIND.powder);
+    this.tracks.lift('ski-l');
+    this.tracks.lift('ski-r');
+  }
+
+  /** a landing from a pop on the flat that came down about where it left: a hop, not a jump to call out */
+  private flatHop(s: Glider) {
+    return this.hopFrom !== null && this.hopFrom - s.y < 1.5;
+  }
+
   /** Start riding the chairlift or the rope tow (on skis: they go on if you are on foot). */
   private startRide(kind: 'chair' | 'tow') {
     if (this.mode === 'foot') this.toggleSkis(true);
@@ -1250,6 +1283,7 @@ export class Game {
     this.audio.click();
     this.hud.toast(kind === 'chair' ? 'Chairlift to the top station' : 'Rope tow to the top of the park', '', 2);
     this.tricks.recoverT = 0;
+    this.jump = newJump();
   }
 
   private stepRide(dt: number) {
@@ -1307,6 +1341,9 @@ export class Game {
         return;
       }
       this.skis = newGlider(this.walker.x, this.walker.z, this.walker.yaw, this.terrain);
+      // a fresh start: no crouch carried over from the last time the skis were on
+      this.jump = newJump();
+      this.hopFrom = null;
       this.mode = 'skis';
       this.cam.setMode('skis');
       this.player.setSkis(true);
@@ -1430,6 +1467,8 @@ export class Game {
 
   private playFrame(dt: number) {
     const p = this.p;
+    // on skis Space is the jump; anywhere else it acts
+    this.input.spaceJumps = this.mode === 'skis' && !this.ride;
     const { look } = this.input.frame();
     this.cam.look(look.x, look.y, p.settings.look, p.settings.invertY);
     if (this.input.pressed('Escape') || this.input.pressed('KeyP')) return this.openPause();
@@ -1665,6 +1704,9 @@ export class Game {
       }
       // a wipeout takes the stick away for a moment; a stumble only dulls it
       const ctl = tr.recoverT <= 0 ? 1 : tr.last === 'wipeout' ? 0 : 0.4;
+      // JUMP: crouch while it is held, spring up when it lets go (off a lip, on top of what the lip gives)
+      const jp = stepJump(this.jump, free && this.input.held('jump'), s.airborne, s.air, dt, tr.recoverT <= 0);
+      if (jp) this.popSkis(s, jp.vy, jp.charge, jp.lip);
       stepGlider(s, prof, free ? mv.x * ctl : 0, free ? mv.y * ctl : 0, dt, this.terrain, this.solid, this.grid, 1);
       const sp = glideSpeed(s);
       const fx = -Math.sin(s.yaw);
@@ -1672,6 +1714,7 @@ export class Game {
       // tricks in the air; clean fast lines on the snow feed the style meter
       const fast = !s.airborne && sp > 11 && s.slip < 2.5 && s.bump < 1;
       for (const ev of stepTricks(tr, { held: free && this.input.held('trick'), sx: mv.x, sy: mv.y }, s.airborne, dt, fast)) this.onTrick(ev, s);
+      if (!s.airborne) this.hopFrom = null;
       this.towToboggan(s, sp, dt);
       // full style: a little extra glide
       if (tr.hotT > 0 && !s.airborne && sp > 4) {
@@ -2205,7 +2248,7 @@ export class Game {
       return;
     }
     const held = this.input.held('action');
-    const pressed = this.input.pressed('btn:action') || this.input.pressed('KeyE') || this.input.pressed('Space') || this.input.pressed('Enter');
+    const pressed = this.input.actionPressed();
     const enabled = a.enabled !== false;
     if (pressed && !enabled) this.audio.deny();
     if (a.hold <= 0) {
@@ -2412,6 +2455,10 @@ export class Game {
         pl.group.position.z -= this.tmpAxis.z;
       }
       pl.grab += ((tr.grabT > 0 ? 1 : 0) - pl.grab) * Math.min(1, dt * 14);
+      // the crouch while JUMP is held (at once, deeper as it charges), the legs snapping straight on the pop
+      this.extendT = Math.max(0, this.extendT - dt);
+      const crouch = this.extendT > 0 ? -0.6 : s.airborne ? 0 : crouchOf(this.jump);
+      pl.crouch += (crouch - pl.crouch) * Math.min(1, dt * (this.extendT > 0 ? 30 : crouch > pl.crouch ? 18 : 9));
       if (pl.grab > 0.01) {
         // the grab: the whole body tucks forward over the skis
         pl.group.quaternion.multiply(this.qb.setFromAxisAngle(this.tmpAxis.set(1, 0, 0), -0.45 * pl.grab));
@@ -2610,7 +2657,8 @@ export class Game {
     else this.hud.setSpeedo(null, '');
     // TRICK takes the action button's place on skis; on the snow, a job or a lift to ride comes first
     const air = this.mode === 'skis' && this.skis.airborne;
-    this.hud.setTrick(this.mode === 'skis' && !this.ride && (air || !this.lastAct), air);
+    const skiing = this.mode === 'skis' && !this.ride;
+    this.hud.setSki(skiing, skiing && (air || !this.lastAct), air, crouchOf(this.jump) > 0 ? this.jump.charge : null);
     if (this.mode === 'heli') this.hud.setAlt(heliAgl(this.heli, this.terrain), elevation(this.heli.y), Math.hypot(this.heli.vx, this.heli.vz), this.heli.vy, this.heli.landed ? null : this.landingBelow());
     else this.hud.setAlt(null);
     // speed: lines at the edges and the view widening, on skis and the sled past about 50 km/h
