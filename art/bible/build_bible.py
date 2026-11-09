@@ -487,7 +487,7 @@ def p_vince(sp):
             ("Hat", f"Charcoal wool beanie ({E['beanie']}) with a mustard band and pom-pom ({E['beanieBand']}); amber goggles ({E['goggles']}) pushed up on it"),
             ("Below", f"Soft-shell trousers ({WORLD['trousers']}), gaiters, worn boots, charcoal mitts"),
             ("Pack", f"Patrol pack with the cross; the old wooden tourers ({E['skisWood']}) ride on it"),
-            ("Build", "Soft carved and jointed (smooth shaded, skis carried diagonally across the pack): pelvis, two-piece spine, neck, shoulders, elbows, hips, knees, ankles; 25 bones in rs_patroller"),
+            ("Build", "Soft carved, jointed: pelvis, two-piece spine, neck, shoulders, elbows, hips, knees, ankles; 25 bones in rs_patroller"),
             ("Face", "Dark round eyes with a highlight, brows, a small nose, pink blush, a smile; he blinks")]
     y = 216
     for k, v in rows:
