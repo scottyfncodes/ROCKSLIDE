@@ -22,6 +22,10 @@
   --pink: #e7aaa6;
   --powder: #a9c8e0;
   --brown: #3a2a1e;
+  /* the field notebook the HUD is written in: kraft cover board, graphite, the nav pencil */
+  --kraft: #b8946a;
+  --graphite: #2f2b26;
+  --nav-ink: #2f6f8f;
   --sans: 'Jost', 'Futura', 'Century Gothic', 'Helvetica Neue', Arial, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   --type: 'Courier Prime', 'Courier New', ui-monospace, monospace;
@@ -2371,4 +2375,132 @@ body.titled #loading .loading-bar {
   .radio {
     padding: 6px 11px;
   }
+}
+
+/* ---------------- the field notebook HUD ----------------
+   Less plum, more field notes: in play, every HUD card is a page from a pocket field notebook. Cream
+   paper with a faint blue graph rule, a kraft board edge, graphite text, red pencil for the patrol and
+   emergencies, a blue nav pencil for the waypoint. The storybook card stock stays on the panels (the
+   map board, pause, wardrobe); this layer is only what sits over the world while you play. */
+.hud .housing,
+.hud .chip,
+.hud .iconbtn,
+.hud .cond .iconbtn {
+  background-color: rgba(247, 240, 227, 0.95);
+  background-image:
+    linear-gradient(rgba(47, 111, 143, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 111, 143, 0.09) 1px, transparent 1px);
+  background-size: 9px 9px;
+  border: 1px solid var(--kraft);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 rgba(150, 112, 70, 0.55), 0 4px 10px rgba(40, 30, 20, 0.14);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: var(--graphite);
+}
+.hud .chip {
+  border-radius: 22px;
+  font-weight: 600;
+}
+.hud .chip svg,
+.hud .iconbtn svg {
+  color: var(--graphite);
+}
+.hud .chip.on {
+  border-color: var(--nav-ink);
+  color: var(--nav-ink);
+  box-shadow: 0 2px 0 rgba(47, 111, 143, 0.45), 0 4px 10px rgba(40, 30, 20, 0.14);
+}
+.hud .chip.on svg {
+  color: var(--nav-ink);
+}
+/* the instruments: a strip of notebook columns */
+.hud .cond .box + .box {
+  border-left: 1px solid rgba(47, 43, 38, 0.18);
+}
+.hud .cond .big,
+.hud .task .obj,
+.hud .speedo .v,
+.hud .alt .big {
+  color: var(--graphite);
+}
+.hud .cond .small,
+.hud .speedo .u,
+.hud .alt .small,
+.hud .alt .big .u {
+  color: rgba(47, 43, 38, 0.66);
+}
+.hud .cond .box.paid .big,
+.hud .cond .gain {
+  color: #a8741a;
+  text-shadow: none;
+}
+/* the compass: pencil ticks, north in red pencil, the waypoint in the nav pencil */
+.hud .compass .tick {
+  background: rgba(47, 43, 38, 0.45);
+}
+.hud .compass .tick.big {
+  background: var(--graphite);
+}
+.hud .compass .card {
+  color: var(--graphite);
+}
+.hud .compass .card.n,
+.hud .compass .center {
+  color: var(--red);
+  background-color: transparent;
+}
+.hud .compass .center {
+  background: var(--red);
+}
+.hud .compass .wp {
+  background: var(--nav-ink);
+  box-shadow: 0 0 0 2px rgba(247, 240, 227, 0.95);
+}
+.hud .wp-dist {
+  color: var(--nav-ink);
+}
+/* the radio: typed on the page, the caller stamped in red pencil */
+.hud .radio {
+  color: var(--graphite);
+}
+.hud .radio .who {
+  color: var(--red);
+}
+.hud .toast.good {
+  color: #2f7a4f;
+}
+.hud .toast.warn {
+  color: #a8741a;
+}
+.hud .alert .d {
+  color: rgba(47, 43, 38, 0.8);
+}
+/* the act button: a paper disc on a kraft board, graphite lettering */
+.hud .act {
+  color: var(--graphite);
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px rgba(150, 112, 70, 0.6), 0 4px 0 var(--kraft), 0 8px 18px rgba(40, 30, 20, 0.22);
+}
+.hud .act.red {
+  color: #fff;
+  box-shadow: inset 0 0 0 3px var(--red), inset 0 0 0 4px rgba(255, 255, 255, 0.5), 0 4px 0 #9b2a1c, 0 8px 18px rgba(40, 20, 30, 0.3);
+}
+/* progress pips and the scanner bar, inked for paper */
+.hud .task .pips b {
+  background: rgba(47, 43, 38, 0.14);
+}
+.hud .task .pips b.done {
+  background: #2f7a4f;
+}
+.hud .task .pips b.now {
+  background: var(--nav-ink);
+}
+.hud .scan .bar .l {
+  color: var(--nav-ink);
+}
+.hud .scan .bar .p {
+  background: rgba(47, 43, 38, 0.14);
+}
+.hud .scan .bar .p i {
+  background: var(--nav-ink);
 }
