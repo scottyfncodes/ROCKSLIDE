@@ -72,11 +72,22 @@ loadPatrolModels('/models/').then((models) => {
     p.setLook(0xd8382a, 0x2b2f38, hat, hat === 'hat-helmet' ? 0xf3efe6 : 0x2b2f38, hat === 'hat-helmet' ? 0xd8382a : 0xe0b042, 0xf2a33a, 0xc79a62);
     if (pose === 'ski') p.setSkis(true);
   }
+  const nd = Number(q.get('dogs') ?? 0);
+  for (let i = 0; i < nd; i++) {
+    const d = new HuskyMesh();
+    d.useModel(models.rs_koda);
+    d.group.position.set((i - (nd - 1) / 2) * 1.3, 0, 0);
+    d.group.rotation.y = [0.7, Math.PI / 2, Math.PI, -0.5][i % 4];
+    scene.add(d.group);
+    for (let k = 0; k < 60; k++) d.animate((q.get('anim') ?? 'idle') as never, k * 0.02 * Number(q.get('dspeed') ?? 0), 1 / 60);
+  }
+  if (nd) for (const p of people) p.group.visible = false;
   if (withDog) {
     const d = new HuskyMesh();
     d.useModel(models.rs_koda);
+    // ?dog=1: Koda beside the first figure; ?dogs=3: Koda alone in a row (front 3/4, side, back)
     d.group.position.set(0.9, 0, 0.4);
-    d.group.rotation.y = Math.PI + 0.9;
+    d.group.rotation.y = 0.9;
     scene.add(d.group);
     dogs.push(d);
   }

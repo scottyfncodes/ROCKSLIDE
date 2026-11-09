@@ -986,7 +986,167 @@ def koda():
     return r
 
 
-BUILD = {"rs_patroller": vince, "rs_villager": lambda: patroller(civilian=True), "rs_koda": koda}
+# ====================================================================== Koda (Character Evolution)
+def two_tone(o, mats, a, b, pick):
+    """Paint each face of `o` role a or b: pick(centre) -> True for b. (Rig.add is then given role None.)"""
+    o.data.materials.clear()
+    o.data.materials.append(mats[a])
+    o.data.materials.append(mats[b])
+    m = o.matrix_basis.copy()  # parts built with place() keep their placement on the object
+    for p in o.data.polygons:
+        p.material_index = 1 if pick(m @ p.center) else 0
+    return o
+
+
+def koda2():
+    """Koda rebuilt to belong beside the new Vince: one smooth lofted barrel (a deep chest that tucks up to
+    the loin), the husky coat painted on it (grey saddle and crown, white bib, belly, legs and mask),
+    tapered legs with a bend at the wrist and hock, round snowshoe paws, a plume of a tail with a white
+    tip, flat cupped ears. Same skeleton, pivots and part meshes as koda() (the game drives it unchanged);
+    the fixed colours are baked into one material like Vince's."""
+    mats = K.Materials(pal, {
+        "collar": "#D8382A", "harnessMain": "#D8382A", "harnessSecond": "#F3EFE6", "bandana": "#D8382A",
+        "baked": "#FFFFFF",
+        "grey": "#5F6873", "greyDark": "#4C545E", "white": "#F4F2EE", "cream": "#E9E4DA", "dark": "#3A4048",
+        "noseBlack": "#1B1D21", "iris": "#8FD0F0", "pupil": "#101418", "earInner": "#E8B4A8", "tongue": "#E86A7A",
+        "tag": "#F2C230", "glint": "Cross White", "pad": "#3A3036",
+    }, prefix="RS")
+    r = Rig(mats, keep={"collar", "harnessMain", "harnessSecond", "bandana"})
+    r.bone("body", None, (0, 0.5, 0))
+    r.bone("front", "body", (0, 0, 0))
+    r.bone("rear", "body", (0, 0, 0))
+    r.bone("chest", "front", (0, 0, -0.33))
+    legs = (("FL", -0.15, -0.34, True), ("FR", 0.15, -0.34, True), ("RL", -0.15, 0.38, False), ("RR", 0.15, 0.38, False))
+    for n, x, z, front in legs:
+        r.bone(f"leg_{n}_upper", "front" if front else "rear", (x, -0.04, z))
+        r.bone(f"leg_{n}_lower", f"leg_{n}_upper", (0, -(0.23 if front else 0.24), 0))
+    r.bone("head", "front", (0, 0.3, -0.5))
+    r.bone("jaw", "head", (0, -0.11, -0.16))
+    r.bone("tongue", "jaw", (0, 0.012, -0.08))
+    r.bone("ear_L", "head", (-0.11, 0.16, 0.02))
+    r.bone("ear_R", "head", (0.11, 0.16, 0.02))
+    r.bone("tail_0", "rear", (0, 0.16, 0.5))
+    for i in range(1, 4):
+        r.bone(f"tail_{i}", f"tail_{i - 1}", (0, 0.1, 0))
+    J = r.at
+    body = "koda_body"
+    add = r.add
+
+    # ---- the barrel, (z, half-width, half-height, centre y): chest, ribs, a tucked loin, the hips
+    BAR = [(-0.6, 0.1, 0.13, 0.57), (-0.52, 0.18, 0.205, 0.545), (-0.38, 0.222, 0.235, 0.53), (-0.2, 0.21, 0.205, 0.55),
+           (0.0, 0.19, 0.17, 0.565), (0.17, 0.185, 0.155, 0.578), (0.32, 0.205, 0.168, 0.578), (0.44, 0.18, 0.15, 0.585),
+           (0.52, 0.11, 0.105, 0.6), (0.55, 0.05, 0.05, 0.6)]
+
+    def bar_at(z):
+        for a, b in zip(BAR, BAR[1:]):
+            if a[0] <= z <= b[0]:
+                t = (z - a[0]) / (b[0] - a[0])
+                return tuple(lerp(a[k], b[k], t) for k in (1, 2, 3))
+        return BAR[0][1:] if z < BAR[0][0] else BAR[-1][1:]
+
+    def white_body(p):
+        """The husky's coat on the barrel: white below a line along the flank that rises up the chest
+        into the bib. (p is in three.js space: the parts are built there and turned at the end.)"""
+        w, h, cy = bar_at(p[2])
+        line = cy - 0.12 * h - 0.25 * h * max(0.0, (-0.25 - p[2]) / 0.35)  # the white rises up the chest
+        bib = p[2] < -0.5 and p[1] < cy + 0.45 * h
+        return p[1] < line or bib
+
+    def barrel(n, z0, z1):
+        rr = [(z, w, h, 0.0, cy, 2.3) for z, w, h, cy in BAR if z0 <= z <= z1]
+        o = loft(n, rr, 18, "Z", caps=(z0 <= BAR[0][0], z1 >= BAR[-1][0]))
+        return two_tone(o, mats, "grey", "white", lambda c: white_body((c.x, c.y, c.z)))
+    add(body, "front", barrel("barrelF", -0.61, 0.17))
+    add(body, "rear", barrel("barrelR", -0.2, 0.6))
+    # the chest (it breathes: the code scales its joint) and the white bib under the jaw
+    ch = J("chest", (0, 0, 0))
+    add(body, "chest", G("chestG", 0.2, (ch[0], ch[1] - 0.02, ch[2] - 0.05), 2, (0.95, 1.0, 0.85)), "white")
+    # the neck: grey nape and ruff, white throat, rising forward to the head
+    neck = [(0.6, 0.16, 0.16, -0.42), (0.68, 0.15, 0.15, -0.45), (0.76, 0.135, 0.13, -0.48), (0.84, 0.12, 0.115, -0.5)]
+    nk = loft("neck", [(y, w, d, 0.0, z, 2.2) for y, w, d, z in neck], 18, "Y", caps=(False, False))
+    # the throat is white: the faces ahead of the neck's centre line, low on the sides
+    neck_z = lambda y: lerp(-0.42, -0.5, max(0.0, min(1.0, (y - 0.6) / 0.24)))  # noqa: E731
+    add(body, "front", two_tone(nk, mats, "grey", "white", lambda c: c.z < neck_z(c.y) - 0.05 and abs(c.x) < 0.13))
+    # ruff: soft grey fur at the shoulders behind the neck
+    add(body, "front", G("ruff", 0.2, (0, 0.71, -0.33), 2, (1.0, 0.62, 0.9)), "grey")
+
+    # ---- legs: a tapered foreleg / a muscled thigh, a bend at the wrist or hock, a round snowshoe paw
+    for n, x, z, front in legs:
+        up, lo = f"leg_{n}_upper", f"leg_{n}_lower"
+        u, l_ = J(up, (0, 0, 0)), J(lo, (0, 0, 0))
+        if front:
+            add(body, up, tube(f"u{n}", u, [(0.06, 0.07, 0.08), (0.0, 0.075, 0.085), (-0.12, 0.065, 0.07), (-0.24, 0.056, 0.06)], sides=12), "white")
+        else:
+            th = tube(f"u{n}", u, [(0.12, 0.06, 0.08, 0.0), (0.04, 0.085, 0.11, 0.015), (-0.06, 0.076, 0.092, 0.02), (-0.17, 0.058, 0.066, 0.01), (-0.26, 0.05, 0.056, 0.0)], sides=12)
+            # grey over the haunch, white down the back of the thigh and the leg (the husky's breeches)
+            add(body, up, two_tone(th, mats, "grey", "white", lambda c, u=u: c.y < u[1] - 0.06 or (c.z > u[2] + 0.06 and c.y < u[1] + 0.02)))
+        add(body, lo, tube(f"l{n}", l_, [(0.03, 0.056, 0.06), (-0.08, 0.05, 0.054), (-0.17, 0.046, 0.05), (-0.2, 0.05, 0.054)], sides=12), "white")
+        paw = [(0.06, 0.04, 0.03), (0.035, 0.062, 0.042), (-0.03, 0.068, 0.04), (-0.085, 0.06, 0.03), (-0.105, 0.035, 0.018)]
+        add(body, lo, loft(f"paw{n}", [(l_[2] + dz, w, h, l_[0], l_[1] - 0.215, 2.4) for dz, w, h in paw], 12, "Z"), "white")
+        for k in (-1, 1):
+            add(body, lo, B(f"toe{n}{k}", 0.004, 0.02, 0.04, (l_[0] + k * 0.022, l_[1] - 0.205, l_[2] - 0.075)), "greyDark")
+
+    # ---- the head: a grey crown and mask over a white face, a tapered muzzle, a dark nose
+    hd = lambda p: J("head", p)  # noqa: E731
+    sk = G("skull", 0.2, hd((0, 0.03, 0)), 2, (1, 0.88, 1.05))
+    hb0 = J("head", (0, 0, 0))
+    # the white face below the crown: the front of the skull under the eyes and the lower cheeks
+    add(body, "head", two_tone(sk, mats, "grey", "white", lambda c: (c.z < hb0[2] - 0.1 and c.y < hb0[1] + 0.07) or c.y < hb0[1] - 0.06))
+    add(body, "head", G("face", 0.15, hd((0, -0.06, -0.08)), 2, (1.08, 0.66, 1.0)), "white")
+    mz = [(-0.12, 0.1, 0.085, -0.04), (-0.22, 0.09, 0.075, -0.055), (-0.32, 0.075, 0.062, -0.065), (-0.385, 0.058, 0.05, -0.07), (-0.405, 0.035, 0.032, -0.07)]
+    hb = J("head", (0, 0, 0))
+    add(body, "head", loft("muzzle", [(hb[2] + z, w, h, hb[0], hb[1] + cy, 2.2) for z, w, h, cy in mz], 16, "Z"), "white")
+    add(body, "head", G("bridge", 0.06, hd((0, 0.03, -0.27)), 1, (0.75, 0.45, 2.0), (0.12, 0, 0)), "grey")
+    add(body, "head", G("mask", 0.07, hd((0, 0.095, -0.15)), 1, (0.9, 0.55, 1.6), (0.35, 0, 0)), "grey")
+    add(body, "head", S("nose", 0.042, hd((0, -0.012, -0.41)), 10, (1.15, 0.78, 0.85)), "noseBlack")
+    for sx in (-1, 1):
+        add(body, "head", G(f"browspot{sx}", 0.03, hd((sx * 0.08, 0.115, -0.17)), 1, (1.15, 0.65, 0.6), (0.3, 0, sx * -0.3)), "white")
+        add(body, "head", G(f"cheek{sx}", 0.07, hd((sx * 0.14, -0.06, -0.06)), 1, (1.1, 0.8, 1.0), (0, 0, sx * -0.5)), "white")
+    add(body, "jaw", G("jawG", 0.08, J("jaw", (0, -0.01, -0.08)), 1, (0.95, 0.4, 1.4)), "white")
+    # ears: flat, cupped triangles with a pink inside (the left one flops: the code tips its joint)
+    for s, sx in (("L", -1), ("R", 1)):
+        e = J(f"ear_{s}", (0, 0, 0))
+        outline = [(-0.075, 0.0), (0.075, 0.0), (0.03, 0.12), (0.0, 0.19), (-0.03, 0.12)]
+        ear = K.prism(f"ear{s}", outline, 0.035, (0, 0, 0), axis="Z")
+        K.deform(ear, lambda v: Vector((v.x, v.y, v.z + 0.6 * v.x * v.x)))
+        add(body, f"ear_{s}", place(ear, v3(e, (0, 0.0, 0)), (0.12, 0, sx * -0.12)), "grey")
+        inner = K.prism(f"inner{s}", [(x * 0.62, y * 0.7 + 0.015) for x, y in outline], 0.02, (0, 0, 0), axis="Z")
+        K.deform(inner, lambda v: Vector((v.x, v.y, v.z + 0.6 * v.x * v.x)))
+        add(body, f"ear_{s}", place(inner, v3(e, (0, 0.0, -0.016)), (0.12, 0, sx * -0.12)), "earInner")
+    # the tail: a plume of four overlapping links, full in the middle, a white tip
+    for i in range(4):
+        t = f"tail_{i}"
+        tp = J(t, (0, 0, 0))
+        r0, r1 = [(0.055, 0.08), (0.08, 0.09), (0.09, 0.082), (0.082, 0.03)][i]
+        top = 0.15 if i < 3 else 0.12
+        add(body, t, tube(f"tl{i}", tp, [(-0.05, r0 * 0.3, r0 * 0.3), (-0.03, r0 * 0.8, r0 * 0.85), (0.02, r0, r0 * 1.05), (0.07, (r0 + r1) / 2 * 1.05, (r0 + r1) / 2 * 1.12),
+                                         (top - 0.04, r1, r1 * 1.05), (top - 0.01, r1 * 0.7, r1 * 0.75), (top, r1 * 0.25, r1 * 0.25)], sides=10),
+            "white" if i == 3 else "grey")
+    # collar and tag (always on; the code paints the collar)
+    add(body, "front", place(K.torus("collarT", 0.165, 0.026, (0, 0, 0), axis="Z", major=16, minor=6), J("front", (0, 0.17, -0.44)), (math.pi / 2 - 0.45, 0, 0)), "collar")
+    add(body, "front", G("tag", 0.03, J("front", (0, 0.07, -0.57)), 1, (1, 1, 0.5)), "tag")
+    # eyes open and shut (the code swaps them), and the tongue (shown when panting)
+    for sx, s in ((-1, "L"), (1, "R")):
+        add("koda_eyes_open", "head", G(f"iris{s}", 0.046, hd((sx * 0.086, 0.06, -0.18)), 1, (1, 0.78, 0.5), (0, 0, sx * 0.25)), "iris")
+        add("koda_eyes_open", "head", G(f"pupil{s}", 0.024, hd((sx * 0.086, 0.058, -0.2)), 1, (1, 1.05, 0.4)), "pupil")
+        add("koda_eyes_open", "head", G(f"glint{s}", 0.008, hd((sx * 0.086 - 0.01, 0.072, -0.21)), 0), "glint")
+        for k in (-1, 1):
+            add("koda_eyes_shut", "head", B(f"lid{s}{k}", 0.042, 0.012, 0.02, hd((sx * 0.085 + k * 0.017, 0.055, -0.192)), (0, 0, k * 0.35)), "dark")
+    tg = K.box("tongueB", (0.065, 0.015, 0.13), (0, 0, 0))
+    K.deform(tg, lambda v: Vector((v.x, v.y, v.z - 0.065)))
+    add("koda_tongue", "tongue", place(tg, J("tongue", (0, 0, 0))), "tongue")
+    # harness and its saddlebags (gear the game turns on), the bandana
+    add("koda_harness", "body", place(K.torus("strapT", 0.28, 0.035, (0, 0, 0), axis="Z", major=14, minor=5), J("body", (0, 0.04, -0.16))), "harnessMain")
+    add("koda_harness", "body", B("saddle", 0.36, 0.06, 0.32, J("body", (0, 0.28, -0.05)), bevel=0.012), "harnessMain")
+    add("koda_harness", "body", B("hx", 0.37, 0.065, 0.08, J("body", (0, 0.28, -0.05))), "harnessSecond")
+    add("koda_harness", "body", B("hz", 0.08, 0.066, 0.2, J("body", (0, 0.28, -0.05))), "harnessSecond")
+    for sx in (-1, 1):
+        add("koda_harness_pack", "body", B(f"bag{sx}", 0.12, 0.2, 0.28, J("body", (sx * 0.27, 0.1, 0.02)), bevel=0.015), "harnessSecond")
+    add("koda_bandana", "front", place(cone("band", 0.17, 0.2, 3, (0, 0, 0)), J("front", (0, 0.02, -0.52)), (math.pi + 0.4, 0, 0)), "bandana")
+    return r
+
+
+BUILD = {"rs_patroller": vince, "rs_villager": lambda: patroller(civilian=True), "rs_koda": koda2}
 rig = BUILD[asset]()
 arm, objs = build(rig, asset)
 bpy.ops.wm.save_as_mainfile(filepath=A["out"])
