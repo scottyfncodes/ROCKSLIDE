@@ -2,6 +2,7 @@
 // charges and the avalanche are shaped from noise and oscillators. Only the voices, the Kessel theme
 // and three stingers are files (files.ts), lazy-loaded, each with a synthesised fallback.
 
+import { crunch, type Snow } from './crunch';
 import { AudioFiles, type Intensity, type Sting } from './files';
 import type { VoiceLine } from './lines';
 
@@ -33,6 +34,9 @@ export class AudioEngine {
   private birdTimer = 4;
   private crackleTimer = 0;
   private lastStep = 0;
+  /** the boot-in-snow takes (crunch.ts), built once: six each for packed snow and powder */
+  private crunches: Record<Snow, AudioBuffer[]> = { packed: [], powder: [] };
+  private lastCrunch = -1;
   private lastThud = 0;
   private turbine!: OscillatorNode;
   private turbineGain!: GainNode;
@@ -77,6 +81,13 @@ export class AudioEngine {
     this.noise = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    for (const snow of ['packed', 'powder'] as Snow[])
+      for (let k = 1; k <= 6; k++) {
+        const x = crunch(ctx.sampleRate, k, snow);
+        const b = ctx.createBuffer(1, x.length, ctx.sampleRate);
+        b.getChannelData(0).set(x);
+        this.crunches[snow].push(b);
+      }
 
     // wind
     this.windFilter = ctx.createBiquadFilter();
@@ -283,18 +294,32 @@ export class AudioEngine {
   }
 
   /**
-   * A footstep in snow, on the frame the boot lands: the boot's weight (an AudioCraft footstep take,
-   * muffled the way snow muffles it) under a squeaky crunch of compressing snow. `hard` 0..1: a run
-   * lands harder and brighter than a walk; `soft` 0..1: powder swallows more of it than packed snow.
+   * A footstep in snow, on the frame the boot lands: a synthesised crunch (crunch.ts), the crackle of the
+   * snow compressing under the heel and then the ball of the foot, over a soft press of weight. `hard`
+   * 0..1: a run lands harder and brighter than a walk; `soft` 0..1: powder (a deeper, softer whumpf)
+   * against packed snow (a crisp crunch); 0 is ice, short and bright.
    */
   step(hard = 0.5, soft = 0) {
     if (!this.on) return;
-    const now = this.ctx!.currentTime;
+    const ctx = this.ctx!;
+    const now = ctx.currentTime;
     if (now - this.lastStep < 0.12) return;
     this.lastStep = now;
-    const body = this.files?.hit('step', 0.16 + hard * 0.22, { rate: 0.8 + hard * 0.15, lowpass: 900 + hard * 900 - soft * 400 }) ?? false;
-    this.burst({ dur: 0.07 + soft * 0.05, gain: (0.06 + hard * 0.07) * (1 - soft * 0.3), type: 'bandpass', freq: 1500 + Math.random() * 900 - soft * 500, q: 1.4 });
-    if (!body) this.burst({ dur: 0.06, gain: 0.05 + hard * 0.04, type: 'lowpass', freq: 400 });
+    const set = this.crunches[soft > 0.6 ? 'powder' : 'packed'];
+    if (!set.length) return;
+    // a different take every time, never the same twice running
+    let i = Math.floor(Math.random() * set.length);
+    if (i === this.lastCrunch) i = (i + 1) % set.length;
+    this.lastCrunch = i;
+    const src = ctx.createBufferSource();
+    src.buffer = set[i];
+    src.playbackRate.value = (soft === 0 ? 1.15 : 1) * (0.93 + hard * 0.1 + Math.random() * 0.08);
+    const g = ctx.createGain();
+    g.gain.value = (0.16 + hard * 0.18) * (soft > 0.6 ? 0.9 : 1);
+    const p = ctx.createStereoPanner();
+    p.pan.value = (Math.random() - 0.5) * 0.16;
+    src.connect(g).connect(p).connect(this.sfx);
+    src.start(now);
   }
 
   /** Something heavy landing in snow at a distance (m): timber, a slab block. */
